@@ -14,7 +14,11 @@
 --       
 -------------------------------------------------------------------------------*/
 
+#ifdef SimLEON
+#include "\Project\Reuse\Leon\SOFTWARE\include\leon.h"
+#else /* SimLEON */
 #include "leon.h"
+#endif /* SimLEON */
 #include "periph.h"
 
 /*======================================================================
@@ -28,7 +32,7 @@
   return	   : TRUE----read success;
 				 FALSE---read failure.
 ***********************************************************************/
-int BasicReadReg32(int address, int *data)
+int /*类型 BasicReadReg32 */BasicReadReg32_lb(int address, int *data)
 {
 	*data = *(char*)address;
 	return 1;
@@ -42,7 +46,7 @@ int BasicReadReg32(int address, int *data)
   return	   : TRUE----write success;
 				 FALSE---write failure.
 ***********************************************************************/
-int BasicWriteReg32(int address, int data)
+int /*类型 BasicWriteReg32 */BasicWriteReg32_lb(int address, int data)
 {
 	*(char*)address = data;
 	return 1;
@@ -116,12 +120,12 @@ void SetCPUTimer(int timerNo, int time)
 ======================================================================*/
 void InitSdram()
 {
-	BasicWriteReg32(HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR, 0x00);
-	BasicWriteReg32(HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR, 0x01);
-	BasicWriteReg32(HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR, 0x02);
-	BasicWriteReg32(HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR, 0x02);
-	BasicWriteReg32(HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR, 0x03);
-	BasicWriteReg32(HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR, 0x04);
-	BasicWriteReg32(HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR, 0x00);
-	BasicWriteReg32(HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR, 0x10);
+	/*类型 BasicWriteReg32 */BasicWriteReg32_lb(HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR, 0x00);
+	/*类型 BasicWriteReg32 */BasicWriteReg32_lb(HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR, 0x01);
+	/*类型 BasicWriteReg32 */BasicWriteReg32_lb(HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR, 0x02);
+	/*类型 BasicWriteReg32 */BasicWriteReg32_lb(HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR, 0x02);
+	/*类型 BasicWriteReg32 */BasicWriteReg32_lb(HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR, 0x03);
+	/*类型 BasicWriteReg32 */BasicWriteReg32_lb(HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR, 0x04);
+	/*类型 BasicWriteReg32 */BasicWriteReg32_lb(HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR, 0x00);
+	/*类型 BasicWriteReg32 */BasicWriteReg32_lb(HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR, 0x10);
 }

@@ -140,7 +140,7 @@ void DIRSOUND::CreateBuffer(WORD channel)
 
 	memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
 	dsbdesc.dwSize				= sizeof(DSBUFFERDESC);
-	dsbdesc.dwFlags 			= 0;
+ 	dsbdesc.dwFlags 			= 0;
 	dsbdesc.dwBufferBytes = len[channel]*Loops;
 	dsbdesc.lpwfxFormat 	= (LPWAVEFORMATEX)&pcmwf;
 
@@ -240,7 +240,11 @@ BOOL DIRSOUND::SoundOpen(int samples_per_sync, int sample_rate)
 {
   ch1 = AllocChannel();
 
+#if BITS_PER_SAMPLE == 8
 	sound[ch1] = new BYTE[ samples_per_sync ];
+#else /* BITS_PER_SAMPLE */
+	sound[ch1] = new short[ samples_per_sync ];
+#endif /* BITS_PER_SAMPLE */
 	len[ch1]	 = samples_per_sync;
 
 	if ( sound[ch1] == NULL )
@@ -275,10 +279,18 @@ void DIRSOUND::SoundClose( void )
 /*-------------------------------------------------------------------*/
 /*  SoundOutput() : Output Sound to Device for Sound Emulation       */
 /*-------------------------------------------------------------------*/
+#if BITS_PER_SAMPLE == 8
 BOOL DIRSOUND::SoundOutput(int samples, BYTE *wave)
+#else /* BITS_PER_SAMPLE */
+BOOL DIRSOUND::SoundOutput(int samples, short *wave)
+#endif /* BITS_PER_SAMPLE */
 {
 	/* Buffering sound data */
+#if BITS_PER_SAMPLE == 8
 	CopyMemory( sound[ ch1 ], wave, samples );  
+#else /* BITS_PER_SAMPLE */
+	CopyMemory( sound[ ch1 ], wave, samples * 2 );  
+#endif /* BITS_PER_SAMPLE */
 
   /* Copying to sound data buffer */
   FillBuffer( ch1 );  

@@ -1,7 +1,7 @@
 
 SECTIONS
 {
-	.itcm :
+/*	.itcm :
 	{
 		InfoNES.o(.text)
 		InfoNES_pAPU.o(.text)
@@ -22,7 +22,7 @@ SECTIONS
 		InfoNES_pAPU.o(*COM*)
 		K6502.o(*COM*)			
 	}	> dtcm
-	
+	*/
 
 }
 DATA_AFTER_TEXT = 1;

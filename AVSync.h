@@ -41,7 +41,10 @@
 ****************************************************/
 //typedef unsigned char BYTE;
 typedef unsigned int  UINT;
-typedef int BOOL;
+//¿‡–Õ typedef int BOOL;
+#ifndef BOOL
+#define BOOL  int
+#endif
 
 #ifndef TRUE
 #define TRUE  1

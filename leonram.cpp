@@ -1,5 +1,4 @@
 //本文件定义了编译到SDRAM的数组或者说指向SDRAM的指针，以及一些初始化函数
-
 #include "InfoNES.h"
 #include "InfoNES_pAPU.h"
 #include "K6502.h"
@@ -16,21 +15,64 @@
 //#define DISPLAY_FRAME_B			DECODE_BASE_ADDR + 0x12,	//默认值:0
 ////#define DISPLAY_VIDEO_MODE		DECODE_BASE_ADDR + 0x13,	// 
 
-#ifndef TESTGRAPH
+#ifdef TESTGRAPH
+unsigned char PPU0[ 65280 /*NES_BACKBUF_WIDTH * NES_DISP_HEIGHT*/ ];
+unsigned char PPU1[ 65280 /*NES_BACKBUF_WIDTH * NES_DISP_HEIGHT*/ ];
+unsigned char PPU2[ 65280 /*NES_BACKBUF_WIDTH * NES_DISP_HEIGHT*/ ];
+#if BITS_PER_SAMPLE == 8
+unsigned char APU0[ SAMPLE_PER_FRAME ];
+unsigned char APU1[ SAMPLE_PER_FRAME ];
+unsigned char APU2[ SAMPLE_PER_FRAME ];
+unsigned char APU3[ SAMPLE_PER_FRAME ];
+unsigned char APU4[ SAMPLE_PER_FRAME ];
+unsigned char APU5[ SAMPLE_PER_FRAME ];
+unsigned char APU6[ SAMPLE_PER_FRAME ];
+unsigned char APU7[ SAMPLE_PER_FRAME ];
+unsigned char APU8[ SAMPLE_PER_FRAME ];
+unsigned char APU9[ SAMPLE_PER_FRAME ];
+unsigned char APU10[ SAMPLE_PER_FRAME ];
+unsigned char APU11[ SAMPLE_PER_FRAME ];
+unsigned char APU12[ SAMPLE_PER_FRAME ];
+unsigned char APU13[ SAMPLE_PER_FRAME ];
+unsigned char APU14[ SAMPLE_PER_FRAME ];
+unsigned char APU15[ SAMPLE_PER_FRAME ];
+#else /* BITS_PER_SAMPLE */
+short APU0[ SAMPLE_PER_FRAME ];
+short APU1[ SAMPLE_PER_FRAME ];
+short APU2[ SAMPLE_PER_FRAME ];
+short APU3[ SAMPLE_PER_FRAME ];
+short APU4[ SAMPLE_PER_FRAME ];
+short APU5[ SAMPLE_PER_FRAME ];
+short APU6[ SAMPLE_PER_FRAME ];
+short APU7[ SAMPLE_PER_FRAME ];
+short APU8[ SAMPLE_PER_FRAME ];
+short APU9[ SAMPLE_PER_FRAME ];
+short APU10[ SAMPLE_PER_FRAME ];
+short APU11[ SAMPLE_PER_FRAME ];
+short APU12[ SAMPLE_PER_FRAME ];
+short APU13[ SAMPLE_PER_FRAME ];
+short APU14[ SAMPLE_PER_FRAME ];
+short APU15[ SAMPLE_PER_FRAME ];
+#endif /* BITS_PER_SAMPLE */
+
+#else /* TESTGRAPH */
+
+#ifdef FPGA128KB
+unsigned char WorkFrame[ 272 /*NES_BACKBUF_WIDTH*/ ];		//图形缓冲区数组，保存6位的颜色索引值
+#else /* FPGA128KB */
 unsigned char WorkFrame[ 65280 /*NES_BACKBUF_WIDTH * NES_DISP_HEIGHT*/ ];		//图形缓冲区数组，保存6位的颜色索引值
+#endif /* FPGA128KB */
 #endif /* TESTGRAPH */
 
 #else /* VCD */
 unsigned char WorkFrame[ 65280 /*NES_BACKBUF_WIDTH * NES_DISP_HEIGHT*/ ];		//图形缓冲区数组，保存6位的颜色索引值
 #endif /* VCD */
 
-//#if ( pAPU_QUALITY == 1 )
-unsigned char wave_buffers[183];      /* 11025 / 60 = 183 samples per sync */	//设定每一桢中对APU发出的声音的采样次数，这是模拟APU的一种方法，不要和DMC中由游戏设定的游戏音乐的采样值混淆起来
-//#elif ( pAPU_QUALITY == 2 )
-//unsigned char wave_buffers[367];      /* 22050 / 60 = 367 samples per sync */
-//#else
-//unsigned char wave_buffers[735];      /* 44100 / 60 = 735 samples per sync */
-//#endif
+#if BITS_PER_SAMPLE == 8
+unsigned char wave_buffers[ SAMPLE_PER_FRAME ];
+#else /* BITS_PER_SAMPLE */
+short wave_buffers[ SAMPLE_PER_FRAME ];
+#endif /* BITS_PER_SAMPLE */
 
 unsigned char PTRAM[ 0x2000 ];		//只用于mapper2的代表VROM的8KB内存
 
@@ -180,6 +222,7 @@ int InfoNES_Init()
 	
 //乘法		VROM = ROM + RomSize * 0x4000;
 	VROM = ROM + ( RomSize << 14 );
+	return 0;
 
 }
 

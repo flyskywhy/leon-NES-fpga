@@ -23,8 +23,12 @@
 
 #define ds_NUMCHANNELS      8
 #define ds_CHANSPERSAMPLE   1
+#if BITS_PER_SAMPLE == 8
 #define ds_BITSPERSAMPLE	  8
-#define Loops               10
+#else /* BITS_PER_SAMPLE */
+#define ds_BITSPERSAMPLE	  16
+#endif /* BITS_PER_SAMPLE */
+#define Loops               20
 
 #define ds_SAMPLERATE		SAMPLE_PER_SEC
 #define rec_freq			SAMPLE_PER_FRAME
@@ -44,7 +48,11 @@ class DIRSOUND
     /*-------------------------------------------------------------------*/
     /*  Global Functions for NES Emulation                               */
     /*-------------------------------------------------------------------*/
+#if BITS_PER_SAMPLE == 8
     BOOL SoundOutput( int samples, BYTE* wave );
+#else /* BITS_PER_SAMPLE */
+    BOOL SoundOutput( int samples, short* wave );
+#endif /* BITS_PER_SAMPLE */
 		void SoundClose( void );
 		BOOL SoundOpen( int samples_per_sync, int sample_rate );
     BOOL SoundMute( BOOL flag );
@@ -72,7 +80,11 @@ class DIRSOUND
 	  LPDIRECTSOUND lpdirsnd;
 
 		/* Used for management of each sound channel  */
+#if BITS_PER_SAMPLE == 8
 		BYTE								*sound[ds_NUMCHANNELS];
+#else /* BITS_PER_SAMPLE */
+		short								*sound[ds_NUMCHANNELS];
+#endif /* BITS_PER_SAMPLE */
 		DWORD 							 len[ds_NUMCHANNELS];
 		LPDIRECTSOUNDBUFFER  lpdsb[ds_NUMCHANNELS];
 

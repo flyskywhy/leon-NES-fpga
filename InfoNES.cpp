@@ -34,12 +34,19 @@
 /*-------------------------------------------------------------------*/
 /*  Include files                                                    */
 /*-------------------------------------------------------------------*/
+#ifdef DMA_SDRAM
+#include "./SimLEON/DMAAccessFunction.h"
+#endif /* DMA_SDRAM */
 
 #include "InfoNES.h"
 
 #ifdef TESTGRAPH
 #include "Int.h"
+#ifdef SimLEON
+#include "\Project\Reuse\Leon\SOFTWARE\include\leon.h"
+#else /* SimLEON */
 #include "leon.h"
+#endif /* SimLEON */
 #endif /* TESTGRAPH */
 
 #ifdef killsystem
@@ -1556,6 +1563,9 @@ void InfoNES_Reset();
 extern BOOL CanSetAddr;
 #endif /* VCD */
 
+
+#ifndef SimLEON
+
 int main()
 {
 #ifdef TESTGRAPH
@@ -1717,7 +1727,6 @@ int main()
 
 	InfoNES_Reset();				//初始化模拟器里的各个参数
 
-
 	for(;;)
 	{
 #ifndef TGsim
@@ -1761,6 +1770,9 @@ int main()
 
 	return 0;
 }
+
+
+#endif /* SimLEON */
 
 #ifndef ITCM32K
 
@@ -2075,7 +2087,16 @@ void InfoNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
 
 #ifdef TESTGRAPH
 
-void SLNES( BYTE *DisplayFrameBase)
+#ifdef DMA_SDRAM
+unsigned char line_buffers[ 272 ];		//扫描线缓冲区数组，保存着一条扫描线的像素信息
+#endif /* DMA_SDRAM */
+
+#ifdef SimLEON
+#include "stdio.h"
+extern int StartDisplay;
+#endif /* SimLEON */
+
+void SLNES( unsigned char *DisplayFrameBase)
 {
 /*
  *  模拟器的主循环
@@ -2084,6 +2105,10 @@ void SLNES( BYTE *DisplayFrameBase)
 	int PPU_Scanline;
 	int NCURLINE;			//扫描线在一个NT内部的Y坐标
 	int i;
+
+#if 0
+	unsigned char xxx[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+#endif
 
 	//在非跳桢期间
 	if ( ( PPU_R1 & R1_SHOW_SCR ) || ( PPU_R1 & R1_SHOW_SP ) )							//在一桢新的画面开始时，如果背景或Sprite允许显示，则重载计数器NSCROLLX和NSCROLLY
@@ -2105,19 +2130,44 @@ void SLNES( BYTE *DisplayFrameBase)
 			//if( PPU_Scanline < 140 || PPU_Scanline > 201)		//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
 			K6502_Step( STEP_PER_SCANLINE );												//执行1条扫描线
 			NSCROLLX = ARX;
-//乘法			buf = DisplayFrameBase + i * NES_BACKBUF_WIDTH + 8;					//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
-			buf = DisplayFrameBase + ( i << 8 ) + ( i << 4 ) + 8;					//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+////乘法			buf = DisplayFrameBase + i * NES_BACKBUF_WIDTH + 8;					//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+//			buf = DisplayFrameBase + ( i << 8 ) + ( i << 4 ) + 8;					//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+			buf = line_buffers + 8;					//将指针指向扫描线缓冲区数组中将会显示在屏幕上开始地址
 
 			if( PPU_R1 & R1_SHOW_SP ) NES_CompareSprites( PPU_Scanline );
 			if( InfoNES_DrawLine( PPU_Scanline, NSCROLLY ) )								//绘制1条扫描线到图形缓冲区数组
 				PPU_R2 |= R2_HIT_SP;															//设置Sprite 0点击标记
-			FirstSprite = -1;																//初始化FirstSprite
 
+#if 0
+	WriteDataToSDRAM( ( int *)( xxx ), 2, (int)( DisplayFrameBase ) + ( i << 6 ) + ( i << 2 ) + 0 );
+#endif
+
+			//printf( "line:	%d\n", PPU_Scanline );
+			//printf( "adress:	%x\n", (int)( DisplayFrameBase ) + ( i << 6 ) + ( i << 2 ) + 2 );
+			//WriteDataToSDRAM( ( int *)( line_buffers + 8 ), 32, (int)( DisplayFrameBase + ( i << 8 ) + ( i << 4 ) + 8 ) );		//绘制PPU桢存当前扫描线的前半段
+			WriteDataToSDRAM( ( int *)( line_buffers + 8 ), 32, (int)( DisplayFrameBase ) + ( i << 6 ) + ( i << 2 ) + 2 );		//绘制PPU桢存当前扫描线的前半段
+
+			FirstSprite = -1;																//初始化FirstSprite
 			NSCROLLY++;																		//NSCROLLY计数器+1
 			NCURLINE = NSCROLLY & 0xFF;														//使NSCROLLY脱去位8的V，相当于VT->FV计数器，即NCURLINE等于当前扫描线在当前NT中的Y坐标
 			if( NCURLINE == 0xF0 || NCURLINE == 0x00 )										//如果VT等于30，说明该垂直切换NT了；或者如果VT等于32，说明这是一个“负的卷轴值”，这不会垂直切换NT，这时需要将之前由于进位而切换的NT再切换回来
 				NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;										//切换垂直方向的NT，同时VT->FV计数器清零
+
+			//WriteDataToSDRAM( ( int *)( line_buffers + 136 ), 32, (int)( DisplayFrameBase + ( i << 8 ) + ( i << 4 ) + 136 )  );	//绘制PPU桢存当前扫描线的后半段
+			//printf( "adress:	%x\n\n", (int)( DisplayFrameBase ) + ( i << 6 ) + ( i << 2 ) + 34 );
+			WriteDataToSDRAM( ( int *)( line_buffers + 136 ), 32, (int)( DisplayFrameBase ) + ( i << 6 ) + ( i << 2 ) + 34 );	//绘制PPU桢存当前扫描线的后半段
+
+#if 0
+	WriteDataToSDRAM( ( int *)( xxx ), 2, (int)( DisplayFrameBase ) + ( i << 6 ) + ( i << 2 ) + 66 );
+#endif
+
 		}
+
+#ifdef SimLEON
+		StartDisplay = 1;
+		printf("framedone\n", PPU_Scanline);
+#endif /* SimLEON */
+
 	}
 	else
 	{
@@ -2160,7 +2210,7 @@ void SLNES( BYTE *DisplayFrameBase)
 
 
 #ifdef AFS
-void emulate_frame( boolean draw )
+void emulate_frame( /*类型 boolean */unsigned char draw )
 {
 
 #ifdef g2l
@@ -2278,7 +2328,11 @@ int clock6502 = 0;
 				K6502_Step( STEP_PER_SCANLINE );							//执行1条扫描线
 				NSCROLLX = ARX;
 //乘法				buf = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8;	//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+#ifdef FPGA128KB
+					buf = WorkFrame + 8;	         //将指针指向一条扫描线的开始地址
+#else /* FPGA128KB */
 					buf = &WorkFrame[ ( PPU_Scanline << 8 ) + ( PPU_Scanline << 4 ) ] + 8;	//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+#endif /* FPGA128KB */
 
 				if( PPU_R1 & R1_SHOW_SP ) NES_CompareSprites( PPU_Scanline );
 				if( InfoNES_DrawLine( PPU_Scanline, NSCROLLY ) )			//绘制1条扫描线到图形缓冲区数组
@@ -2371,8 +2425,10 @@ void do_frame()
 #endif /* LEON */
 #endif /* PrintfFrameClock */
 
-unsigned int asdf=1;
-unsigned int jkl = clock();
+
+unsigned int frame = 1;
+unsigned int BaseTime = clock();
+
 
   for (;;)			//模拟器的主循环
   {
@@ -2493,7 +2549,7 @@ unsigned int jkl = clock();
 #ifdef THROTTLE_SPEED	//限速，在LEON中用不着，加速还来不及呢:)
 	//{
 	//last_frame_time += FRAME_PERIOD;
-	last_frame_time = jkl + (asdf++) * SAMPLE_PER_FRAME * 1000 / SAMPLE_PER_SEC;
+	last_frame_time = BaseTime + ( frame++ ) * SAMPLE_PER_FRAME * 1000 / SAMPLE_PER_SEC;
 	//}
 	//else
 #else /* THROTTLE_SPEED */
@@ -2990,7 +3046,7 @@ inline int InfoNES_DrawLine( register int DY, register int SY )	//DY是当前的扫描
 #ifdef LEON
 			P[ 0 ] = P[ 1 ] = P[ 2 ] = P[ 3 ] = P[ 4 ] = P[ 5 ] = P[ 6 ] = P[ 7 ] = NES_BLACK;
 #else
-			P[ 0 ] = P[ 1 ] = P[ 2 ] = P[ 3 ] = P[ 4 ] = P[ 5 ] = P[ 6 ] = P[ 7 ] = NesPalette[ NES_BLACK ];
+			P[ 0 ] = P[ 1 ] = P[ 2 ] = P[ 3 ] = P[ 4 ] = P[ 5 ] = P[ 6 ] = P[ 7 ] = 0/*NesPalette[ NES_BLACK ]*/;
 #endif
 			ZBuf[ D0 ] = 0;
 		}

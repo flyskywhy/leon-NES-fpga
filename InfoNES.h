@@ -57,14 +57,14 @@ extern BYTE gamefile[];
 //#define nesterpad			//使用nester的手柄代码
 //#define HACKpad				//不处理写$4016的pad_strobe，不能用
 
-//#define killPALRAM			//不使用PALRAM[ 1024 ]，而只用PalTable[ 32 ]，这是为了要把DTCM中的7.5KB数据减少1KB以便在由DTCM转成锁定dcache方式时尽量提供更多的cache给其它应用
+#define killPALRAM			//不使用PALRAM[ 1024 ]，而只用PalTable[ 32 ]，这是为了要把DTCM中的7.5KB数据减少1KB以便在由DTCM转成锁定dcache方式时尽量提供更多的cache给其它应用
 #define killlut				//将decay_lut[ 16 ]、trilength_lut[ 128 ]转换为代码，这也是为了要把DTCM中的7.5KB数据减少0.5KB以便在由DTCM转成锁定dcache方式时尽量提供更多的cache给其它应用
 
 #define g2l					//尽可能多地将全局变量转为本地变量
 
 #define killstring			//用于LEON，不使用string.h中提供的memcmp、memcpy和memset库函数。
 
-#define killtable			//用M6502中的代码的方式代替K6502中查找g_ASLTable、g_LSRTable、g_ROLTable、g_RORTable，目的是减少3KB的代码量
+//#define killtable			//用M6502中的代码的方式代替K6502中查找g_ASLTable、g_LSRTable、g_ROLTable、g_RORTable，目的是减少3KB的代码量
 
 #define PocketNES 1			//以查找数组的方式获取指令
 
@@ -76,7 +76,11 @@ extern BYTE gamefile[];
 
 #define writeIO				//设定使用K6502_WriteIO()代替K6502_WritePPU()K6502_WriteAPU()以减少Write6502RAM中的分支
 
-//#define killwif				//以查找函数指针数组的方式代替6502代码中Write6502RAM的条件分支语句	//速度会稍变慢，暂时不用
+#define splitPPURAM			//把PPURAM分割成几块内存，如果游戏测试通过的话，这样做会加快速度和减少内存需求
+
+#ifndef splitPPURAM
+#define killwif				//以查找函数指针数组的方式代替6502代码中Write6502RAM的条件分支语句	//速度会稍变慢，暂时不用
+#endif /* splitPPURAM */
 #ifdef killwif
 #ifndef writefunc
 typedef /*static inline*/ void ( *writefunc )( BYTE byData );
@@ -87,7 +91,9 @@ extern writefunc PPU_write_tbl[ 8 ];
 #endif /* killwif */
 
 
+#ifndef splitPPURAM
 //#define killif			//以查找函数指针数组的方式代替6502代码中的条件分支语句 //速度反而变慢，所以不用，速度变慢可能是由于新增的函数调用的开销引起的
+#endif /* splitPPURAM */
 #ifdef killif
 
 #ifndef readfunc
@@ -118,9 +124,9 @@ extern writefunc PPU_write_tbl[ 8 ];
 #ifdef AFS
 
 #ifdef LEON
-#define PrintfFrameClock	//这三者在LEON平台中只能同时取一，在Win32平台则都不取		//是否输出打印出每桢的CLOCK数
+//#define PrintfFrameClock	//这三者在LEON平台中只能同时取一，在Win32平台则都不取		//是否输出打印出每桢的CLOCK数
 //#define PrintfFrameSkip																//是否输出打印出跳桢数
-//#define PrintfFrameGraph																//是否输出打印出每桢的部分画面
+#define PrintfFrameGraph																//是否输出打印出每桢的部分画面
 #endif
 
 #ifdef PrintfFrameClock
@@ -194,8 +200,6 @@ extern BYTE *memmap_tbl[8];
 /*-------------------------------------------------------------------*/
 
 /* PPU RAM */
-#define splitPPURAM	//把PPURAM分割成几块内存，如果游戏测试通过的话，这样做会加快速度和减少内存需求
-
 #ifdef splitPPURAM
 
 #ifdef DTCM8K
@@ -665,7 +669,7 @@ void InfoNES_Main();
 #ifndef AFS
 /* The loop of emulation */
 #ifdef TESTGRAPH
-void SLNES( BYTE *DisplayFrameBase);
+void SLNES( unsigned char *DisplayFrameBase);
 #else /* TESTGRAPH */
 void InfoNES_Cycle();
 #endif /* TESTGRAPH */

@@ -31,8 +31,8 @@
 /*======================================================================
   ====================== Basic read/write funtions ===================
 ======================================================================*/
-int BasicReadReg32(int address, int *data);
-int BasicWriteReg32(int address, int data);
+int /*类型 BasicReadReg32 */BasicReadReg32_lb(int address, int *data);
+int /*类型 BasicWriteReg32 */BasicWriteReg32_lb(int address, int data);
 
 //
 void Sleep(int time);

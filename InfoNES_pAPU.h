@@ -35,6 +35,8 @@ extern writefunc APU_write_tbl[ 32 ];
 #define SAMPLE_PER_SEC            44100
 #endif
 
+#define BITS_PER_SAMPLE				16
+
 #define INLINE static inline
 #define int8 char
 #define int16 short
@@ -42,7 +44,7 @@ extern writefunc APU_write_tbl[ 32 ];
 #define uint8 unsigned char
 #define uint16 unsigned short
 #define uint32 unsigned int
-#define boolean uint8
+//类型 #define boolean uint8
 
 #define  APU_WRA0       0x4000
 #define  APU_WRA1       0x4001
@@ -81,21 +83,21 @@ typedef struct rectangle_s
 {
 	uint8 regs[4];
 
-	boolean enabled;
+	/*类型 boolean */unsigned char enabled;
 
 	int32 phaseacc;
 	int32 freq;
 	int32 output_vol;
-	boolean fixed_envelope;
-	boolean holdnote;
+	/*类型 boolean */unsigned char fixed_envelope;
+	/*类型 boolean */unsigned char holdnote;
 	uint8 volume;
 
 	int32 sweep_phase;
 	int32 sweep_delay;
-	boolean sweep_on;
+	/*类型 boolean */unsigned char sweep_on;
 	uint8 sweep_shifts;
 	uint8 sweep_length;
-	boolean sweep_inc;
+	/*类型 boolean */unsigned char sweep_inc;
 
 	/* this may not be necessary in the future */
 	int32 freq_limit;
@@ -103,7 +105,7 @@ typedef struct rectangle_s
 	/* rectangle 0 uses a complement addition for sweep
 	** increases, while rectangle 1 uses subtraction
 	*/
-	boolean sweep_complement;
+	/*类型 boolean */unsigned char sweep_complement;
 
 	int32 env_phase;
 	int32 env_delay;
@@ -118,7 +120,7 @@ typedef struct triangle_s
 {
 	uint8 regs[3];
 
-	boolean enabled;
+	/*类型 boolean */unsigned char enabled;
 
 	int32 freq;
 	int32 phaseacc;
@@ -126,8 +128,8 @@ typedef struct triangle_s
 
 	uint8 adder;
 
-	boolean holdnote;
-	boolean counter_started;
+	/*类型 boolean */unsigned char holdnote;
+	/*类型 boolean */unsigned char counter_started;
 	/* quasi-hack */
 	int write_latency;
 
@@ -140,7 +142,7 @@ typedef struct noise_s
 {
 	uint8 regs[3];
 
-	boolean enabled;
+	/*类型 boolean */unsigned char enabled;
 
 	int32 freq;
 	int32 phaseacc;
@@ -149,8 +151,8 @@ typedef struct noise_s
 	int32 env_phase;
 	int32 env_delay;
 	uint8 env_vol;
-	boolean fixed_envelope;
-	boolean holdnote;
+	/*类型 boolean */unsigned char fixed_envelope;
+	/*类型 boolean */unsigned char holdnote;
 
 	uint8 volume;
 
@@ -164,7 +166,7 @@ typedef struct dmc_s
 	uint8 regs[4];
 
 	/* bodge for timestamp queue */
-	boolean enabled;
+	/*类型 boolean */unsigned char enabled;
 
 	int32 freq;
 	int32 phaseacc;
@@ -176,9 +178,9 @@ typedef struct dmc_s
 	int cached_dmalength;
 	uint8 cur_byte;
 
-	boolean looping;
-	boolean irq_gen;
-	boolean irq_occurred;
+	/*类型 boolean */unsigned char looping;
+	/*类型 boolean */unsigned char irq_gen;
+	/*类型 boolean */unsigned char irq_occurred;
 
 } dmc_t;
 

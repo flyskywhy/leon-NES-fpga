@@ -27,11 +27,18 @@
 #include "K6502_rw.h"
 #endif
 
+#include "InfoNES_pAPU.h"
+
 #ifndef killsystem
 #include "InfoNES_System.h"
+#if BITS_PER_SAMPLE == 8
+//void InfoNES_SoundOutput( int samples, BYTE *wave1, BYTE *wave2, BYTE *wave3, BYTE *wave4, BYTE *wave5 );
+void InfoNES_SoundOutput( int samples, BYTE *wave );
+#else /* BITS_PER_SAMPLE */
+//void InfoNES_SoundOutput( int samples, short *wave1, short *wave2, short *wave3, short *wave4, short *wave5 );
+void InfoNES_SoundOutput( int samples, short *wave );
+#endif /* BITS_PER_SAMPLE */
 #endif
-
-#include "InfoNES_pAPU.h"
 
 //nester
 #ifndef killstring
@@ -43,7 +50,11 @@
 #include "leonram.h"
 #else /* DTCM8K */
 
+#if BITS_PER_SAMPLE == 8
 BYTE wave_buffers[ SAMPLE_PER_FRAME ];
+#else /* BITS_PER_SAMPLE */
+int16 wave_buffers[ SAMPLE_PER_FRAME ];
+#endif /* BITS_PER_SAMPLE */
 
 #endif /* DTCM8K */
 
@@ -1039,13 +1050,17 @@ void apu_write(uint32 address, uint8 value)
 	}
 }
 
-
 void InfoNES_pAPUVsync(void)
 {
 	apudata_t *d;
 	uint32 elapsed_cycles;
 	int32 accum;
 	int num_samples = SAMPLE_PER_FRAME;						//得到每一桢中对声音进行的采样数
+#if BITS_PER_SAMPLE == 8
+	BYTE *wbs = wave_buffers;
+#else /* BITS_PER_SAMPLE */
+	int16 *wbs = wave_buffers;
+#endif /* BITS_PER_SAMPLE */
 
 #ifdef debug
 	printf("a");
@@ -1054,7 +1069,7 @@ void InfoNES_pAPUVsync(void)
 	/* grab it, keep it local for speed */
 	elapsed_cycles = (uint32) apu->elapsed_cycles;			//得到在6502执行该桢以前其所已经走过的时钟周期数
 
-	while (num_samples)									//开始采样
+	while (num_samples--)									//开始采样
 	{	//如果“队列尾”还没有走到和“队列头”同样的位置（该桢的信息队列还没有处理完）并且“队列尾”中的时间戳还没有超过该采样开始时的6502时钟周期数（在当前的采样开始前还有对APU寄存器的写入信息没有处理玩）
 		while ((FALSE == APU_QEMPTY()) && (apu->queue[apu->q_tail].timestamp <= elapsed_cycles))
 		{
@@ -1091,16 +1106,23 @@ void InfoNES_pAPUVsync(void)
 		//if (16 == apu->sample_bits)
 		//	*((int16 *) buffer)++ = (int16) accum;
 		//else
-		wave_buffers[ SAMPLE_PER_FRAME - num_samples-- ] = (accum >> 8) ^ 0x80;		//将采样值转换成无符号的8位整数。可以考虑直接在采样时就以8位来处理以增加模拟器的运行速度
+#if BITS_PER_SAMPLE == 8
+		//wave_buffers[ SAMPLE_PER_FRAME - num_samples-- ] = (accum >> 8) ^ 0x80;		//将采样值转换成无符号的8位整数。可以考虑直接在采样时就以8位来处理以增加模拟器的运行速度
+		*(wbs++) = (accum >> 8) ^ 0x80;		//将采样值转换成无符号的8位整数。可以考虑直接在采样时就以8位来处理以增加模拟器的运行速度
+#else /* BITS_PER_SAMPLE */
+		//wave_buffers[ SAMPLE_PER_FRAME - num_samples-- ] = (int16) accum;			//将采样值转换成有符号的16位整数
+		*(wbs++) = (int16) accum;													//将采样值转换成有符号的16位整数
+#endif /* BITS_PER_SAMPLE */
 	}
 
 	/* resync cycle counter */
 	apu->elapsed_cycles = total_cycles;							//在对该桢采完样后进行6502时钟周期总数的同步，以保证对下一桢进行采样时的精确性
 
 #ifndef killsystem
-	InfoNES_SoundOutput(apu->num_samples,						//将采样值输出到系统声音硬件的缓冲区中进行播放
-		wave_buffers, wave_buffers, wave_buffers, 
-		wave_buffers, wave_buffers);
+	//InfoNES_SoundOutput(apu->num_samples,						//将采样值输出到系统声音硬件的缓冲区中进行播放
+	//	wave_buffers, wave_buffers, wave_buffers, 
+	//	wave_buffers, wave_buffers);
+	InfoNES_SoundOutput(apu->num_samples, wave_buffers);						//将采样值输出到系统声音硬件的缓冲区中进行播放
 #endif /* killsystem */
 }
 
@@ -1835,7 +1857,11 @@ apu = &apu_t;
 //#endif /* LEON */
 
 #ifndef killsystem
+#if BITS_PER_SAMPLE == 8
 	InfoNES_SoundOpen( apu->num_samples, apu->sample_rate );
+#else /* BITS_PER_SAMPLE */
+	InfoNES_SoundOpen( apu->num_samples * 2, apu->sample_rate );
+#endif /* BITS_PER_SAMPLE */
 #endif /* killsystem */
 }
 
