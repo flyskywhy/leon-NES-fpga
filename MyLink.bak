@@ -25,4 +25,4 @@ SECTIONS
 }
 
 INCLUDE D:/Project/LEON/software/include/LeonLink
-//INCLUDE D:/Project/LEON/software/include/LeonSimLink
+/* INCLUDE D:/Project/LEON/software/include/LeonSimLink */

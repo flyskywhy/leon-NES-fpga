@@ -17,6 +17,8 @@
 #include <stdio.h>
 
 #include "leon.h"
+#include "register.h"
+#include "InfoNES_Types.h"
 #include "AVSync.h"
 #include "Int.h"
 #include "periph.h"
@@ -93,6 +95,7 @@ BOOL FirstAudioFrame;
 BOOL NeedWaitForAudio;
 BOOL SkipReadAudioFIFO;
 BOOL FirstPictureInt;
+BOOL CanSetAddr;
 
 /*======================================================================
   ======================== FIFO manage functions =====================
@@ -756,7 +759,7 @@ void SetDisplayVideoMode()
 }
 
 /***********************************************************************
-  function name: SetTVMode(BOOL bPAL, BOOL bSVideo, BOOL bPAL625, BOOL bMaster)
+  function name: SetTVMode(BOOL bGame, BOOL bPAL, BOOL bSVideo, BOOL bPAL625, BOOL bMaster)
   functionality: set current TV mode,
 				 TV_MODE[5..4]--BarMode, ("00": Video)
 				 TV_MODE[3]-----PAL/NTSC,
@@ -769,11 +772,11 @@ void SetDisplayVideoMode()
 				 bMaster--TRUE for Master, FALSE for Slave.
   return	   : NO
 ***********************************************************************/
-void SetTVMode(BYTE BarMode, BOOL bPAL, BOOL bSVideo, BOOL bPAL625, BOOL bMaster)
+void SetTVMode(BOOL bGame, BYTE BarMode, BOOL bPAL, BOOL bSVideo, BOOL bPAL625, BOOL bMaster)
 {
 	int tmp = 0;
 
-	tmp = ((BarMode&0x3)<<4) | (bPAL<<3) | (bSVideo<<2) | (bPAL625<<1) | bMaster;
+	tmp = bGame<<5 | ((BarMode&0x3)<<4) | (bPAL<<3) | (bSVideo<<2) | (bPAL625<<1) | bMaster;
 
 	WriteRegister(DECODE_BASE_ADDR+TV_MODE, tmp);
 }
@@ -1494,7 +1497,7 @@ void ISRForDecodeComplete()
 ***********************************************************************/
 void ISRForTimer()
 {
-//	DisableAllInterrupt();
+#ifdef VIDEO
 	if(FirstTimerInt)
 	{
 		TimeIntNum = 0; 
@@ -1531,7 +1534,13 @@ void ISRForTimer()
 #endif
 		SyncSchedule();
 	}
-//	EnableAllInterrupt();
+	
+#else	// for Game
+	SetCPUTimer(1, 20);
+	CanSetAddr = TRUE;
+
+#endif
+
 }
 
 /***********************************************************************
@@ -1730,7 +1739,8 @@ void SyncInit()
 	StartDecode();
 
 	// Configure Display frame address for init picture.
-	SetTVMode(0/*BarMode*/, TRUE/*bPAL*/, FALSE/*bSVideo*/, TRUE/*bPAL625*/, TRUE/*bMaster*/);
+	SetTVMode(FALSE/*bGame*/, 0/*BarMode*/, TRUE/*bPAL*/, FALSE/*bSVideo*/,
+	          TRUE/*bPAL625*/, TRUE/*bMaster*/);
 	SetDisplayFrameBase(D);
 	// set a invariable B frame addr for buffer status diagnos
 	WriteRegister(DECODE_BASE_ADDR+BFRAME_BASE_ADDR, P3/*0x1A900*/);
@@ -1739,6 +1749,37 @@ void SyncInit()
 	ClearVideoPTSFifo();
 	ClearAudioPTSFifo();
 }
+
+/***********************************************************************
+  function name: GameInit()
+  functionality: Game module init
+  parameters   : NO
+  return	   : NO
+***********************************************************************/
+void GameInit()
+{
+	CanSetAddr = FALSE;
+	// Disable interrupt
+	DisableAllInterrupt();
+
+	EnableDemux(FALSE);
+	EnableTVEncoder(FALSE);
+
+	InitTimer();
+
+	// init Sdram
+	InitSdram();
+
+	// Configure Display frame address for init picture.
+	SetTVMode(TRUE/*bGame*/, 0/*BarMode*/, TRUE/*bPAL*/, FALSE/*bSVideo*/,
+		      TRUE/*bPAL625*/, TRUE/*bMaster*/);
+	SetDisplayFrameBase(P1);
+	SetDisplayFrameTypeB(FALSE);
+
+	// set a invariable B frame addr for buffer status diagnos
+	WriteRegister(DECODE_BASE_ADDR+BFRAME_BASE_ADDR, P3/*0x1A900*/);
+}
+
 
 #if DEBUG
 void RegisterTest()
@@ -1801,81 +1842,82 @@ void RegisterTest()
 }
 #endif
 
-
+#if 0
 /*======================================================================
   ============================= Main Routine =========================
 ======================================================================*/
-//int main()
-//{
-//	//create log file for FIFO
-//	AudioWriteFp = fopen("write_audio_fifo.log", "wb");
-//	AudioReadFp  = fopen("read_audio_fifo.log", "wb");
-//	VideoWriteFp = fopen("write_video_fifo.log", "wb");
-//	VideoReadFp  = fopen("read_video_fifo.log", "wb");
-//	SysFp		 = fopen("program.log", "wb");
-//
-//	// HostSim init, use socket
-////	if(!InitHostSim(0, 5510, ISR, Msg))
-////	{
-////		fclose(AudioWriteFp);
-////		fclose(AudioReadFp);
-////		fclose(VideoWriteFp);
-////		fclose(VideoReadFp);
-////		fclose(SysFp);
-////
-////		return -1;
-////	}
-//	// HostSim init, use EPP
-////	if(!InitHostSim(1, 1, ISR, Msg))
-////		return -1;
-//	EnrollInterrupt(ISR);
-//
-//#if DEBUG
-//	printf("Start enter initialization...\r\n\n");
-//	fprintf(SysFp, "Start enter initialization...\r\n");
-////	RegisterTest();
-//#endif 
-//
-//	SyncInit();
-//
-//#if DEBUG
-//	printf("Finish initialization!\r\n\n");
-//	fprintf(SysFp, "Finish initialization!\r\n");
-//	printf("Enable Decode...\r\n\n");
-//	fprintf(SysFp, "Enable Decode...\r\n");
-//#endif
-//
-////	EnableInterrupt(PICTURE_HEAD);
-//	EnableInterrupt(IRQ_PIC_HEAD, LEVEL2);
-////	EnableInterrupt(DECODE_COMPLETE);
-//	EnableInterrupt(IRQ_DECODE_COMPLETE, LEVEL2);
-////	EnableIsr();
-//
-//#if DEBUG
-//	printf("Start enter interrupt cycle...\r\n\n");
-//	fprintf(SysFp, "Start enter interrupt cycle...\r\n");
-//#endif
-//
-//	printf("Start enter interrupt cycle...\r\n\n");
-//	while(TRUE)	//27 != getch())
+int main()
+{
+	//create log file for FIFO
+	AudioWriteFp = fopen("write_audio_fifo.log", "wb");
+	AudioReadFp  = fopen("read_audio_fifo.log", "wb");
+	VideoWriteFp = fopen("write_video_fifo.log", "wb");
+	VideoReadFp  = fopen("read_video_fifo.log", "wb");
+	SysFp		 = fopen("program.log", "wb");
+
+	// HostSim init, use socket
+//	if(!InitHostSim(0, 5510, ISR, Msg))
 //	{
-//		Sleep(10);
+//		fclose(AudioWriteFp);
+//		fclose(AudioReadFp);
+//		fclose(VideoWriteFp);
+//		fclose(VideoReadFp);
+//		fclose(SysFp);
+//
+//		return -1;
 //	}
-//	printf("Exit interrupt cycle!\r\n\n");
-//
-//#if DEBUG
-//	printf("Exit interrupt cycle!\r\n\n");
-//	fprintf(SysFp, "Exit interrupt cycle!\r\n");
-//#endif
-//
-//	fclose(SysFp);
-//	fclose(AudioReadFp);
-//	fclose(AudioWriteFp);
-//	fclose(VideoReadFp);
-//	fclose(VideoWriteFp);
-//
-//	// release ppsim
-////	ReleaseHostSim();
-//
-//	return 0;
-//}
+	// HostSim init, use EPP
+//	if(!InitHostSim(1, 1, ISR, Msg))
+//		return -1;
+	EnrollInterrupt(ISR);
+
+#if DEBUG
+	printf("Start enter initialization...\r\n\n");
+	fprintf(SysFp, "Start enter initialization...\r\n");
+//	RegisterTest();
+#endif 
+
+	SyncInit();
+
+#if DEBUG
+	printf("Finish initialization!\r\n\n");
+	fprintf(SysFp, "Finish initialization!\r\n");
+	printf("Enable Decode...\r\n\n");
+	fprintf(SysFp, "Enable Decode...\r\n");
+#endif
+
+//	EnableInterrupt(PICTURE_HEAD);
+	EnableInterrupt(IRQ_PIC_HEAD, LEVEL2);
+//	EnableInterrupt(DECODE_COMPLETE);
+	EnableInterrupt(IRQ_DECODE_COMPLETE, LEVEL2);
+//	EnableIsr();
+
+#if DEBUG
+	printf("Start enter interrupt cycle...\r\n\n");
+	fprintf(SysFp, "Start enter interrupt cycle...\r\n");
+#endif
+
+	printf("Start enter interrupt cycle...\r\n\n");
+	while(TRUE)	//27 != getch())
+	{
+		Sleep(10);
+	}
+	printf("Exit interrupt cycle!\r\n\n");
+
+#if DEBUG
+	printf("Exit interrupt cycle!\r\n\n");
+	fprintf(SysFp, "Exit interrupt cycle!\r\n");
+#endif
+
+	fclose(SysFp);
+	fclose(AudioReadFp);
+	fclose(AudioWriteFp);
+	fclose(VideoReadFp);
+	fclose(VideoWriteFp);
+
+	// release ppsim
+//	ReleaseHostSim();
+
+	return 0;
+}
+#endif

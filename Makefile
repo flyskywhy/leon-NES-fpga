@@ -4,12 +4,12 @@ vpath %.c gamefile
 # 指定program为要生成的目标exe的名字(无后缀)
 program = InfoNES
 # 指定modules为组成目标代码的模块名(实际是每个.S,.s,.C对应的.o,无后缀)
-modules = K6502 InfoNES_pAPU InfoNES contra leonram AVSync Int periph
+modules = K6502 InfoNES_pAPU InfoNES mario leonram AVSync Int periph
 # 包含公用的MAKEFILE (注意顺序：先定义，再包含)
 include ${LeonDir}/include/LeonMake.mak
 
 ########################### Optional #################################
-CFLAGS +=  -DLEON -Dkillsystem -DDTCM8K
+CFLAGS +=  -DLEON -Dkillsystem -DDTCM8K -DTESTGRAPH
 #--------- Link Option -------------
 # 指定自定义的连接选项(LDFLAGS) -- default: -g -N
 # LDFLAGS += -O2
@@ -38,7 +38,7 @@ InfoNES_pAPU.o: InfoNES_pAPU.c K6502.h K6502_rw.h InfoNES.h InfoNES_Types.h Info
 
 InfoNES.o: InfoNES.c InfoNES.h InfoNES_Types.h InfoNES_pAPU.h K6502.h
 
-contra.o: .\gamefile\contra.c .\gamefile\contra.h
+mario.o: .\gamefile\mario.c .\gamefile\mario.h
 
 leonram.o: leonram.c leonram.h
 

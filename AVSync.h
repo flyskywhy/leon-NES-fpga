@@ -24,13 +24,6 @@
 
 #define MBLINES			  3*16
 
-#define DECODE_BASE_ADDR  0x0A0
-#define INT_BASE_ADDR	  0x1E0
-#define DEMUX_BASE_ADDR   0x000
-#define OSD_BASE_ADDR	  0x040
-#define DMA_BASE_ADDR	  0x080
-//#define PCM_BASE_ADDR	  0xC0
-
 #define AUDIO_FIFO_LENGTH 32
 #define VIDEO_FIFO_LENGTH 32
 #define AUDIO_PTS_DELTA	  2351
@@ -42,91 +35,6 @@
 #define VIDEO_BUF_SIZE		1280
 #define AUDIO_BUF_BASE_ADDR	0
 #define AUDIO_BUF_SIZE		512
-/***************************************************
-***************** Registers define *****************
-****************************************************/
-// Decoder registers define
-enum DecodeRegister{
-	ID_TAG,
-	DECODE_ENABLE,
-	DECODE_TYPE,
-	START_DECODE,
-	START_CURR_OR_NEXT_FRAME,
-	FWDREF_BASE_ADDR,
-	BAKREF_BASE_ADDR,
-	SAVE_BASE_ADDR,
-	VIDEO_MODE_AND_PIC_TYPE,
-	// jpeg
-	JPEG_IDCT_COMPLETE,	
-
-	// display
-	BFRAME_BASE_ADDR = 0x0E,
-	TV_ONOFF,
-	TV_MODE,
-	DISPLAY_FRAME_BASE_ADDR,
-	DISPLAY_FRAME_B,
-	DISPLAY_VIDEO_MODE
-};
-/*
-// PCM registers define
-enum PCMRegisters{
-	AUDIO_FRAME_ID,
-	AUDIO_SAMPLES,
-	AUDIO_SAMPLE_RATE
-};
-*/
-// Interrupt registers define
-enum InterruptRegister{
-	INTERRUPT_MASK,
-	TIMER_ON,
-	TIMER_VALUE,
-
-	// for clear interrupt flags
-	INTERRUPT_CLR
-};
-
-// Demux registers define
-enum DemuxRegister{
-	SCR_HIGH = 1,
-	SCR_LOW,
-	DTS_HIGH,
-	DTS_LOW,
-
-	FRAME_TYPE,
-	FRAME_COUNT,
-
-	PTS_HIGH,
-	PTS_LOW,
-
-	MSF,			//-- Minute, Second and Frame info
-	SW_RESET = 16,  //-- software reset register
-	DEMUX_ENABLE,   //-- module enable
-
-	TRICK_MODE,		//-- 00: Normal Mode
-					//-- 01: FF mode(Fast Forw)
-					//-- 10: FB mode(Fast Back)
-					//-- 11: SP mode(slow play)
-	// VSB and ASB configuration registers:
-	VSB_BASE_ADDR = 24,
-	VSB_SIZE,
-	ASB_BASE_ADDR,
-	ASB_SIZE,
-
-	// VSB and ASB Congestion configuration:
-	VSB_CONGESTION_SIZE,
-	VSB_OUTCONGESTION_SIZE,
-	ASB_CONGESTION_SIZE,
-	ASB_OUTCONGESTION_SIZE
-};
-
-// DMA registers define
-enum DMARegister{
-	MEMADDR_TO_SDRAM,
-	COMMAND_SETUP,
-	DATA_TO_CACHE,
-	DATA_FROM_CACHE,
-	DMA_STATUS
-};
 
 /***************************************************
 ********************* type define ******************
@@ -200,15 +108,18 @@ enum IrqMask{
 	MASK_PIC_HEAD		= 0x0001,
 	MASK_SLICE_HEAD		= 0x0002,
 	MASK_DECODE_COMPLETE= 0x0004,
+	MASK_BFRAME_EMPTY   = 0x0008,
+	MASK_BFRAME_FULL    = 0x0010,
+
 	// reserved
-	MASK_TIMER			= 0x0080,
+	//MASK_TIMER		= 0x0080,
 	MASK_DEMUX			= 0x0100,
-	MASK_ASB_EMPTY		= 0x0200,
-	MASK_VSB_EMPTY		= 0x0400,
-	MASK_VSB_FULL		= 0x0800,
-	MASK_ASB_FULL		= 0x1000,
-	MASK_VCACHE_ERROR	= 0x2000,
-	MASK_ACACHE_ERROR	= 0x4000
+	MASK_VSB_FULL		= 0x0200,
+	MASK_ASB_FULL		= 0x0400,
+	MASK_VCACHE_ERROR	= 0x0800,
+	MASK_ACACHE_ERROR	= 0x1000,
+	MASK_ASB_EMPTY		= 0x2000,
+	MASK_VSB_EMPTY		= 0x4000
 	// reserved
 };
 
@@ -216,15 +127,18 @@ typedef enum{
 	IRQ_PIC_HEAD,
 	IRQ_SLICE_HEAD,
 	IRQ_DECODE_COMPLETE,
+	IRQ_BFRAME_EMPTY,
+	IRQ_BFRAME_FULL,
+
 	// reserved
-	IRQ_TIMER = 7,
-	IRQ_DEMUX,
-	IRQ_ASB_EMPTY,
-	IRQ_VSB_EMPTY,
+	//IRQ_TIMER = 7,
+	IRQ_DEMUX = 8,
 	IRQ_VSB_FULL,
 	IRQ_ASB_FULL,
 	IRQ_VCACHE_ERROR,
-	IRQ_ACACHE_ERROR
+	IRQ_ACACHE_ERROR,
+	IRQ_ASB_EMPTY,
+	IRQ_VSB_EMPTY
 	// reserved
 } InterruptType_t;
 
@@ -241,46 +155,6 @@ typedef enum{
 						// 设置B帧2次解码标志; 告诉VSB去LOAD原先锁存的B帧指针.
 } DecodeMethod_t;
 
-typedef enum{
-	PLAY,
-	FAST_FORW,
-	FAST_BACK,
-	SLOW_PLAY,
-	PAUSE,
-	STOP
-}  PlayMode_t;
-
-typedef enum{
-	CD_START = 1,
-	CD_JUMP,
-	CD_STOP
-} CDCommand_t;
-
-/***************************************************
-************** function prototype define ***********
-****************************************************/
-
-/********************************************************
-******************* Exception functions *****************
-*********************************************************/
-void VideoPTSFifoUpFlow();
-void VideoPTSFifoDownFlow();
-void AudioPTSFifoUpFlow();
-void AudioPTSFifoDownFlow();
-void StreamException();
-void VideoException();
-void Msg(char* strMsg);
-
-/********************************************************
-******************* FIFO manage functions ***************
-*********************************************************/
-void ClearVideoPTSFifo();
-BOOL InsertVideoPTSFifo(VideoPTS_t VideoPTSFifo[], int* head, int* tail, VideoPTS_t VideoPTS);
-BOOL GetVideoPTSFifo(VideoPTS_t VideoPTSFifo[], int* head, int* tail, VideoPTS_t* VideoPTS);
-
-void ClearAudioPTSFifo();
-BOOL InsertAudioPTSFifo(AudioPTS_t AudioPTSFifo[], int* head, int* tail, AudioPTS_t AudioPTS);
-BOOL GetAudioPTSFifo(AudioPTS_t AudioPTSFifo[], int* head, int* tail, AudioPTS_t* AudioPTS);
 
 /********************************************************
 ********************* Utility functions *****************
@@ -288,75 +162,44 @@ BOOL GetAudioPTSFifo(AudioPTS_t AudioPTSFifo[], int* head, int* tail, AudioPTS_t
 BOOL ReadRegister(int address, int* data);
 BOOL WriteRegister(int address, int data);
 
-DecodeType_t GetDecodeType();
-VideoType_t GetVideoType();
-FrameType_t GetFrameType();
-int  CalculateTDisplay(VideoType_t VideoType);
-int  CalculateTd(VideoType_t VideoType);
-int  CalculateInitDecodeDelay();
-VideoPTS_t GetCurrentVideoPTSNode();
-
-TS_t GetAudioPTS(int AudioFrameId);
-TS_t GetCurrentSTC();
-
 void SetDecodeFrameBase(BYTE* p);
 void EnableDecode(BOOL bEnable);
 void SetDecode(DecodeMethod_t DecodeMethod);
 void StartDecode();
 
+void SetVideoBuffer(int BaseAddr, int size);
+void SetAudioBuffer(int BaseAddr, int size);
+
+void EnableTVEncoder(BOOL bEnable);
+void ResetTVEncoder();
 void SetDisplayFrameBase(BYTE* p);
 void SetDisplayFrameTypeB(BOOL bBFrame);
 void SetDisplayVideoMode();
-void SetTVMode(BYTE BarMode, BOOL bPAL, BOOL bSVideo, BOOL bPAL625, BOOL bMaster);
-void EnableDisplay(BOOL bDisplay);
+void SetTVMode(BOOL bGame, BYTE BarMode, BOOL bPAL, BOOL bSVideo, BOOL bPAL625, BOOL bMaster);
+
+void EnableDemux(BOOL bEnable);
+void ResetDemux();
 
 void SetFWDFrameBase(BYTE* p);
 void SetBAKFrameBase(BYTE* p);
-
-//void EnableTimer(BOOL bTimer);
-//void SetCPUTimer(int time);
-
-void EnableDemux();
-void SetVideoBuffer(int BaseAddr, int size);
-void SetAudioBuffer(int BaseAddr, int size);
-void SetVideoBufferCongestion(int high, int low);
-void SetAudioBufferCongestion(int high, int low);
-void SetTrickMode(PlayMode_t mode);
-
-//void EnableInterrupt(InterruptType_t Int);
-//void DisableInterrupt(InterruptType_t Int);
-//void DisableAllInterrupt();
-//void EnableAllInterrupt();
-
-void StartPCM();
-void ReStartPCM();
 
 void SwapFAndB();
 
 /********************************************************
 ****************** Sync analysis functions **************
 *********************************************************/
-void DecisionOnSyncStatus(SyncStatus_t SyncStatus);
-SyncStatus_t CheckAVSync(TS_t STC);
-void SyncSchedule();
+void DecodeControl();
 
 /********************************************************
 ************** Sync Initialization Route ****************
 *********************************************************/
 void SyncInit();
+void GameInit();
 
 /********************************************************
 **************** Interrupt Server Routine ***************
 *********************************************************/
 // ISR for Demux module
 void ISRForPictureHead();
-void ISRForDecodeComplete();
-void ISRForDemux();
 void ISRForTimer();
-void ISRForAudio();
-void ISRForVBufDownFlow();
-void ISRForVBufUpFlow();
-void ISRForABufDownFlow();
-void ISRForABufUpFlow();
-
 void ISR(int IntNo);

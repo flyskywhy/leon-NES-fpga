@@ -3,16 +3,16 @@ SECTIONS
 {
 	.itcm :
 	{
-		InfoNES.o(.text)
+/*		InfoNES.o(.text)
 		InfoNES_pAPU.o(.text)
 		InfoNES_pAPU.o(.rodata)
-		K6502.o(.text)
+		K6502.o(.text)			*/
 		
 	}	> itcm
 
 	.dtcm :
 	{
-		InfoNES.o(.data)
+/*		InfoNES.o(.data)
 		InfoNES_pAPU.o(.data)
 		K6502.o(.data)
 		InfoNES.o(.bss)
@@ -20,7 +20,7 @@ SECTIONS
 		K6502.o(.bss)
 		InfoNES.o(*COM*)
 		InfoNES_pAPU.o(*COM*)
-		K6502.o(*COM*)
+		K6502.o(*COM*)			*/
 	}	> dtcm
 }
 

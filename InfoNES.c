@@ -37,6 +37,11 @@
 
 #include "InfoNES.h"
 
+#ifdef TESTGRAPH
+#include "Int.h"
+#include "leon.h"
+#endif /* TESTGRAPH */
+
 #ifdef killsystem
 //#include <stdio.h>
 //#include <stdlib.h>
@@ -1522,34 +1527,37 @@ inline void NES_CompareSprites( register int DY )
 #endif /* VCD */
 
 //#ifdef PrintfFrameGraph
-//#include "./gamefile/mario.h"
+#include "./gamefile/mario.h"
 //#else
-#include "./gamefile/contra.h"
+//#include "./gamefile/contra.h"
 //#endif /* PrintfFrameGraph */
 DWORD FrameCount = 0;
 DWORD dwKeyPad1 = 0;
 DWORD dwKeyPad2 = 0;
 DWORD dwKeySystem = 0;
 void reset();
+extern BOOL CanSetAddr;
 
 int main()
 {
-//	EnrollInterrupt(ISR);
-//	SyncInit();
-//
-//	SetCPUTimer(1, 20);
-//	EnableTimer(1, TRUE);
-//
-//	EnableInterrupt(IRQ_TIMER1, LEVEL1);
-	
-	
+#ifdef TESTGRAPH
+
+	EnrollInterrupt(ISR);
+	GameInit();
+
+	SetCPUTimer(1, 20);
+	EnableTimer(1, TRUE);
+
+	EnableInterrupt(IRQ_TIMER1, LEVEL1);
+
+#endif /* TESTGRAPH */
 	
 	
 #ifdef killstring
 	if( gamefile[ 0 ] == 'N' && gamefile[ 1 ] == 'E' && gamefile[ 2 ] == 'S' )	//*.nes文件
-#else
+#else /* killstring */
 	if( memcmp( gamefile, "NES\x1a", 4 ) == 0 )	//*.nes文件
-#endif
+#endif /* killstring */
 	{
 		MapperNo = gamefile[ 6 ] >> 4;					//MapperNo，因为只支持mapper0、2、3，所以只要知道低4位信息就可以了
 		if( MapperNo != 0 && MapperNo != 2 && MapperNo != 3 )
@@ -1570,13 +1578,30 @@ int main()
 
 #ifdef TESTGRAPH
 
-	reset();
+	reset();				//初始化模拟器里的各个参数
 	for(;;)
 	{
-		SetDisplayFrameBase( (BYTE *)IRAM );
-		SLNES( (BYTE *)PRAM );
-		SetDisplayFrameBase( (BYTE *)PRAM );
-		SLNES( (BYTE *)IRAM );
+		for(;;)
+		{
+			if(CanSetAddr)
+			{
+				SetDisplayFrameBase( (BYTE *)IRAM );	//设置显示模块的基地址到0x8000
+				CanSetAddr = FALSE;
+				break;
+			}
+		}		
+		SLNES( (BYTE *)PRAM );			//调用模拟器写一桢数据到基地址0x11480
+		
+		for(;;)
+		{
+			if(CanSetAddr)
+			{
+				SetDisplayFrameBase( (BYTE *)PRAM );	//设置显示模块的基地址到0x11480
+				CanSetAddr = FALSE;
+				break;
+			}
+		}
+		SLNES( (BYTE *)IRAM );			//调用模拟器写一桢数据到基地址0x8000
 	}
 
 #else /* TESTGRAPH */
