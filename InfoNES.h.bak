@@ -19,8 +19,17 @@
 
 #define FRAME_SKIP 5		//跳桢数，一般设为10以下
 
-#define IRAM	0x08000			//PPU桢存0的起始地址
-#define PRAM	0x11480			//PPU桢存1的起始地址
+#ifdef TESTGRAPH
+#define TGsim				//在sim时，单独测试VCD平台条件下将会使用Display模块的模拟器代码的正确性，而不调用Display模块的函数
+#endif /* TESTGRAPH */
+
+#ifdef TGsim
+#define IRAM	0x40040000		//在sim时，PPU桢存0的起始地址
+#define PRAM	0x40050000		//在sim时，PPU桢存1的起始地址
+#else /* TGsim */
+#define IRAM	0x08000			//在FPGA上连接Display模块运行时，PPU桢存0的起始地址
+#define PRAM	0x11480			//在FPGA上连接Display模块运行时，PPU桢存1的起始地址
+#endif /* TGsim */
 
 #define VCD					//如果使用VCD的硬件则将本语句开启
 
@@ -102,7 +111,7 @@ extern writefunc PPU_write_tbl[ 8 ];
 
 #ifdef PrintfFrameClock
 #define Test6502APU		//在使用PrintfFrameClock测试每桢的微秒数时只测试6502+APU
-#endif PrintfFrameClock
+#endif /* PrintfFrameClock */
 
 
 #ifdef LEON

@@ -2,15 +2,16 @@ AS=sparc-rtems-as
 CC=sparc-rtems-gcc
 DUMP=sparc-rtems-objdump
 
-CFLAGS = -g -c -O2 -mv8 -mno-fpu -DLEON -Dkillsystem -DDTCM8K -DTESTGRAPH
+CFLAGS = -g -c -O2 -mv8 -mno-fpu -DLEON -Dkillsystem -DDTCM8K
+#CFLAGS = -g -c -O2 -mv8 -mno-fpu -DLEON -Dkillsystem -DDTCM8K -DTESTGRAPH
 #CFLAGS = -g -c -O2 -mv8 -mno-fpu -DLEON --verbose
 #ASFLAGS = -D -gstabs 
 LDFLAGS = -g -N -Ttext=40000000 #-nostdlib -nodefaultlibs -nostdinclude #-e main 
 LIBS= -LD:/cygwin/opt/rtems/sparc-rtems/lib -lgcc
 DUMPFLAGS = -a -f -x -d -S -s -t
 
-OBJS = K6502.o InfoNES_pAPU.o InfoNES.o mario.o leonram.o AVSync.o Int.o periph.o
-#OBJS = K6502.o InfoNES_pAPU.o InfoNES.o mario.o leonram.o
+#OBJS = K6502.o InfoNES_pAPU.o InfoNES.o mario.o leonram.o AVSync.o Int.o periph.o
+OBJS = K6502.o InfoNES_pAPU.o InfoNES.o mario.o leonram.o
 #OBJS = K6502.o InfoNES_pAPU.o InfoNES.o
 #OBJS = InfoNES_System_LEON.o K6502.o InfoNES_pAPU.o InfoNES.o
 

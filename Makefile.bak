@@ -10,6 +10,7 @@ include ${LeonDir}/include/LeonMake.mak
 
 ########################### Optional #################################
 CFLAGS +=  -DLEON -Dkillsystem -DDTCM8K
+#CFLAGS +=  -DLEON -Dkillsystem -DDTCM8K -DTESTGRAPH
 #--------- Link Option -------------
 # 指定自定义的连接选项(LDFLAGS) -- default: -g -N
 # LDFLAGS += -O2

@@ -994,11 +994,17 @@ void InfoNES_pAPUVsync(void)
 	apudata_t *d;
 	uint32 elapsed_cycles;
 	int32 accum;
-	int num_samples = apu->num_samples;						//得到每一桢中对声音进行的采样数
+#if pAPU_QUALITY == 1
+	int num_samples = 183;						//得到每一桢中对声音进行的采样数
+#elif pAPU_QUALITY == 2
+	int num_samples = 367;						//得到每一桢中对声音进行的采样数
+#else
+	int num_samples = 735;						//得到每一桢中对声音进行的采样数
+#endif
 	/* grab it, keep it local for speed */
 	elapsed_cycles = (uint32) apu->elapsed_cycles;			//得到在6502执行该桢以前其所已经走过的时钟周期数
 
-	while (num_samples--)									//开始采样
+	while (num_samples)									//开始采样
 	{	//如果“队列尾”还没有走到和“队列头”同样的位置（该桢的信息队列还没有处理完）并且“队列尾”中的时间戳还没有超过该采样开始时的6502时钟周期数（在当前的采样开始前还有对APU寄存器的写入信息没有处理玩）
 		while ((FALSE == APU_QEMPTY()) && (apu->queue[apu->q_tail].timestamp <= elapsed_cycles))
 		{
@@ -1035,7 +1041,13 @@ void InfoNES_pAPUVsync(void)
 		//if (16 == apu->sample_bits)
 		//	*((int16 *) buffer)++ = (int16) accum;
 		//else
-		wave_buffers[num_samples] = (accum >> 8) ^ 0x80;		//将采样值转换成无符号的8位整数。可以考虑直接在采样时就以8位来处理以增加模拟器的运行速度
+#if pAPU_QUALITY == 1
+		wave_buffers[ 183 - num_samples-- ] = (accum >> 8) ^ 0x80;		//将采样值转换成无符号的8位整数。可以考虑直接在采样时就以8位来处理以增加模拟器的运行速度
+#elif pAPU_QUALITY == 2
+		wave_buffers[ 367 - num_samples-- ] = (accum >> 8) ^ 0x80;		//将采样值转换成无符号的8位整数。可以考虑直接在采样时就以8位来处理以增加模拟器的运行速度
+#else
+		wave_buffers[ 735 - num_samples-- ] = (accum >> 8) ^ 0x80;		//将采样值转换成无符号的8位整数。可以考虑直接在采样时就以8位来处理以增加模拟器的运行速度
+#endif
 	}
 
 	/* resync cycle counter */

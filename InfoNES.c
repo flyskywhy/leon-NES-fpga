@@ -1536,14 +1536,19 @@ DWORD dwKeyPad1 = 0;
 DWORD dwKeyPad2 = 0;
 DWORD dwKeySystem = 0;
 void reset();
+#ifdef VCD
 extern BOOL CanSetAddr;
+#endif /* VCD */
 
 int main()
 {
 #ifdef TESTGRAPH
 
 	EnrollInterrupt(ISR);
+
+#ifndef TGsim
 	GameInit();
+#endif /* TGsim */
 
 	SetCPUTimer(1, 20);
 	EnableTimer(1, TRUE);
@@ -1581,6 +1586,7 @@ int main()
 	reset();				//初始化模拟器里的各个参数
 	for(;;)
 	{
+#ifndef TGsim
 		for(;;)
 		{
 			if(CanSetAddr)
@@ -1589,9 +1595,11 @@ int main()
 				CanSetAddr = FALSE;
 				break;
 			}
-		}		
+		}
+#endif /* TGsim */
 		SLNES( (BYTE *)PRAM );			//调用模拟器写一桢数据到基地址0x11480
 		
+#ifndef TGsim
 		for(;;)
 		{
 			if(CanSetAddr)
@@ -1601,6 +1609,7 @@ int main()
 				break;
 			}
 		}
+#endif /* TGsim */
 		SLNES( (BYTE *)IRAM );			//调用模拟器写一桢数据到基地址0x8000
 	}
 
@@ -1950,15 +1959,14 @@ void SLNES( BYTE *DisplayFrameBase)
 			if( NCURLINE == 0xF0 || NCURLINE == 0x00 )										//如果VT等于30，说明该垂直切换NT了；或者如果VT等于32，说明这是一个“负的卷轴值”，这不会垂直切换NT，这时需要将之前由于进位而切换的NT再切换回来
 				NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;										//切换垂直方向的NT，同时VT->FV计数器清零
 		}
-		//for( ; PPU_Scanline < 232; PPU_Scanline++ )											//显示在屏幕上的8-231共224条扫描线
-		for( PPU_Scanline = 0; PPU_Scanline < 224; PPU_Scanline++ )											//显示在屏幕上的8-231共224条扫描线
+		for( i = 0; PPU_Scanline < 232; PPU_Scanline++, i++ )											//显示在屏幕上的8-231共224条扫描线
 		{
 			//加速
 			//if( PPU_Scanline < 140 || PPU_Scanline > 201)		//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
 			K6502_Step( STEP_PER_SCANLINE );												//执行1条扫描线
 			NSCROLLX = ARX;
-//乘法			buf = DisplayFrameBase + PPU_Scanline * NES_BACKBUF_WIDTH + 8;				//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
-			buf = DisplayFrameBase + ( PPU_Scanline << 8 ) + ( PPU_Scanline << 4 ) + 8;		//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+//乘法			buf = DisplayFrameBase + i * NES_BACKBUF_WIDTH + 8;					//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+			buf = DisplayFrameBase + ( i << 8 ) + ( i << 4 ) + 8;					//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
 
 			if( PPU_R1 & R1_SHOW_SP ) NES_CompareSprites( PPU_Scanline );
 			if( InfoNES_DrawLine( PPU_Scanline, NSCROLLY ) )								//绘制1条扫描线到图形缓冲区数组
