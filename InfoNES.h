@@ -88,6 +88,11 @@ extern BYTE PPU_R2;
 extern BYTE PPU_R3;
 extern BYTE PPU_R7;
 
+//lizheng
+//extern BYTE PPU_R4;
+extern BYTE PPU_R5;
+extern BYTE PPU_R6;
+
 //FCEU
 extern BYTE PPUGenLatch;
 extern BYTE PPUSPL;
@@ -168,6 +173,64 @@ extern BYTE PPU_UpDown_Clip;
   PPU_Scr_H_Bit_Next = PPU_Scr_H_Next & 0x07; \
 }
 
+//nesterJ
+/*
+在一条扫描开始绘制时（如果背景或Sprite允许显示）：
+	v:0000010000011111=t:0000010000011111
+*/
+#define LOOPY_SCANLINE_START(v,t) \
+  { \
+    v = (v & 0xFBE0) | (t & 0x041F); \
+  }
+/*
+第12-14位是tile的Y补偿量。
+你可以把第5、6、7、8、9位当作“y卷轴值”（*8）。这项功能
+与X稍有不同。当它增加到29而不是31时就绕回到0同时切换第11
+位。在这里有一些古怪的边缘效果。如果你将该值人为设置为超
+过29（通过2005或者2006），则很明显从29绕回的现象不会发生，
+并且AT的数据会被当作NT的数据来用。“y卷轴值”仍旧会从31绕
+回到0，但是不会切换第11位。这可以解释为什么通过2005向“Y”
+写入的值超过240会表现得像一个负的卷轴值一样。
+*/
+#define LOOPY_NEXT_LINE(v) \
+  { \
+    if((v & 0x7000) == 0x7000) /* is subtile y offset == 7? */ \
+    { \
+      v &= 0x8FFF; /* subtile y offset = 0 */ \
+      if((v & 0x03E0) == 0x03A0) /* name_tab line == 29? */ \
+      { \
+        v ^= 0x0800;  /* switch nametables (bit 11) */ \
+        v &= 0xFC1F;  /* name_tab line = 0 */ \
+      } \
+      else \
+      { \
+        if((v & 0x03E0) == 0x03E0) /* line == 31? */ \
+        { \
+          v &= 0xFC1F;  /* name_tab line = 0 */ \
+        } \
+        else \
+        { \
+          v += 0x0020; /* next name_tab line */ \
+        } \
+      } \
+    } \
+    else \
+    { \
+      v += 0x1000; /* next subtile y offset */ \
+    } \
+  }
+#define VRAM(addr)  PPUBANK[ ( addr ) >> 10 ] [ ( addr ) & 0x3FF ]
+//#define DRAW_BG_PIXEL() \
+//  col = attrib_bits; \
+// \
+//  if(pattern_lo & pattern_mask) col |= 0x01; \
+//  if(pattern_hi & pattern_mask) col |= 0x02; \
+//  if(col & 0x03) \
+//    *p = PalTable[col]; \
+//  else \
+//    *p = PalTable[0]; \
+//  p++;
+
 /* Current Scanline */
 extern WORD PPU_Scanline;
 
@@ -221,16 +284,15 @@ extern WORD DoubleFrame[ 2 ][ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
 extern WORD *WorkFrame;
 extern WORD WorkFrameIdx;
 #else
-extern WORD WorkFrame[ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
-
-////nesterJ
-//extern WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
-//extern BYTE solid_buf[ NES_DISP_WIDTH ];
-
-#endif
+//extern WORD WorkFrame[ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
 
 //nesterJ
-extern BYTE solid_buf[ NES_DISP_WIDTH ];
+extern WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
+
+////颜色
+//extern BYTE WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
+
+#endif
 
 extern BYTE ChrBuf[];
 
@@ -343,13 +405,13 @@ void InfoNES_Cycle();
 int InfoNES_HSync();
 
 /* Render a scanline */
-void InfoNES_DrawLine();
+//void InfoNES_DrawLine();
 void InfoNES_DrawLine2();
 
 /* Get a position of scanline hits sprite #0 */
-void InfoNES_GetSprHitY();
+//void InfoNES_GetSprHitY();
 
 /* Develop character data */
-void InfoNES_SetupChr();
+//void InfoNES_SetupChr();
 
 #endif /* !InfoNES_H_INCLUDED */

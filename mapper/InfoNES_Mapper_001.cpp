@@ -240,7 +240,7 @@ void Map1_Write( WORD wAddr, BYTE byData )
             PPUBANK[ 1 ] = VROMPAGE( (byBankNum+1) % (NesHeader.byVRomSize << 3) );
             PPUBANK[ 2 ] = VROMPAGE( (byBankNum+2) % (NesHeader.byVRomSize << 3) );
             PPUBANK[ 3 ] = VROMPAGE( (byBankNum+3) % (NesHeader.byVRomSize << 3) );
-            InfoNES_SetupChr();
+//            InfoNES_SetupChr();
           }
           else
           {
@@ -254,7 +254,7 @@ void Map1_Write( WORD wAddr, BYTE byData )
             PPUBANK[ 5 ] = VROMPAGE( (byBankNum+5) % (NesHeader.byVRomSize << 3) );
             PPUBANK[ 6 ] = VROMPAGE( (byBankNum+6) % (NesHeader.byVRomSize << 3) );
             PPUBANK[ 7 ] = VROMPAGE( (byBankNum+7) % (NesHeader.byVRomSize << 3) );
-            InfoNES_SetupChr();
+//            InfoNES_SetupChr();
           }
         }
       }
@@ -295,7 +295,7 @@ void Map1_Write( WORD wAddr, BYTE byData )
             PPUBANK[ 6 ] = CRAMPAGE( byBankNum+2 );
             PPUBANK[ 7 ] = CRAMPAGE( byBankNum+3 );
 #endif
-            InfoNES_SetupChr();
+//            InfoNES_SetupChr();
             break;
           }
         }
@@ -309,7 +309,7 @@ void Map1_Write( WORD wAddr, BYTE byData )
           PPUBANK[ 5 ] = VROMPAGE( (byBankNum+1) % (NesHeader.byVRomSize << 3) );
           PPUBANK[ 6 ] = VROMPAGE( (byBankNum+2) % (NesHeader.byVRomSize << 3) );
           PPUBANK[ 7 ] = VROMPAGE( (byBankNum+3) % (NesHeader.byVRomSize << 3) );
-          InfoNES_SetupChr(); 
+//          InfoNES_SetupChr(); 
         }
       }
       break;

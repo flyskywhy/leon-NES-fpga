@@ -37,7 +37,7 @@ void Map0_Init()
 //¼õÈÝ   MapperRenderScreen = Map0_RenderScreen;
 
   /* Set SRAM Banks */
-  SRAMBANK = SRAM;
+//¼õÈÝ   SRAMBANK = SRAM;
 
   /* Set ROM Banks */
   if ( NesHeader.byRomSize > 1 )

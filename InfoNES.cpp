@@ -95,6 +95,11 @@ BYTE PPU_R2;
 BYTE PPU_R3;
 BYTE PPU_R7;
 
+//lizheng
+//BYTE PPU_R4;
+BYTE PPU_R5;
+BYTE PPU_R6;
+
 //FCEU
 BYTE PPUGenLatch;
 BYTE PPUSPL;
@@ -181,17 +186,24 @@ WORD DoubleFrame[ 2 ][ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
 WORD *WorkFrame;
 WORD WorkFrameIdx;
 #else
-WORD WorkFrame[ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
+//WORD WorkFrame[ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
 
-////nesterJ
-//WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//图形缓冲区数组
-//BYTE solid_buf[ NES_DISP_WIDTH ];							//扫描线与Sprite重叠标记数组，只有在Sprite中的某点像素颜色不是透明色时才在该数组的相应位置设置标记
+//nesterJ
+WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//图形缓冲区数组，保存RGB值
+
+////颜色
+//BYTE WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//图形缓冲区数组，保存4位颜色索引值
 
 #endif
 
 //nesterJ
 /* InfoNES_DrawLine2() */
+  BYTE solid_buf[ NES_DISP_WIDTH ];							//扫描线与Sprite重叠标记数组，只有在Sprite中的某点像素颜色不是透明色时才在该数组的相应位置设置标记
+  WORD *buf;
   WORD *p;					//指向图形缓冲区数组中当前所绘像素地址的指针
+////颜色
+//  BYTE *p;
+
   BYTE col;					//代表每个像素4位的颜色索引值，可以索引16个颜色索引值
   BYTE c1,c2;				//代表每个像素从Pattern Table中获得的的低2位的颜色索引值
 
@@ -250,7 +262,7 @@ BYTE APU_Reg[ 0x18 ];
 
 /* APU Mute ( 0:OFF, 1:ON ) */
 //音频int APU_Mute = 1;
-int APU_Mute = 1;
+int APU_Mute = 0;
 
 /* Pad data */
 DWORD PAD1_Latch;
@@ -558,6 +570,9 @@ void InfoNES_SetupPPU()
   // Reset PPU Register
   PPU_R0 = PPU_R1 = PPU_R2 = PPU_R3 = PPU_R7 = 0;
 
+  //lizheng
+  /*PPU_R4 = */PPU_R5 = PPU_R6 = 0;
+
   //FCEU
   PPUGenLatch = 0;
   PPUSPL = 0;
@@ -594,6 +609,9 @@ void InfoNES_SetupPPU()
   PPU_BG_Base = ChrBuf;
   PPU_SP_Base = ChrBuf + 256 * 64;
   PPU_SP_Height = 8;
+  //nester
+  bg_pattern_table_addr = 0;
+  spr_pattern_table_addr = 0;
 
   // Reset PPU banks
   for ( nPage = 0; nPage < 16; ++nPage )
@@ -679,201 +697,18 @@ void InfoNES_Cycle()
  *
  */
 
-  // Set the PPU adress to the buffered value
-  if ( ( PPU_R1 & R1_SHOW_SP ) || ( PPU_R1 & R1_SHOW_SCR ) )
-		PPU_Addr = PPU_Temp;
+  //// Set the PPU adress to the buffered value
+  //if ( ( PPU_R1 & R1_SHOW_SP ) || ( PPU_R1 & R1_SHOW_SCR ) )
+		//PPU_Addr = PPU_Temp;
 
   // Emulation loop
   for (;;)
   {    
-    int nStep;
-
-    // Set a flag if a scanning line is a hit in the sprite #0
-    if ( SpriteJustHit == PPU_Scanline &&
-      PPU_ScanTable[ PPU_Scanline ] == SCAN_ON_SCREEN )
-    {
-      // # of Steps to execute before sprite #0 hit
-      nStep = SPRRAM[ SPR_X ] * STEP_PER_SCANLINE / NES_DISP_WIDTH;
-
-      // Execute instructions
-      K6502_Step( nStep );
-
-      // Set a sprite hit flag
-      if ( ( PPU_R1 & R1_SHOW_SP ) && ( PPU_R1 & R1_SHOW_SCR ) )
-        PPU_R2 |= R2_HIT_SP;
-
-      //// NMI is required if there is necessity
-      //if ( ( PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
-      //  NMI_REQ;//经过部分游戏测试，这一段代码好像没有必要。而且NES文档也说它无用，其他几个模拟器也不用它。
-
-      // Execute instructions
-      K6502_Step( STEP_PER_SCANLINE - nStep );
-    }
-    else
-    {
-      // Execute instructions
-      K6502_Step( STEP_PER_SCANLINE );
-      
-      //加速
-//      if ( FrameCnt == 0 || FrameCnt == FrameSkip )
-//      	K6502_Step( 90 );
-//      else
-//      	K6502_Step( 40 );    
-	}
-
-    // Frame IRQ in H-Sync
-    FrameStep += STEP_PER_SCANLINE;
-    if ( FrameStep > STEP_PER_FRAME && FrameIRQ_Enable )
-    {
-      FrameStep %= STEP_PER_FRAME;
-      IRQ_REQ;
-      APU_Reg[ 0x15 ] |= 0x40;
-    }
-
-    // A mapper function in H-Sync
-    //Map4
-	//MapperHSync();
-    
-    // A function in H-Sync
-    if ( InfoNES_HSync() == -1 )
-      return;  // To the menu screen
-
-    // HSYNC Wait
-    InfoNES_Wait();
-
-
-	 // //加速
-  //  int nStep;
-  //    
-  //  //SCAN_TOP_OFF_SCREEN:
-  //    // Reset a PPU status
-  //    PPU_R2 = 0;
-
-  //    // Set up a character data
-  //    if ( NesHeader.byVRomSize == 0 && FrameCnt == 0 )
-  //      InfoNES_SetupChr();
-
-  //    // Get position of sprite #0
-  //    InfoNES_GetSprHitY();
-
-  //  // Set a flag if a scanning line is a hit in the sprite #0
-  //  if ( SpriteJustHit < SCAN_UNKNOWN_START )
-  //  {
-  //    // # of Steps to execute before sprite #0 hit
-  //    nStep = SpriteJustHit * STEP_PER_SCANLINE + SPRRAM[ SPR_X ] * STEP_PER_SCANLINE / NES_DISP_WIDTH;
-
-  //    // Execute instructions
-  //    K6502_Step( nStep );
-
-  //    // Set a sprite hit flag
-  //    if ( ( PPU_R1 & R1_SHOW_SP ) && ( PPU_R1 & R1_SHOW_SCR ) )
-  //      PPU_R2 |= R2_HIT_SP;
-
-      //// NMI is required if there is necessity
-      //if ( ( PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
-      //  NMI_REQ;//经过部分游戏测试，这一段代码好像没有必要。而且NES文档也说它无用，其他几个模拟器也不用它。
-
-  //    // Execute instructions
-  //    K6502_Step( STEP_PER_SCANLINE * SCAN_UNKNOWN_START - nStep );
-  //  }
-  //  else
-  //  {
-  //    // Execute instructions
-  //    K6502_Step( STEP_PER_SCANLINE * SCAN_UNKNOWN_START );
-  //  }
-
-  ///*-------------------------------------------------------------------*/
-  ///*  Refresh screen                                                   */
-  ///*-------------------------------------------------------------------*/
-  //if ( FrameCnt == 0 )
-  //{
-  //      // Render 240 scanlines
-  //  for( PPU_Scanline = 0; PPU_Scanline < 240; PPU_Scanline++ )
-  //  	  InfoNES_DrawLine();
-  //      
-  //      // Transfer the contents of work frame on the screen
-  //      InfoNES_LoadFrame();
-  //}
-
-  ///*-------------------------------------------------------------------*/
-  ///*  Set new scroll values                                            */
-  ///*-------------------------------------------------------------------*/
-  //PPU_Scr_V      = PPU_Scr_V_Next;
-  //PPU_Scr_V_Byte = PPU_Scr_V_Byte_Next;
-  //PPU_Scr_V_Bit  = PPU_Scr_V_Bit_Next;
-
-  //PPU_Scr_H      = PPU_Scr_H_Next;
-  //PPU_Scr_H_Byte = PPU_Scr_H_Byte_Next;
-  //PPU_Scr_H_Bit  = PPU_Scr_H_Bit_Next;
-
-  //  // SCAN_VBLANK_START:
-  //    // FrameCnt + 1
-  //    FrameCnt = ( FrameCnt >= FrameSkip ) ? 0 : FrameCnt + 1;
-
-  //    // Set a V-Blank flag
-  //    PPU_R2 = R2_IN_VBLANK;
-
-  //    // Reset latch flag
-  //    PPU_Latch_Flag = 0;
-
-  //    // pAPU Sound function in V-Sync
-  //    if ( !APU_Mute )
-  //      InfoNES_pAPUVsync();
-
-  //    // A mapper function in V-Sync
-  ////    MapperVSync();
-
-  //    // Get the condition of the joypad
-  //    InfoNES_PadState( &PAD1_Latch, &PAD2_Latch, &PAD_System );
-  //    
-  //    // NMI on V-Blank
-  //    if ( PPU_R0 & R0_NMI_VB )
-  //      NMI_REQ;
-
-  //    // Exit an emulation if a QUIT button is pushed
-  //    if ( PAD_PUSH( PAD_System, PAD_SYS_QUIT ) )
-  //      return;  // Exit an emulation      
-
-  //    // Execute instructions
-  //    K6502_Step( STEP_PER_SCANLINE * 22 );
-
-  //  // Frame IRQ in V-Sync
-  //  if ( FrameIRQ_Enable )
-  //  {
-  //    IRQ_REQ;
-  //    APU_Reg[ 0x15 ] |= 0x40;
-  //  }
-
-  //  // HSYNC Wait
-  //  for( PPU_Scanline = 0; PPU_Scanline < 262; PPU_Scanline++ )
-		//InfoNES_Wait();
-
-
-//	  //加速
 //    int nStep;
-//PPU_Scanline = 0;
-//	// Execute instructions
-//      K6502_Step( STEP_PER_SCANLINE );
 //
-//    if ( FrameCnt == 0 )
-//        // Render 1 scanlines
-//    	  InfoNES_DrawLine();
-//      
-//    //SCAN_TOP_OFF_SCREEN:
-//      // Reset a PPU status
-//      PPU_R2 = 0;
-//
-//      // Set up a character data
-//      if ( NesHeader.byVRomSize == 0 && FrameCnt == 0 )
-//        InfoNES_SetupChr();
-//
-//      // Get position of sprite #0
-//      InfoNES_GetSprHitY();
-//
-//  for( PPU_Scanline = 1; PPU_Scanline < 240; PPU_Scanline++ )
-//  {
 //    // Set a flag if a scanning line is a hit in the sprite #0
-//    if ( SpriteJustHit == PPU_Scanline )
+//    if ( SpriteJustHit == PPU_Scanline &&
+//      PPU_ScanTable[ PPU_Scanline ] == SCAN_ON_SCREEN )
 //    {
 //      // # of Steps to execute before sprite #0 hit
 //      nStep = SPRRAM[ SPR_X ] * STEP_PER_SCANLINE / NES_DISP_WIDTH;
@@ -885,9 +720,9 @@ void InfoNES_Cycle()
 //      if ( ( PPU_R1 & R1_SHOW_SP ) && ( PPU_R1 & R1_SHOW_SCR ) )
 //        PPU_R2 |= R2_HIT_SP;
 //
-      //// NMI is required if there is necessity
-      //if ( ( PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
-      //  NMI_REQ;//经过部分游戏测试，这一段代码好像没有必要。而且NES文档也说它无用，其他几个模拟器也不用它。
+//      //// NMI is required if there is necessity
+//      //if ( ( PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
+//      //  NMI_REQ;//经过部分游戏测试，这一段代码好像没有必要。而且NES文档也说它无用，其他几个模拟器也不用它。
 //
 //      // Execute instructions
 //      K6502_Step( STEP_PER_SCANLINE - nStep );
@@ -896,11 +731,142 @@ void InfoNES_Cycle()
 //    {
 //      // Execute instructions
 //      K6502_Step( STEP_PER_SCANLINE );
+//      
+//      //加速
+////      if ( FrameCnt == 0 || FrameCnt == FrameSkip )
+////      	K6502_Step( 90 );
+////      else
+////      	K6502_Step( 40 );    
+//	}
+//
+//    // Frame IRQ in H-Sync
+//    FrameStep += STEP_PER_SCANLINE;
+//    if ( FrameStep > STEP_PER_FRAME && FrameIRQ_Enable )
+//    {
+//      FrameStep %= STEP_PER_FRAME;
+//      IRQ_REQ;
+//      APU_Reg[ 0x15 ] |= 0x40;
 //    }
 //
-//    if ( FrameCnt == 0 )
-//        // Render 1 scanlines
-//    	  InfoNES_DrawLine();
+//    // A mapper function in H-Sync
+//    //Map4
+//	//MapperHSync();
+//    
+//    // A function in H-Sync
+//    if ( InfoNES_HSync() == -1 )
+//      return;  // To the menu screen
+//
+//    // HSYNC Wait
+    //InfoNES_Wait();
+
+
+	//nesterJ
+
+	//if ( FrameCnt == 0 )											//如果在非跳桢期间
+	//{
+	//	if ( ( PPU_R1 & R1_SHOW_SCR ) || ( PPU_R1 & R1_SHOW_SP ) )		//在一桢新的画面开始时，如果背景或Sprite允许显示，则v=t
+	//		PPU_Addr = PPU_Temp;
+	//	for( PPU_Scanline = 0; PPU_Scanline < NES_DISP_HEIGHT; PPU_Scanline++ )		//显示在屏幕上的0-239共240条扫描线
+	//	{
+	//		K6502_Step( STEP_PER_SCANLINE );								//执行1条扫描线
+	//		buf = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8;			//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+	//		InfoNES_DrawLine2();											//绘制1条扫描线到图形缓冲区数组
+	//	}
+	//	InfoNES_LoadFrame();											//将图形缓冲区数组里的内容刷新到屏幕上
+	//}
+	//else															//如果在跳桢期间
+	//	K6502_Step( STEP_PER_SCANLINE * NES_DISP_HEIGHT );				//只执行240条扫描线而不绘制扫描线，当然也不刷新屏幕
+	if ( FrameCnt == 0 )											//如果在非跳桢期间
+	{
+		if ( ( PPU_R1 & R1_SHOW_SCR ) || ( PPU_R1 & R1_SHOW_SP ) )		//在一桢新的画面开始时，如果背景或Sprite允许显示，则v=t
+			PPU_Addr = PPU_Temp;
+		PPU_Scanline = 0;
+		for( ; PPU_Scanline < 8; PPU_Scanline++ )		//显示在屏幕上的0-7共8条扫描线
+		{
+			//K6502_Step( STEP_PER_SCANLINE );								//执行1条扫描线
+			if ( ( PPU_R1 & R1_SHOW_SCR ) || ( PPU_R1 & R1_SHOW_SP ) )
+			{
+				LOOPY_SCANLINE_START( PPU_Addr, PPU_Temp );
+				LOOPY_NEXT_LINE( PPU_Addr );
+			}
+		}
+		for( ; PPU_Scanline < 232; PPU_Scanline++ )		//显示在屏幕上的8-231共224条扫描线
+		{
+			K6502_Step( STEP_PER_SCANLINE );								//执行1条扫描线
+			buf = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8;			//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+			InfoNES_DrawLine2();											//绘制1条扫描线到图形缓冲区数组
+		}
+		for( ; PPU_Scanline < 240; PPU_Scanline++ )		//显示在屏幕上的232-239共8条扫描线
+		{
+			//K6502_Step( STEP_PER_SCANLINE );								//执行1条扫描线
+			if ( ( PPU_R1 & R1_SHOW_SCR ) || ( PPU_R1 & R1_SHOW_SP ) )
+			{
+				LOOPY_SCANLINE_START( PPU_Addr, PPU_Temp );
+				LOOPY_NEXT_LINE( PPU_Addr );
+			}
+		}
+		InfoNES_LoadFrame();											//将图形缓冲区数组里的内容刷新到屏幕上
+	}
+	else															//如果在跳桢期间
+		K6502_Step( STEP_PER_SCANLINE * NES_DISP_HEIGHT );				//只执行240条扫描线而不绘制扫描线，当然也不刷新屏幕
+
+	FrameCnt = ( FrameCnt >= FrameSkip ) ? 0 : FrameCnt + 1;		//循环跳桢状态
+
+	//if ( FrameIRQ_Enable )											//执行桢中断，不过由nester的源代码可知，它只有在map4和map40时执行
+	//{
+	//	IRQ_REQ;
+	//	APU_Reg[ 0x15 ] |= 0x40;
+	//}
+	K6502_Step( STEP_PER_SCANLINE );								//执行第240条扫描线
+
+	PPU_Scanline = 241;
+	PPU_R2 |= R2_IN_VBLANK;											//在VBlank开始时设置R2_IN_VBLANK标记
+	K6502_Step( 1 );												//在R2_IN_VBLANK标记和NMI之间执行一条指令
+	if ( PPU_R0 & R0_NMI_VB )										//如果R0_NMI_VB标记被设置
+		K6502_NMI();													//执行NMI中断
+	//PPU_Latch_Flag = 0;											//nesterJ没有在VBlank开始时复位PPU_Latch_Flag标记
+	//MapperVSync();												//在VBlank期间的Mapper交换，但我们现在的几个Mapper格式用不着这种交换方式
+	K6502_Step( STEP_PER_SCANLINE * 21 );							//执行21条扫描线
+	PPU_R2 &= 0x3F;//= 0;											//在VBlank结束时复位R2_IN_VBLANK和R2_HIT_SP标记，InfoNES采用的是全部复位
+	K6502_Step( STEP_PER_SCANLINE );								//执行最后1条扫描线
+
+	InfoNES_PadState( &PAD1_Latch, &PAD2_Latch, &PAD_System );		//获取手柄输入信息
+	if ( PAD_PUSH( PAD_System, PAD_SYS_QUIT ) )						//如果手柄按下了退出键，则退出模拟器，
+		return;
+	if ( !APU_Mute )												//如果没有将模拟器设为静音状态则输出声音
+		InfoNES_pAPUVsync();
+	
+	//for( PPU_Scanline = 0; PPU_Scanline < 263/*/(FrameSkip+1)*/; PPU_Scanline++ )		//为了使游戏运行速度不至于过快而进行的同步等待
+	//	InfoNES_Wait();
+	for( PPU_Scanline = 0; PPU_Scanline < 255/*/(FrameSkip+1)*/; PPU_Scanline++ )		//为了使游戏运行速度不至于过快而进行的同步等待
+		InfoNES_Wait();
+  }
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*              InfoNES_HSync() : A function in H-Sync               */
+/*                                                                   */
+/*===================================================================*/
+//int InfoNES_HSync()
+//{
+///*
+// *  A function in H-Sync
+// *
+// *  Return values
+// *    0 : Normally
+// *   -1 : Exit an emulation
+// */
+//
+//  /*-------------------------------------------------------------------*/
+//  /*  Render a scanline                                                */
+//  /*-------------------------------------------------------------------*/
+//  if ( FrameCnt == 0 &&
+//       PPU_ScanTable[ PPU_Scanline ] == SCAN_ON_SCREEN )
+//  {
+//    InfoNES_DrawLine();
+//  }
+//
 //  /*-------------------------------------------------------------------*/
 //  /*  Set new scroll values                                            */
 //  /*-------------------------------------------------------------------*/
@@ -912,33 +878,51 @@ void InfoNES_Cycle()
 //  PPU_Scr_H_Byte = PPU_Scr_H_Byte_Next;
 //  PPU_Scr_H_Bit  = PPU_Scr_H_Bit_Next;
 //
-//  }
-//  if ( FrameCnt == 0 )
+//  /*-------------------------------------------------------------------*/
+//  /*  Next Scanline                                                    */
+//  /*-------------------------------------------------------------------*/
+//  PPU_Scanline = ( PPU_Scanline == SCAN_VBLANK_END ) ? 0 : PPU_Scanline + 1;
+//
+//  /*-------------------------------------------------------------------*/
+//  /*  Operation in the specific scanning line                          */
+//  /*-------------------------------------------------------------------*/
+//  switch ( PPU_Scanline )
+//  {
+//    case SCAN_TOP_OFF_SCREEN:
+//      // Reset a PPU status
+//      PPU_R2 = 0;
+//
+//      // Set up a character data
+//      if ( NesHeader.byVRomSize == 0 && FrameCnt == 0 )
+//        InfoNES_SetupChr();
+//
+//      // Get position of sprite #0
+//      InfoNES_GetSprHitY();
+//      break;
+//
+//    case SCAN_UNKNOWN_START:
+//      if ( FrameCnt == 0 )
+//      {
 //        // Transfer the contents of work frame on the screen
 //        InfoNES_LoadFrame();
+//        
+//#if 0
+//        // Switching of the double buffer
+//        WorkFrameIdx = 1 - WorkFrameIdx;
+//        WorkFrame = DoubleFrame[ WorkFrameIdx ];
+//#endif
+//      }
+//      break;
 //
-//for( PPU_Scanline = 240; PPU_Scanline < 243; PPU_Scanline++ )
-//{
-//	K6502_Step( STEP_PER_SCANLINE );
-//  /*-------------------------------------------------------------------*/
-//  /*  Set new scroll values                                            */
-//  /*-------------------------------------------------------------------*/
-//  PPU_Scr_V      = PPU_Scr_V_Next;
-//  PPU_Scr_V_Byte = PPU_Scr_V_Byte_Next;
-//  PPU_Scr_V_Bit  = PPU_Scr_V_Bit_Next;
-//
-//  PPU_Scr_H      = PPU_Scr_H_Next;
-//  PPU_Scr_H_Byte = PPU_Scr_H_Byte_Next;
-//  PPU_Scr_H_Bit  = PPU_Scr_H_Bit_Next;
-//
-//}
-//
-//    // SCAN_VBLANK_START:
+//    case SCAN_VBLANK_START:
 //      // FrameCnt + 1
 //      FrameCnt = ( FrameCnt >= FrameSkip ) ? 0 : FrameCnt + 1;
 //
 //      // Set a V-Blank flag
-//      PPU_R2 = R2_IN_VBLANK;
+//      //PPU_R2 = R2_IN_VBLANK;
+//	  //FCEU
+//	  PPU_R2 |= R2_IN_VBLANK;
+//	  PPU_R3 = PPUSPL = 0;
 //
 //      // Reset latch flag
 //      PPU_Latch_Flag = 0;
@@ -948,7 +932,7 @@ void InfoNES_Cycle()
 //        InfoNES_pAPUVsync();
 //
 //      // A mapper function in V-Sync
-//  //    MapperVSync();
+////加速       MapperVSync();
 //
 //      // Get the condition of the joypad
 //      InfoNES_PadState( &PAD1_Latch, &PAD2_Latch, &PAD_System );
@@ -959,194 +943,14 @@ void InfoNES_Cycle()
 //
 //      // Exit an emulation if a QUIT button is pushed
 //      if ( PAD_PUSH( PAD_System, PAD_SYS_QUIT ) )
-//        return;  // Exit an emulation      
+//        return -1;  // Exit an emulation      
+//      
+//      break;
+//  }
 //
-//      // Execute instructions
-//for( PPU_Scanline = 243; PPU_Scanline < 263; PPU_Scanline++ )
-//{
-//	K6502_Step( STEP_PER_SCANLINE );
-//  /*-------------------------------------------------------------------*/
-//  /*  Set new scroll values                                            */
-//  /*-------------------------------------------------------------------*/
-//  PPU_Scr_V      = PPU_Scr_V_Next;
-//  PPU_Scr_V_Byte = PPU_Scr_V_Byte_Next;
-//  PPU_Scr_V_Bit  = PPU_Scr_V_Bit_Next;
-//
-//  PPU_Scr_H      = PPU_Scr_H_Next;
-//  PPU_Scr_H_Byte = PPU_Scr_H_Byte_Next;
-//  PPU_Scr_H_Bit  = PPU_Scr_H_Bit_Next;
-//
+//  // Successful
+//  return 0;
 //}
-//
-//	//K6502_Step( STEP_PER_SCANLINE * 22 );
-//    // Frame IRQ in V-Sync
-//    if ( FrameIRQ_Enable )
-//    {
-//      IRQ_REQ;
-//      APU_Reg[ 0x15 ] |= 0x40;
-//    }
-//
-//    // HSYNC Wait
-//    for( PPU_Scanline = 0; PPU_Scanline < 262; PPU_Scanline++ )
-//		InfoNES_Wait();
-
-
-	////nesterJ
-	//PPU_R2 &= 0x3F;//= 0;				//在一桢新的画面开始时复位R2_IN_VBLANK和R2_HIT_SP标记，InfoNES采用的是全部复位
-	//if ( ( PPU_R1 & R1_SHOW_SCR ) && ( PPU_R1 & R1_SHOW_SP ) )
-	//	PPU_Addr = PPU_Temp;				//在一桢新的画面开始时，如果背景和Sprite都允许显示，则v=t
-
-	//for( PPU_Scanline = 0; PPU_Scanline < 240; PPU_Scanline++ )
-	//{
-	//	K6502_Step( STEP_PER_SCANLINE );	//执行一条扫描线
-	//	if ( FrameCnt == 0 )
-	//		InfoNES_DrawLine2();				//在非跳桢期间绘制一条扫描线
-	//}
-
-	//if ( FrameCnt == 0 )
-	//	InfoNES_LoadFrame();				//在非跳桢期间将图形缓冲区数组里的内容刷新到屏幕上
-	//FrameCnt = ( FrameCnt >= FrameSkip ) ? 0 : FrameCnt + 1;	//循环跳桢状态
-
-	//K6502_Step( STEP_PER_SCANLINE );	//执行第240条扫描线
-	//PPU_R2 |= R2_IN_VBLANK;				//设置R2_IN_VBLANK标记
-	////PPU_Latch_Flag = 0;				//nesterJ没有在VBlank开始时复位PPU_Latch_Flag标记
-
-	//if ( !APU_Mute )
-	//	InfoNES_pAPUVsync();				//如果没有将模拟器设为静音状态则输出声音
-
-	////MapperVSync();					//在VBlank期间的Mapper交换，但我们现在的几个Mapper格式用不着这种交换方式
-
-	//InfoNES_PadState( &PAD1_Latch, &PAD2_Latch, &PAD_System );	//获取手柄输入信息
-
-	//if ( PPU_R0 & R0_NMI_VB )
-	//	NMI_REQ;							//如果游戏设置了R0_NMI_VB标记，则接下来要执行一次NMI程序
-
-	//if ( PAD_PUSH( PAD_System, PAD_SYS_QUIT ) )		//如果手柄按下了退出键，则退出模拟器，
-	//	return;
-
-	//K6502_Step( STEP_PER_SCANLINE * 22 );	//执行剩下的22条扫描线
-
-	//// Frame IRQ in V-Sync
-	//if ( FrameIRQ_Enable )
-	//{
-	//	IRQ_REQ;
-	//	APU_Reg[ 0x15 ] |= 0x40;
-	//}
-
-	//// HSYNC Wait
-	//for( PPU_Scanline = 0; PPU_Scanline < 263; PPU_Scanline++ )
-	//	InfoNES_Wait();
-  }
-}
-
-/*===================================================================*/
-/*                                                                   */
-/*              InfoNES_HSync() : A function in H-Sync               */
-/*                                                                   */
-/*===================================================================*/
-int InfoNES_HSync()
-{
-/*
- *  A function in H-Sync
- *
- *  Return values
- *    0 : Normally
- *   -1 : Exit an emulation
- */
-
-  /*-------------------------------------------------------------------*/
-  /*  Render a scanline                                                */
-  /*-------------------------------------------------------------------*/
-  if ( FrameCnt == 0 &&
-       PPU_ScanTable[ PPU_Scanline ] == SCAN_ON_SCREEN )
-  {
-    InfoNES_DrawLine();
-  }
-
-  /*-------------------------------------------------------------------*/
-  /*  Set new scroll values                                            */
-  /*-------------------------------------------------------------------*/
-  PPU_Scr_V      = PPU_Scr_V_Next;
-  PPU_Scr_V_Byte = PPU_Scr_V_Byte_Next;
-  PPU_Scr_V_Bit  = PPU_Scr_V_Bit_Next;
-
-  PPU_Scr_H      = PPU_Scr_H_Next;
-  PPU_Scr_H_Byte = PPU_Scr_H_Byte_Next;
-  PPU_Scr_H_Bit  = PPU_Scr_H_Bit_Next;
-
-  /*-------------------------------------------------------------------*/
-  /*  Next Scanline                                                    */
-  /*-------------------------------------------------------------------*/
-  PPU_Scanline = ( PPU_Scanline == SCAN_VBLANK_END ) ? 0 : PPU_Scanline + 1;
-
-  /*-------------------------------------------------------------------*/
-  /*  Operation in the specific scanning line                          */
-  /*-------------------------------------------------------------------*/
-  switch ( PPU_Scanline )
-  {
-    case SCAN_TOP_OFF_SCREEN:
-      // Reset a PPU status
-      PPU_R2 = 0;
-
-      // Set up a character data
-      if ( NesHeader.byVRomSize == 0 && FrameCnt == 0 )
-        InfoNES_SetupChr();
-
-      // Get position of sprite #0
-      InfoNES_GetSprHitY();
-      break;
-
-    case SCAN_UNKNOWN_START:
-      if ( FrameCnt == 0 )
-      {
-        // Transfer the contents of work frame on the screen
-        InfoNES_LoadFrame();
-        
-#if 0
-        // Switching of the double buffer
-        WorkFrameIdx = 1 - WorkFrameIdx;
-        WorkFrame = DoubleFrame[ WorkFrameIdx ];
-#endif
-      }
-      break;
-
-    case SCAN_VBLANK_START:
-      // FrameCnt + 1
-      FrameCnt = ( FrameCnt >= FrameSkip ) ? 0 : FrameCnt + 1;
-
-      // Set a V-Blank flag
-      //PPU_R2 = R2_IN_VBLANK;
-	  //FCEU
-	  PPU_R2 |= R2_IN_VBLANK;
-	  PPU_R3 = PPUSPL = 0;
-
-      // Reset latch flag
-      PPU_Latch_Flag = 0;
-
-      // pAPU Sound function in V-Sync
-      if ( !APU_Mute )
-        InfoNES_pAPUVsync();
-
-      // A mapper function in V-Sync
-//加速       MapperVSync();
-
-      // Get the condition of the joypad
-      InfoNES_PadState( &PAD1_Latch, &PAD2_Latch, &PAD_System );
-      
-      // NMI on V-Blank
-      if ( PPU_R0 & R0_NMI_VB )
-        NMI_REQ;
-
-      // Exit an emulation if a QUIT button is pushed
-      if ( PAD_PUSH( PAD_System, PAD_SYS_QUIT ) )
-        return -1;  // Exit an emulation      
-      
-      break;
-  }
-
-  // Successful
-  return 0;
-}
 
 /*===================================================================*/
 /*                                                                   */
@@ -1155,775 +959,846 @@ int InfoNES_HSync()
 /*===================================================================*/
 
 //nesterJ
-/*
-scanline start (if background or sprites are enabled):
-	v:0000010000011111=t:0000010000011111
-*/
-#define LOOPY_SCANLINE_START(v,t) \
-  { \
-    v = (v & 0xFBE0) | (t & 0x041F); \
-  }
-/*
-bits 12-14 are the tile Y offset.
-you can think of bits 5,6,7,8,9 as the "y scroll"(*8).  this functions
-slightly different from the X.  it wraps to 0 and bit 11 is switched when
-it's incremented from _29_ instead of 31.  there are some odd side effects
-from this.. if you manually set the value above 29 (from either 2005 or
-2006), the wrapping from 29 obviously won't happen, and attrib data will be
-used as name table data.  the "y scroll" still wraps to 0 from 31, but
-without switching bit 11.  this explains why writing 240+ to 'Y' in 2005
-appeared as a negative scroll value.
-*/
-#define LOOPY_NEXT_LINE(v) \
-  { \
-    if((v & 0x7000) == 0x7000) /* is subtile y offset == 7? */ \
-    { \
-      v &= 0x8FFF; /* subtile y offset = 0 */ \
-      if((v & 0x03E0) == 0x03A0) /* name_tab line == 29? */ \
-      { \
-        v ^= 0x0800;  /* switch nametables (bit 11) */ \
-        v &= 0xFC1F;  /* name_tab line = 0 */ \
-      } \
-      else \
-      { \
-        if((v & 0x03E0) == 0x03E0) /* line == 31? */ \
-        { \
-          v &= 0xFC1F;  /* name_tab line = 0 */ \
-        } \
-        else \
-        { \
-          v += 0x0020; \
-        } \
-      } \
-    } \
-    else \
-    { \
-      v += 0x1000; /* next subtile y offset */ \
-    } \
-  }
-#define VRAM(addr)  PPUBANK[ ( addr ) >> 10 ] [ ( addr ) & 0x3FF ]
-//#define DRAW_BG_PIXEL() \
-//  col = attrib_bits; \
-// \
-//  if(pattern_lo & pattern_mask) col |= 0x01; \
-//  if(pattern_hi & pattern_mask) col |= 0x02; \
-//    *p  = PalTable[col]; \
-//  p++;
 void InfoNES_DrawLine2()
 {
 /*
  *  绘制一条扫描线，参考了nesterJ的render_bg()和render_spr()。
  *
  */
-// if ( !( PPU_R1 & R1_SHOW_SCR ) )			//如果背景设定为关闭则将当前扫描线设为黑色（将颜色值设为0）。
-// {
-//   InfoNES_MemorySet( &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8, 0, 512 );				//NES_DISP_WIDTH * 2，因为*p是WORD类型
-// }
-//if ( ( PPU_R1 & R1_SHOW_SCR ) && ( PPU_R1 & R1_SHOW_SP ) )
+	//buf = p;									//暂存指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+	if ( ( PPU_R1 & R1_SHOW_SCR ) || ( PPU_R1 & R1_SHOW_SP ) )
+	{
+		LOOPY_SCANLINE_START( PPU_Addr, PPU_Temp );
+
+		//绘制背景
+		if ( PPU_R1 & R1_SHOW_SCR )
+		{
+			tile_x = (PPU_Addr & 0x001F);					//获取待绘制的Tile的索引值在其所属NameTable中的X坐标
+			tile_y = (PPU_Addr & 0x03E0) >> 5;
+
+			name_addr = 0x2000 + (PPU_Addr & 0x0FFF);		//获取待绘制的Tile的索引值在PPURAM中的地址
+
+			attrib_addr = 0x2000 + (PPU_Addr & 0x0C00) + 0x03C0 + ((tile_y & 0xFFFC)<<1) + (tile_x>>2);	//获取待绘制的Tile的颜色索引值的高二位所在的attribute byte在PPURAM中的地址
+
+			if(0x0000 == (tile_y & 0x0002))					//如果待绘制的Tile位于Square 0或1中，即该Tile颜色索引值的高二位在attribute byte的低四位中
+				if(0x0000 == (tile_x & 0x0002))						//如果待绘制的Tile位于Square 0中，即该Tile颜色索引值的高二位在attribute byte的0和1位
+					attrib_bits = (VRAM(attrib_addr) & 0x03) << 2;		//则获取该二位颜色索引值
+				else												//如果待绘制的Tile位于Square 1中，即该Tile颜色索引值的高二位在attribute byte的2和3位
+					attrib_bits = (VRAM(attrib_addr) & 0x0C);				//则获取该二位颜色索引值
+			else												//如果待绘制的Tile位于Square 1或2中，即该Tile颜色索引值的高二位在attribute byte的高四位中
+				if(0x0000 == (tile_x & 0x0002))						//如果待绘制的Tile位于Square 2中，即该Tile颜色索引值的高二位在attribute byte的4和5位
+					attrib_bits = (VRAM(attrib_addr) & 0x30) >> 2;		//则获取该二位颜色索引值
+				else												//如果待绘制的Tile位于Square 3中，即该Tile颜色索引值的高二位在attribute byte的6和7位
+					attrib_bits = (VRAM(attrib_addr) & 0xC0) >> 4;		//则获取该二位颜色索引值
+
+			p = buf - PPU_x;								//将指针指向图形缓冲区数组中为显示一条完整的扫描线所需绘制的32 + 1个Tile中的第一个Tile的开始地址，如果PPU_x不等于零，那它就位于屏幕左面外边的8个像素中
+
+			// draw 33 tiles
+			for( int i = 33; i; i--)
+			{
+				pattern_addr = bg_pattern_table_addr + ((WORD)VRAM(name_addr) << 4) + ((PPU_Addr & 0x7000) >> 12);	//获取待绘制的位于当前扫描线上的Tile中的8个像素的第1个像素的颜色索引值的0位在PPURAM中的地址
+				pattern_lo   = VRAM(pattern_addr);		//获取待绘制的位于当前扫描线上的Tile中的8个像素颜色索引值的0位的字节值
+				pattern_hi   = VRAM(pattern_addr+8);		//获取待绘制的位于当前扫描线上的Tile中的8个像素颜色索引值的1位的字节值
+
+				//将相关像素颜色值绘制到图形缓冲区的数组中，该方法参考自FCEU，比InfoNES用的方法快
+				c1 = ( ( pattern_lo >> 1 ) & 0x55 ) | ( pattern_hi & 0xAA );	//获取待绘制的位于当前扫描线上的Tile中的8个像素中的第0、2、4、6个像素的颜色索引值的低二位组成的的字节值
+				c2 = ( pattern_lo & 0x55 ) | ( ( pattern_hi << 1 ) & 0xAA );	//获取待绘制的位于当前扫描线上的Tile中的8个像素中的第1、3、5、7个像素的颜色索引值的低二位组成的的字节值
+				p[6]=PalTable[c1&3 | attrib_bits];
+				p[7]=PalTable[c2&3 | attrib_bits];
+				p[4]=PalTable[(c1>>2)&3 | attrib_bits];
+				p[5]=PalTable[(c2>>2)&3 | attrib_bits];
+				p[2]=PalTable[(c1>>4)&3 | attrib_bits];
+				p[3]=PalTable[(c2>>4)&3 | attrib_bits];
+				p[0]=PalTable[c1>>6 | attrib_bits];
+				p[1]=PalTable[c2>>6 | attrib_bits];
+				p += 8;
+
+				// //颜色
+				//p[6]=PPURAM[ 0x3f00 | ( c1&3 | attrib_bits ) ];
+				//p[7]=PPURAM[ 0x3f00 | ( c2&3 | attrib_bits ) ];
+				//p[4]=PPURAM[ 0x3f00 | ( (c1>>2)&3 | attrib_bits ) ];
+				//p[5]=PPURAM[ 0x3f00 | ( (c2>>2)&3 | attrib_bits ) ];
+				//p[2]=PPURAM[ 0x3f00 | ( (c1>>4)&3 | attrib_bits ) ];
+				//p[3]=PPURAM[ 0x3f00 | ( (c2>>4)&3 | attrib_bits ) ];
+				//p[0]=PPURAM[ 0x3f00 | ( c1>>6 | attrib_bits ) ];
+				//p[1]=PPURAM[ 0x3f00 | ( c2>>6 | attrib_bits ) ];
+				//p += 8;
+
+				//   BYTE pattern_mask = 0x80;
+				////p[ 0 ] = PalTable[ 3F00 + ( pattern_lo & pattern_mask | ( pattern_hi & pattern_mask ) | attrib_bits
+				//   DRAW_BG_PIXEL();
+				//   pattern_mask >>= 1;
+				//   DRAW_BG_PIXEL();
+				//   pattern_mask >>= 1;
+				//   DRAW_BG_PIXEL();
+				//   pattern_mask >>= 1;
+				//   DRAW_BG_PIXEL();
+				//   pattern_mask >>= 1;
+				//   DRAW_BG_PIXEL();
+				//   pattern_mask >>= 1;
+				//   DRAW_BG_PIXEL();
+				//   pattern_mask >>= 1;
+				//   DRAW_BG_PIXEL();
+				//   pattern_mask >>= 1;
+				//   DRAW_BG_PIXEL();
+
+				tile_x++;
+				name_addr++;
+
+				//下一个Tile是否正在从一个Square水平转向另一个Square？  are we crossing a dual-tile boundary?
+				if(0x0000 == (tile_x & 0x0001))
+				{
+					//下一个Tile是否正在从一个attribute table水平转向另一个attribute table？  are we crossing a quad-tile boundary?
+					if(0x0000 == (tile_x & 0x0003))
+					{
+						//下一个Tile是否正在从一个name table水平转向另一个跨越name table？  are we crossing a name table boundary?
+						if(0x0000 == (tile_x & 0x001F))
+						{
+							name_addr ^= 0x0400;		//切换name tables
+							attrib_addr ^= 0x0400;
+							name_addr -= 0x0020;
+							attrib_addr -= 0x0008;
+							tile_x -= 0x0020;
+						}
+
+						attrib_addr++;
+					}
+
+					//获取下一个Tile所处Square的高二位颜色索引值
+					if(0x0000 == (tile_y & 0x0002))
+						if(0x0000 == (tile_x & 0x0002))
+							attrib_bits = (VRAM(attrib_addr) & 0x03) << 2;
+						else
+							attrib_bits = (VRAM(attrib_addr) & 0x0C);
+					else
+						if(0x0000 == (tile_x & 0x0002))
+							attrib_bits = (VRAM(attrib_addr) & 0x30) >> 2;
+						else
+							attrib_bits = (VRAM(attrib_addr) & 0xC0) >> 4;
+				}
+			}
+			if ( !( PPU_R1 & R1_CLIP_BG ) )			//如果设定了背景修剪状态的话则把画面左边8个像素修剪掉，这是为了不至于显示由于水平卷轴而带来的画面左边不对齐的瑕疵
+				for( int i = 0; i < 8; i++ )
+					buf[ i ] = PalTable[ 0 ];
+		}
+		else			//如果背景设定为关闭则将当前扫描线设为背景色。
+			for(int i = 0; i < NES_DISP_WIDTH; i++ )
+				buf[ i ] = PalTable[ 0 ];
+    //if ( PPU_UpDown_Clip && 
+    //   ( SCAN_ON_SCREEN_START > PPU_Scanline || PPU_Scanline > SCAN_BOTTOM_OFF_SCREEN_START ) )
+    //  InfoNES_MemorySet( buf, 0, NES_DISP_WIDTH << 1 );
+
+		//绘制Sprite
+		if ( PPU_R1 & R1_SHOW_SP )
+		{
+			num_sprites = 0;
+			spr_height = ( PPU_R0 & R0_SP_SIZE ) ? 16 : 8;
+			InfoNES_MemorySet( solid_buf, 0, NES_DISP_WIDTH );		//清空solid_buf
+
+			//绘制Sprite 0
+			spr = &SPRRAM[ 0 ];				//将指针指向Sprite 0中的SPRRAM的入口
+			spr_y = spr[ SPR_Y ] + 1;		//获取Sprite 0的Y坐标，加1是因为其SPRRAM中保存的Y坐标本身就是减1的
+			//if( !( spr_y > PPU_Scanline) || ((spr_y+(spr_height)) <= PPU_Scanline))		//可以用来发现Sprite 0
+			if( !(( spr_y > PPU_Scanline) || ((spr_y+(spr_height)) <= PPU_Scanline)))	//如果Sprite 0在当前的扫描线上
+			{
+				num_sprites++;
+				spr_x = spr[ SPR_X ];			//获取Sprite 0的X坐标
+				start_x = 0;
+				end_x = 8;
+				if((spr_x + 7) > 255)			//如果Sprite 0最右边像素的X坐标超过255则把超出部分修剪掉  clip right
+					end_x -= ((spr_x + 7) - 255);
+				//if( (spr_x < 8) && (PPU_R1 & R1_CLIP_SP))		//如果Sprite 0的X坐标小于8且设定了Sprite修剪状态的话则把小于8的部分修剪掉  clip left
+				//{
+				//	if(0 == spr_x) continue;						//当然如果Sprite 0的X坐标等于0的话则不理会该Sprite，因为整个Sprite都需要被修剪掉
+				//	start_x += (8 - spr_x);
+				//}
+				y = PPU_Scanline - spr_y;					//获取待绘制的位于当前扫描线上的Sprite 0中的8个像素相对于Sprite 0自身的的Y坐标
+				p = buf + spr_x + start_x;					//将指针指向图形缓冲区数组中Sprite 0所需绘制的第一个像素对应的地址
+				solid = solid_buf + spr_x + start_x;		//将指针指向扫描线与Sprite重叠标记数组solid_buf中Sprite 0所需绘制的第一个像素对应的地址
+
+				//Sprite 0是否有水平翻转属性？
+				if( spr[ SPR_ATTR]  & SPR_ATTR_H_FLIP )		//有
+				{
+					inc_x = -1;
+					start_x = 7 - start_x;//加速(8-1) - start_x;
+					end_x = 7 - end_x;//加速(8-1) - end_x;
+				}
+				else										//没有
+					inc_x = 1;
+
+				///Sprite 0是否有垂直翻转属性？
+				if( spr[ SPR_ATTR ] & SPR_ATTR_V_FLIP )		//有
+					y = (spr_height-1) - y;
+
+				priority = spr[ SPR_ATTR ] & SPR_ATTR_PRI;		//获取Sprite 0的优先权
+				for( x = start_x; x != end_x; x += inc_x )
+				{
+					col = 0;
+					if( spr_height == 16 )
+					{
+						tile_addr = spr[ SPR_CHR ] << 4;			//获取Sprite 0所使用的Tile在一个Pattern Table中的相对地址
+						if(spr[ SPR_CHR ] & 0x01)					//如果Sprite 0的Tile Index #是奇数
+						{
+							tile_addr += 0x1000;						//从第二个Pattern Table中索引Tile
+							if(y < 8) tile_addr -= 16;					//如果当前扫描线位于Sprite #的上半部分则索引前一个相邻的Tile
+						}
+						else										//如果Sprite 0的Tile Index #是偶数
+							if(y >= 8) tile_addr += 16;					//如果当前扫描线位于Sprite 0的下半部分则索引下一个相邻的Tile
+						tile_addr += y & 0x07;				//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的0位在PPURAM中的地址
+						tile_mask = 0x80 >> x;//加速(x & 0x07);
+					}
+					else
+					{
+						tile_addr = spr[ SPR_CHR ] << 4;			//获取Sprite 0所使用的Tile在一个Pattern Table中的相对地址
+						tile_addr += y & 0x07;				//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的0位在一个Pattern Table中的相对地址
+						tile_addr += spr_pattern_table_addr;		//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的0位在PPURAM中的地址
+						tile_mask = 0x80 >> x;//加速(x & 0x07);
+					}
+
+					if(VRAM(tile_addr) & tile_mask) col |= 0x01;	//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的0位
+					tile_addr += 8;
+					if(VRAM(tile_addr) & tile_mask) col |= 0x02;	//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的1位
+
+					if(spr[ SPR_ATTR ] & 0x02) col |= 0x08;			//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的3位
+					if(spr[ SPR_ATTR ] & 0x01) col |= 0x04;			//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的2位
+					//col |= ( spr[ SPR_ATTR ] & SPR_ATTR_COLOR ) << 2;
+
+					if(col & 0x03)						//如果待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的低二位为不为0即它索引的颜色不是透明色
+					{
+						*solid = 1;							//设置Sprite #占用该像素
+
+						// set sprite 0 hit flag
+						if(!( PPU_R2 & R2_HIT_SP))			//如果还没有设置过Sprite 0点击标记
+						{
+							if( *p != PalTable[ 0x00 ] )			//如果与待绘制的位于当前扫描线上的Tile中的像素同坐标的背景像素的颜色不是透明色
+								////颜色
+								//         if( *p != PPURAM[ 0x3f00 ] )
+							{
+								PPU_R2 |= R2_HIT_SP;					//设置Sprite 0点击标记
+							}
+						}
+
+						if(priority)							//如果Sprite 0的优先权比较低
+						{
+							if( *p == PalTable[ 0x00 ] )			//只有在与待绘制的位于当前扫描线上的Tile中的像素同坐标的背景像素的颜色是透明色的情况下才绘制该像素
+								////颜色
+								//if( *p == PPURAM[ 0x3f00 ] )
+							{
+								*p  = PalTable[ 0x10 + col ];
+								////颜色
+								//	*p  = PPURAM[ 0x3f10 + col ];
+
+								//*p  = 0x40 + ((PPU_R1 & 1) ? spr_pal[col] & 0xF0 : spr_pal[col]);
+							}
+						}
+						else									//如果Sprite 0的优先权比较高
+						{
+							*p  = PalTable[ 0x10 + col ];			//在当前背景的前面绘制该像素
+							////颜色
+							//*p  = PPURAM[ 0x3f10 + col ];			//在当前背景的前面绘制该像素
+
+							//if(!(*solid))
+							//{
+							//  *p  = 0x40 + ((PPU_R1 & 1) ? spr_pal[col] & 0xF0 : spr_pal[col]);
+							//  (*solid) |= SPR_WRITTEN_FLAG;
+							//}
+						}
+					}
+					p++;
+					solid++;
+				}
+			}
+
+			for(s = 1; s < 64; s++)
+			{
+				spr = &SPRRAM[ s << 2 ];		//将指针指向Sprite #中的SPRRAM的入口，s乘以4是因为每个Sprite在SPRRAM中占用4个字节
+
+				spr_y = spr[ SPR_Y ] + 1;		//获取Sprite #的Y坐标，加1是因为其SPRRAM中保存的Y坐标本身就是减1的
+
+				//如果Sprite #不在当前的扫描线上则不理会该Sprite
+				if((spr_y > PPU_Scanline) || ((spr_y+(spr_height)) <= PPU_Scanline))
+					continue;
+
+				num_sprites++;
+				//if(num_sprites > 8)//是否在同一条扫描线上有超过8个Sprite的存在
+				//{
+				//  if(!NESTER_settings.nes.graphics.show_more_than_8_sprites) break;
+				//}
+
+				spr_x = spr[ SPR_X ];			//获取Sprite #的X坐标
+
+				start_x = 0;
+				end_x = 8;
+
+				//如果Sprite #最右边像素的X坐标超过255则把超出部分修剪掉  clip right
+				if((spr_x + 7) > 255)
+				{
+					end_x -= ((spr_x + 7) - 255);
+				}
+
+				//如果Sprite #的X坐标小于8且设定了Sprite修剪状态的话则把小于8的部分修剪掉  clip left
+				if( s && (spr_x < 8) && (PPU_R1 & R1_CLIP_SP))
+				{
+					if(0 == spr_x) continue;		//当然如果Sprite #的X坐标等于0的话则不理会该Sprite，因为整个Sprite都需要被修剪掉
+					start_x += (8 - spr_x);
+				}
+
+				y = PPU_Scanline - spr_y;					//获取待绘制的位于当前扫描线上的Sprite #中的8个像素相对于Sprite #自身的的Y坐标
+
+				p = buf + spr_x + start_x;					//将指针指向图形缓冲区数组中Sprite #所需绘制的第一个像素对应的地址
+				solid = solid_buf + spr_x + start_x;		//将指针指向扫描线与Sprite重叠标记数组solid_buf中Sprite #所需绘制的第一个像素对应的地址
+
+				//Sprite #是否有水平翻转属性？
+				if( spr[ SPR_ATTR]  & SPR_ATTR_H_FLIP )		//有
+				{
+					inc_x = -1;
+					start_x = 7 - start_x;//加速(8-1) - start_x;
+					end_x = 7 - end_x;//加速(8-1) - end_x;
+				}
+				else										//没有
+					inc_x = 1;
+
+				///Sprite #是否有垂直翻转属性？
+				if( spr[ SPR_ATTR ] & SPR_ATTR_V_FLIP )		//有
+					y = (spr_height-1) - y;
+
+				//获取Sprite #的优先权
+				priority = spr[ SPR_ATTR ] & SPR_ATTR_PRI;
+
+				for( x = start_x; x != end_x; x += inc_x )
+				{
+					col = 0;
+
+					//如果该像素已经由别的Sprite占用则不再绘制
+					if( !( *solid ) )
+					{
+						if( spr_height == 16 )
+						{
+							tile_addr = spr[ SPR_CHR ] << 4;			//获取Sprite #所使用的Tile在一个Pattern Table中的相对地址
+							if(spr[ SPR_CHR ] & 0x01)					//如果Sprite #的Tile Index #是奇数
+							{
+								tile_addr += 0x1000;						//从第二个Pattern Table中索引Tile
+								if(y < 8) tile_addr -= 16;					//如果当前扫描线位于Sprite #的上半部分则索引前一个相邻的Tile
+							}
+							else										//如果Sprite #的Tile Index #是偶数
+								if(y >= 8) tile_addr += 16;					//如果当前扫描线位于Sprite #的下半部分则索引下一个相邻的Tile
+							tile_addr += y & 0x07;				//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的0位在PPURAM中的地址
+							tile_mask = 0x80 >> x;//加速(x & 0x07);
+						}
+						else
+						{
+							tile_addr = spr[ SPR_CHR ] << 4;			//获取Sprite #所使用的Tile在一个Pattern Table中的相对地址
+							tile_addr += y & 0x07;				//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的0位在一个Pattern Table中的相对地址
+							tile_addr += spr_pattern_table_addr;		//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的0位在PPURAM中的地址
+							tile_mask = 0x80 >> x;//加速(x & 0x07);
+						}
+
+						if(VRAM(tile_addr) & tile_mask) col |= 0x01;	//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的0位
+						tile_addr += 8;
+						if(VRAM(tile_addr) & tile_mask) col |= 0x02;	//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的1位
+
+						if(spr[ SPR_ATTR ] & 0x02) col |= 0x08;			//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的3位
+						if(spr[ SPR_ATTR ] & 0x01) col |= 0x04;			//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的2位
+						//col |= ( spr[ SPR_ATTR ] & SPR_ATTR_COLOR ) << 2;
+
+						if(col & 0x03)						//如果待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的低二位为不为0即它索引的颜色不是透明色
+						{
+							*solid = 1;							//设置Sprite #占用该像素
+
+							//// set sprite 0 hit flag
+							//if(!s && !( PPU_R2 & R2_HIT_SP))								//如果是Sprite 0
+							//{
+							//	if( *p != PalTable[ 0x00 ] )			//如果与待绘制的位于当前扫描线上的Tile中的像素同坐标的背景像素的颜色不是透明色
+							//		////颜色
+							//		//         if( *p != PPURAM[ 0x3f00 ] )
+							//	{
+							//		PPU_R2 |= R2_HIT_SP;					//设置Sprite 0点击标记
+							//	}
+							//}
+
+							if(priority)							//如果Sprite #的优先权比较低
+							{
+								if( *p == PalTable[ 0x00 ] )			//只有在与待绘制的位于当前扫描线上的Tile中的像素同坐标的背景像素的颜色是透明色的情况下才绘制该像素
+									////颜色
+									//if( *p == PPURAM[ 0x3f00 ] )
+								{
+									*p  = PalTable[ 0x10 + col ];
+									////颜色
+									//	*p  = PPURAM[ 0x3f10 + col ];
+
+									//*p  = 0x40 + ((PPU_R1 & 1) ? spr_pal[col] & 0xF0 : spr_pal[col]);
+								}
+							}
+							else									//如果Sprite #的优先权比较高
+							{
+								*p  = PalTable[ 0x10 + col ];			//在当前背景的前面绘制该像素
+								////颜色
+								//*p  = PPURAM[ 0x3f10 + col ];			//在当前背景的前面绘制该像素
+
+								//if(!(*solid))
+								//{
+								//  *p  = 0x40 + ((PPU_R1 & 1) ? spr_pal[col] & 0xF0 : spr_pal[col]);
+								//  (*solid) |= SPR_WRITTEN_FLAG;
+								//}
+							}
+						}
+					}
+					p++;
+					solid++;
+				}
+			}
+			//// added by rinao
+			//if(num_sprites >= 8)
+			//{
+			//	PPU_R2 |= 0x20;
+			//}
+			//else
+			//{
+			//	PPU_R2 &= 0xDF;
+			//}
+		}
+		LOOPY_NEXT_LINE( PPU_Addr );
+	}
+}
+
+//void InfoNES_DrawLine()
 //{
-//LOOPY_SCANLINE_START( PPU_Addr, PPU_Temp );
+///*
+// *  Render a scanline
+// *
+// */
 //
+//  int nX;
+//  int nY;
+//  int nY4;
+//  int nYBit;
+//  WORD *pPalTbl;
+//  BYTE *pAttrBase;
+//  WORD *pPoint;
+//  int nNameTable;
+//  BYTE *pbyNameTable;
+//  BYTE *pbyChrData;
+//  BYTE *pSPRRAM;
+//  int nAttr;
+//  int nSprCnt;
+//  int nIdx;
+//  int nSprData;
+//  BYTE bySprCol;
+//  BYTE pSprBuf[ NES_DISP_WIDTH + 7 ];
 //
-//  //绘制背景
-// if ( PPU_R1 & R1_SHOW_SCR )
-// {
-//  p = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8 - PPU_x;	//将指针指向图形缓冲区数组中为显示一条完整的扫描线所需绘制的32 + 1个Tile中的第一个Tile的开始地址，如果PPU_x不等于零，那它就位于屏幕左面外边的8个像素中
+//  /*-------------------------------------------------------------------*/
+//  /*  Render Background                                                */
+//  /*-------------------------------------------------------------------*/
 //
-//  tile_x = (PPU_Addr & 0x001F);					//获取待绘制的Tile的索引值在其所属NameTable中的X坐标
-//  tile_y = (PPU_Addr & 0x03E0) >> 5;
+//  /* MMC5 VROM switch */
+////减容   MapperRenderScreen( 1 );
+//	  
+//	  ////FCEU
+//	  //if ( ( PPU_R1 & R1_SHOW_SP ) || ( PPU_R1 & R1_SHOW_SCR ) )
+//	  //{
+//		 // PPU_Addr |= PPU_Temp & 0x41F;
+//		 // InfoNES_SetupScr();
+//	  //}
+////LOOPY_SCANLINE_START( PPU_Addr, PPU_Temp );
+////InfoNES_SetupScr();
+//  // Pointer to the render position
+//  pPoint = &WorkFrame[ PPU_Scanline * NES_DISP_WIDTH ];//指向图形缓冲区数组中当前扫描线开始地址的指针。
 //
-//  name_addr = 0x2000 + (PPU_Addr & 0x0FFF);		//获取待绘制的Tile的索引值在PPURAM中的地址
-//
-//  attrib_addr = 0x2000 + (PPU_Addr & 0x0C00) + 0x03C0 + ((tile_y & 0xFFFC)<<1) + (tile_x>>2);	//获取待绘制的Tile的颜色索引值的高二位所在的attribute byte在PPURAM中的地址
-//
-//  if(0x0000 == (tile_y & 0x0002))					//如果待绘制的Tile位于Square 0或1中，即该Tile颜色索引值的高二位在attribute byte的低四位中
-//    if(0x0000 == (tile_x & 0x0002))						//如果待绘制的Tile位于Square 0中，即该Tile颜色索引值的高二位在attribute byte的0和1位
-//      attrib_bits = (VRAM(attrib_addr) & 0x03) << 2;		//则获取该二位颜色索引值
-//    else												//如果待绘制的Tile位于Square 1中，即该Tile颜色索引值的高二位在attribute byte的2和3位
-//      attrib_bits = (VRAM(attrib_addr) & 0x0C);				//则获取该二位颜色索引值
-//  else												//如果待绘制的Tile位于Square 1或2中，即该Tile颜色索引值的高二位在attribute byte的高四位中
-//    if(0x0000 == (tile_x & 0x0002))						//如果待绘制的Tile位于Square 2中，即该Tile颜色索引值的高二位在attribute byte的4和5位
-//      attrib_bits = (VRAM(attrib_addr) & 0x30) >> 2;		//则获取该二位颜色索引值
-//    else												//如果待绘制的Tile位于Square 3中，即该Tile颜色索引值的高二位在attribute byte的6和7位
-//      attrib_bits = (VRAM(attrib_addr) & 0xC0) >> 4;		//则获取该二位颜色索引值
-//
-//  // draw 33 tiles
-//  for( int i = 33; i; i--)
+//  // Clear a scanline if screen is off
+//  if ( !( PPU_R1 & R1_SHOW_SCR ) )//如果背景设定为关闭则将当前扫描线设为黑色（将颜色值设为0）。
 //  {
-//      pattern_addr = bg_pattern_table_addr + ((WORD)VRAM(name_addr) << 4) + ((PPU_Addr & 0x7000) >> 12);	//获取待绘制的位于当前扫描线上的Tile中的8个像素的第1个像素的颜色索引值的0位在PPURAM中的地址
-//      pattern_lo   = VRAM(pattern_addr);		//获取待绘制的位于当前扫描线上的Tile中的8个像素颜色索引值的0位的字节值
-//      pattern_hi   = VRAM(pattern_addr+8);		//获取待绘制的位于当前扫描线上的Tile中的8个像素颜色索引值的1位的字节值
-//
-//	//将相关像素颜色值绘制到图形缓冲区的数组中，该方法参考自FCEU，比InfoNES用的方法快
-//	c1 = ( ( pattern_lo >> 1 ) & 0x55 ) | ( pattern_hi & 0xAA );	//获取待绘制的位于当前扫描线上的Tile中的8个像素中的第0、2、4、6个像素的颜色索引值的低二位组成的的字节值
-//	c2 = ( pattern_lo & 0x55 ) | ( ( pattern_hi << 1 ) & 0xAA );	//获取待绘制的位于当前扫描线上的Tile中的8个像素中的第1、3、5、7个像素的颜色索引值的低二位组成的的字节值
-//	p[6]=PalTable[c1&3 | attrib_bits];
-//	p[7]=PalTable[c2&3 | attrib_bits];
-//	p[4]=PalTable[(c1>>2)&3 | attrib_bits];
-//	p[5]=PalTable[(c2>>2)&3 | attrib_bits];
-//	p[2]=PalTable[(c1>>4)&3 | attrib_bits];
-//	p[3]=PalTable[(c2>>4)&3 | attrib_bits];
-//	p[0]=PalTable[c1>>6 | attrib_bits];
-//	p[1]=PalTable[c2>>6 | attrib_bits];
-//	p += 8;
-//
-//   //   pattern_mask = 0x80;
-//	  ////p[ 0 ] = PalTable[ 3F00 + ( pattern_lo & pattern_mask | ( pattern_hi & pattern_mask ) | attrib_bits
-//   //   DRAW_BG_PIXEL();
-//   //   pattern_mask >>= 1;
-//   //   DRAW_BG_PIXEL();
-//   //   pattern_mask >>= 1;
-//   //   DRAW_BG_PIXEL();
-//   //   pattern_mask >>= 1;
-//   //   DRAW_BG_PIXEL();
-//   //   pattern_mask >>= 1;
-//   //   DRAW_BG_PIXEL();
-//   //   pattern_mask >>= 1;
-//   //   DRAW_BG_PIXEL();
-//   //   pattern_mask >>= 1;
-//   //   DRAW_BG_PIXEL();
-//   //   pattern_mask >>= 1;
-//   //   DRAW_BG_PIXEL();
-//
-//      tile_x++;
-//      name_addr++;
-//
-//      //下一个Tile是否正在从一个Square水平转向另一个Square？  are we crossing a dual-tile boundary?
-//      if(0x0000 == (tile_x & 0x0001))
-//      {
-//        //下一个Tile是否正在从一个attribute table水平转向另一个attribute table？  are we crossing a quad-tile boundary?
-//        if(0x0000 == (tile_x & 0x0003))
-//        {
-//          //下一个Tile是否正在从一个name table水平转向另一个跨越name table？  are we crossing a name table boundary?
-//          if(0x0000 == (tile_x & 0x001F))
-//          {
-//            name_addr ^= 0x0400;		//切换name tables
-//            attrib_addr ^= 0x0400;
-//            name_addr -= 0x0020;
-//            attrib_addr -= 0x0008;
-//            tile_x -= 0x0020;
-//          }
-//
-//          attrib_addr++;
-//        }
-//
-//		//获取下一个Tile所处Square的高二位颜色索引值
-//		if(0x0000 == (tile_y & 0x0002))
-//          if(0x0000 == (tile_x & 0x0002))
-//            attrib_bits = (VRAM(attrib_addr) & 0x03) << 2;
-//          else
-//            attrib_bits = (VRAM(attrib_addr) & 0x0C);
-//        else
-//          if(0x0000 == (tile_x & 0x0002))
-//            attrib_bits = (VRAM(attrib_addr) & 0x30) >> 2;
-//          else
-//            attrib_bits = (VRAM(attrib_addr) & 0xC0) >> 4;
-//      }
-//  }
-//
-//  //if(bg_clip_left8())
-//  //{
-//  //  // clip left 8 pixels
-//  //  memset(buf + 8, NES::NES_COLOR_BASE + bg_pal[0], 8);
-//  //  memset(solid + 8, 0, sizeof(solid[0])*8);
-//  //}
-//  //  if ( !( PPU_R1 & R1_CLIP_BG ) )
-//  //  {
-//  //    WORD *pPointTop;
-//
-//  //    pPointTop = &WorkFrame[ PPU_Scanline * NES_DISP_WIDTH ];
-//  //    InfoNES_MemorySet( pPointTop, 0, 8 << 1 );
-//  //  }
-// }
-//
-//
-// //绘制Sprite
-// if ( PPU_R1 & R1_SHOW_SP )
-// {
-//  num_sprites = 0;
-//  spr_height = ( PPU_R0 & R0_SP_SIZE ) ? 16 : 8;
-//  InfoNES_MemorySet( solid_buf, 0, NES_DISP_WIDTH );		//清空solid_buf
-//
-//  for(s = 0; s < 64; s++)
-//  {
-//    spr = &SPRRAM[ s << 2 ];		//将指针指向Sprite #中的SPRRAM的入口，s乘以4是因为每个Sprite在SPRRAM中占用4个字节
-//
-//    spr_y = spr[ SPR_Y ] + 1;		//获取Sprite #的Y坐标，加1是因为其SPRRAM中保存的Y坐标本身就是减1的
-//
-//    //如果Sprite #不在当前的扫描线上则不理会该Sprite
-//    if((spr_y > PPU_Scanline) || ((spr_y+(spr_height)) <= PPU_Scanline))
-//      continue;
-//
-//    num_sprites++;
-//    //if(num_sprites > 8)//是否在同一条扫描线上有超过8个Sprite的存在
-//    //{
-//    //  if(!NESTER_settings.nes.graphics.show_more_than_8_sprites) break;
-//    //}
-//
-//    spr_x = spr[ SPR_X ];			//获取Sprite #的X坐标
-//
-//    start_x = 0;
-//    end_x = 8;
-//
-//    //如果Sprite #最右边像素的X坐标超过255则把超出部分修剪掉  clip right
-//    if((spr_x + 7) > 255)
-//    {
-//      end_x -= ((spr_x + 7) - 255);
-//    }
-//
-//    //如果Sprite #的X坐标小于8且设定了Sprite修剪状态的话则把小于8的部分修剪掉  clip left
-//    if((spr_x < 8) && (PPU_R1 & R1_CLIP_SP))
-//    {
-//      if(0 == spr_x) continue;		//当然如果Sprite #的X坐标等于0的话则不理会该Sprite，因为整个Sprite都需要被修剪掉
-//      start_x += (8 - spr_x);
-//    }
-//
-//	y = PPU_Scanline - spr_y;		//获取待绘制的位于当前扫描线上的Sprite #中的8个像素相对于Sprite #自身的的Y坐标
-//
-//    p = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8 + spr_x + start_x;	//将指针指向图形缓冲区数组中Sprite #所需绘制的第一个像素对应的地址
-//    solid = &solid_buf[ spr_x + start_x ];										//将指针指向扫描线与Sprite重叠标记数组solid_buf中Sprite #所需绘制的第一个像素对应的地址
-//
-//    //Sprite #是否有水平翻转属性？
-//    if( spr[ SPR_ATTR]  & SPR_ATTR_H_FLIP )		//有
-//    {
-//      inc_x = -1;
-//      start_x = 7 - start_x;//加速(8-1) - start_x;
-//      end_x = 7 - end_x;//加速(8-1) - end_x;
-//    }
-//    else										//没有
-//      inc_x = 1;
-//
-//    ///Sprite #是否有垂直翻转属性？
-//    if( spr[ SPR_ATTR ] & SPR_ATTR_V_FLIP )		//有
-//      y = (spr_height-1) - y;
-//
-//    //获取Sprite #的优先权
-//    priority = spr[ SPR_ATTR ] & SPR_ATTR_PRI;
-//
-//    for( x = start_x; x != end_x; x += inc_x )
-//    {
-//      col = 0;
-//
-//      //如果该像素已经由别的Sprite占用则不再绘制
-//      if( !( *solid ) )
-//      {
-//        if( spr_height == 16 )
-//        {
-//          tile_addr = spr[ SPR_CHR ] << 4;			//获取Sprite #所使用的Tile在一个Pattern Table中的相对地址
-//          if(spr[ SPR_CHR ] & 0x01)					//如果Sprite #的Tile Index #是奇数
-//          {
-//            tile_addr += 0x1000;						//从第二个Pattern Table中索引Tile
-//            if(y < 8) tile_addr -= 16;					//如果当前扫描线位于Sprite #的上半部分则索引前一个相邻的Tile
-//          }
-//          else										//如果Sprite #的Tile Index #是偶数
-//            if(y >= 8) tile_addr += 16;					//如果当前扫描线位于Sprite #的下半部分则索引下一个相邻的Tile
-//          tile_addr += y & 0x07;				//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的0位在PPURAM中的地址
-//          tile_mask = 0x80 >> x;//加速(x & 0x07);
-//        }
-//        else
-//        {
-//          tile_addr = spr[ SPR_CHR ] << 4;			//获取Sprite #所使用的Tile在一个Pattern Table中的相对地址
-//          tile_addr += y & 0x07;				//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的0位在一个Pattern Table中的相对地址
-//          tile_addr += spr_pattern_table_addr;		//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的0位在PPURAM中的地址
-//          tile_mask = 0x80 >> x;//加速(x & 0x07);
-//        }
-//
-//        if(VRAM(tile_addr) & tile_mask) col |= 0x01;	//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的0位
-//        tile_addr += 8;
-//        if(VRAM(tile_addr) & tile_mask) col |= 0x02;	//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的1位
-//
-//        if(spr[ SPR_ATTR ] & 0x02) col |= 0x08;			//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的3位
-//        if(spr[ SPR_ATTR ] & 0x01) col |= 0x04;			//获取待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的2位
-//		//col |= ( spr[ SPR_ATTR ] & SPR_ATTR_COLOR ) << 2;
-//
-//        if(col & 0x03)						//如果待绘制的位于当前扫描线上的Tile中的像素的颜色索引值的低二位为不为0即它索引的颜色不是透明色
-//        {
-//          *solid = 1;							//设置Sprite #占用该像素
-//
-//          // set sprite 0 hit flag
-//          if(!s)								//如果是Sprite 0
-//          {
-//            if( *p != PalTable[ 0x00 ] )			//如果与待绘制的位于当前扫描线上的Tile中的像素同坐标的背景像素的颜色不是透明色
-//            {
-//              PPU_R2 |= R2_HIT_SP;					//设置Sprite 0点击标记
-//            }
-//          }
-//
-//          if(priority)							//如果Sprite #的优先权比较低
-//          {
-//            if( *p == PalTable[ 0x00 ] )			//只有在与待绘制的位于当前扫描线上的Tile中的像素同坐标的背景像素的颜色是透明色的情况下才绘制该像素
-//            {
-//				*p  = PalTable[ 0x10 + col ];
-//              //*p  = 0x40 + ((PPU_R1 & 1) ? spr_pal[col] & 0xF0 : spr_pal[col]);
-//            }
-//          }
-//          else									//如果Sprite #的优先权比较高
-//          {
-//			*p  = PalTable[ 0x10 + col ];			//在当前背景的前面绘制该像素
-//            //if(!(*solid))
-//            //{
-//            //  *p  = 0x40 + ((PPU_R1 & 1) ? spr_pal[col] & 0xF0 : spr_pal[col]);
-//            //  (*solid) |= SPR_WRITTEN_FLAG;
-//            //}
-//          }
-//        }
-//      }
-//      p++;
-//      solid++;
-//    }
-//  }
-//  // added by rinao
-//  if(num_sprites >= 8)
-//  {
-//    PPU_R2 |= 0x20;
+//    InfoNES_MemorySet( pPoint, 0, NES_DISP_WIDTH << 1 );
 //  }
 //  else
 //  {
-//    PPU_R2 &= 0xDF;
+//    nNameTable = PPU_NameTableBank;//待做PPU_NameTableBank
+//
+//    nY = PPU_Scr_V_Byte + ( PPU_Scanline >> 3 );
+//
+//    nYBit = PPU_Scr_V_Bit + ( PPU_Scanline & 7 );
+//
+//    if ( nYBit > 7 )
+//    {
+//      ++nY;
+//      nYBit &= 7;
+//    }
+//    nYBit <<= 3;
+//
+//    if ( nY > 29 )
+//    {
+//      // Next NameTable (An up-down direction)
+//      nNameTable ^= NAME_TABLE_V_MASK;
+//      nY -= 30;
+//    }
+//
+//    nX = PPU_Scr_H_Byte;
+//
+//    nY4 = ( ( nY & 2 ) << 1 );
+//
+//    /*-------------------------------------------------------------------*/
+//    /*  Rendering of the block of the left end                           */
+//    /*-------------------------------------------------------------------*/
+//
+//    pbyNameTable = PPUBANK[ nNameTable ] + nY * 32 + nX;
+//    pbyChrData = PPU_BG_Base + ( *pbyNameTable << 6 ) + nYBit;
+//    pAttrBase = PPUBANK[ nNameTable ] + 0x3c0 + ( nY / 4 ) * 8;
+//    pPalTbl =  &PalTable[ ( ( ( pAttrBase[ nX >> 2 ] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 ) ];
+//
+//    for ( nIdx = PPU_Scr_H_Bit; nIdx < 8; ++nIdx )
+//    {
+//      *( pPoint++ ) = pPalTbl[ pbyChrData[ nIdx ] ];
+//    }
+//
+//    // Callback at PPU read/write
+////加速     MapperPPU( PATTBL( pbyChrData ) );
+//
+//    ++nX;
+//    ++pbyNameTable;
+//
+//    /*-------------------------------------------------------------------*/
+//    /*  Rendering of the left table                                      */
+//    /*-------------------------------------------------------------------*/
+//
+//    for ( ; nX < 32; ++nX )
+//    {
+//      pbyChrData = PPU_BG_Base + ( *pbyNameTable << 6 ) + nYBit;
+//      pPalTbl = &PalTable[ ( ( ( pAttrBase[ nX >> 2 ] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 ) ];
+//
+//      pPoint[ 0 ] = pPalTbl[ pbyChrData[ 0 ] ]; 
+//      pPoint[ 1 ] = pPalTbl[ pbyChrData[ 1 ] ];
+//      pPoint[ 2 ] = pPalTbl[ pbyChrData[ 2 ] ];
+//      pPoint[ 3 ] = pPalTbl[ pbyChrData[ 3 ] ];
+//      pPoint[ 4 ] = pPalTbl[ pbyChrData[ 4 ] ];
+//      pPoint[ 5 ] = pPalTbl[ pbyChrData[ 5 ] ];
+//      pPoint[ 6 ] = pPalTbl[ pbyChrData[ 6 ] ];
+//      pPoint[ 7 ] = pPalTbl[ pbyChrData[ 7 ] ];
+//      pPoint += 8;
+//
+//      // Callback at PPU read/write
+////加速       MapperPPU( PATTBL( pbyChrData ) );
+//
+//      ++pbyNameTable;
+//    }
+//
+//    // Holizontal Mirror
+//    nNameTable ^= NAME_TABLE_H_MASK;
+//
+//    pbyNameTable = PPUBANK[ nNameTable ] + nY * 32;
+//    pAttrBase = PPUBANK[ nNameTable ] + 0x3c0 + ( nY / 4 ) * 8;
+//
+//    /*-------------------------------------------------------------------*/
+//    /*  Rendering of the right table                                     */
+//    /*-------------------------------------------------------------------*/
+//
+//    for ( nX = 0; nX < PPU_Scr_H_Byte; ++nX )
+//    {
+//      pbyChrData = PPU_BG_Base + ( *pbyNameTable << 6 ) + nYBit;
+//      pPalTbl = &PalTable[ ( ( ( pAttrBase[ nX >> 2 ] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 ) ];
+//
+//      pPoint[ 0 ] = pPalTbl[ pbyChrData[ 0 ] ]; 
+//      pPoint[ 1 ] = pPalTbl[ pbyChrData[ 1 ] ];
+//      pPoint[ 2 ] = pPalTbl[ pbyChrData[ 2 ] ];
+//      pPoint[ 3 ] = pPalTbl[ pbyChrData[ 3 ] ];
+//      pPoint[ 4 ] = pPalTbl[ pbyChrData[ 4 ] ];
+//      pPoint[ 5 ] = pPalTbl[ pbyChrData[ 5 ] ];
+//      pPoint[ 6 ] = pPalTbl[ pbyChrData[ 6 ] ];
+//      pPoint[ 7 ] = pPalTbl[ pbyChrData[ 7 ] ];
+//      pPoint += 8;
+//
+//      // Callback at PPU read/write
+////加速       MapperPPU( PATTBL( pbyChrData ) );
+//
+//      ++pbyNameTable;
+//    }
+//
+//    /*-------------------------------------------------------------------*/
+//    /*  Rendering of the block of the right end                          */
+//    /*-------------------------------------------------------------------*/
+//
+//    pbyChrData = PPU_BG_Base + ( *pbyNameTable << 6 ) + nYBit;
+//    pPalTbl = &PalTable[ ( ( ( pAttrBase[ nX >> 2 ] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 ) ];
+//    for ( nIdx = 0; nIdx < PPU_Scr_H_Bit; ++nIdx )
+//    {
+//      pPoint[ nIdx ] = pPalTbl[ pbyChrData[ nIdx ] ];
+//    }
+//
+//    // Callback at PPU read/write
+////加速     MapperPPU( PATTBL( pbyChrData ) );
+//
+//    /*-------------------------------------------------------------------*/
+//    /*  Backgroud Clipping                                               */
+//    /*-------------------------------------------------------------------*/
+//    if ( !( PPU_R1 & R1_CLIP_BG ) )
+//    {
+//      WORD *pPointTop;
+//
+//      pPointTop = &WorkFrame[ PPU_Scanline * NES_DISP_WIDTH ];
+//      InfoNES_MemorySet( pPointTop, 0, 8 << 1 );
+//    }
+//
+//    /*-------------------------------------------------------------------*/
+//    /*  Clear a scanline if up and down clipping flag is set             */
+//    /*-------------------------------------------------------------------*/
+//    /*if ( PPU_UpDown_Clip && 
+//       ( SCAN_ON_SCREEN_START > PPU_Scanline || PPU_Scanline > SCAN_BOTTOM_OFF_SCREEN_START ) )
+//    {
+//      WORD *pPointTop;
+//
+//      pPointTop = &WorkFrame[ PPU_Scanline * NES_DISP_WIDTH ];
+//      InfoNES_MemorySet( pPointTop, 0, NES_DISP_WIDTH << 1 );
+//    }*///加速  
 //  }
-// }
-//    LOOPY_NEXT_LINE( PPU_Addr );
+//
+//  /*-------------------------------------------------------------------*/
+//  /*  Render a sprite                                                  */
+//  /*-------------------------------------------------------------------*/
+//
+//  /* MMC5 VROM switch */
+////减容   MapperRenderScreen( 0 );
+//
+//  if ( PPU_R1 & R1_SHOW_SP )
+//  {
+//    // Reset Scanline Sprite Count
+//    PPU_R2 &= ~R2_MAX_SP;
+//
+//    // Reset sprite buffer
+//    InfoNES_MemorySet( pSprBuf, 0, sizeof pSprBuf );
+//
+//    // Render a sprite to the sprite buffer
+//    nSprCnt = 0;
+//    for ( pSPRRAM = SPRRAM + ( 63 << 2 ); pSPRRAM >= SPRRAM; pSPRRAM -= 4 )
+//    {
+//      nY = pSPRRAM[ SPR_Y ] + 1;
+//      if ( nY > PPU_Scanline || nY + PPU_SP_Height <= PPU_Scanline )
+//        continue;  // Next sprite
+//
+//     /*-------------------------------------------------------------------*/
+//     /*  A sprite in scanning line                                        */
+//     /*-------------------------------------------------------------------*/
+//
+//      // Holizontal Sprite Count +1
+//      ++nSprCnt;
+//      
+//      nAttr = pSPRRAM[ SPR_ATTR ];
+//      nYBit = PPU_Scanline - nY;
+//      nYBit = ( nAttr & SPR_ATTR_V_FLIP ) ? ( PPU_SP_Height - nYBit - 1 ) << 3 : nYBit << 3;
+//
+//      if ( PPU_R0 & R0_SP_SIZE )
+//      {
+//        // Sprite size 8x16
+//        if ( pSPRRAM[ SPR_CHR ] & 1 )
+//        {
+//          pbyChrData = ChrBuf + 256 * 64 + ( ( pSPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit;
+//        }
+//        else
+//        {
+//          pbyChrData = ChrBuf + ( ( pSPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit;
+//        }
+//      }
+//      else
+//      {
+//        // Sprite size 8x8
+//        pbyChrData = PPU_SP_Base + ( pSPRRAM[ SPR_CHR ] << 6 ) + nYBit;
+//      }
+//
+//      nAttr ^= SPR_ATTR_PRI;
+//      bySprCol = ( nAttr & ( SPR_ATTR_COLOR | SPR_ATTR_PRI ) ) << 2;
+//      nX = pSPRRAM[ SPR_X ];
+//
+//      if ( nAttr & SPR_ATTR_H_FLIP )
+//      {
+//        // Horizontal flip
+//        if ( pbyChrData[ 7 ] )
+//          pSprBuf[ nX ]     = bySprCol | pbyChrData[ 7 ];
+//        if ( pbyChrData[ 6 ] )
+//          pSprBuf[ nX + 1 ] = bySprCol | pbyChrData[ 6 ];
+//        if ( pbyChrData[ 5 ] )
+//          pSprBuf[ nX + 2 ] = bySprCol | pbyChrData[ 5 ];
+//        if ( pbyChrData[ 4 ] )
+//          pSprBuf[ nX + 3 ] = bySprCol | pbyChrData[ 4 ];
+//        if ( pbyChrData[ 3 ] )
+//          pSprBuf[ nX + 4 ] = bySprCol | pbyChrData[ 3 ];
+//        if ( pbyChrData[ 2 ] )
+//          pSprBuf[ nX + 5 ] = bySprCol | pbyChrData[ 2 ];
+//        if ( pbyChrData[ 1 ] )
+//          pSprBuf[ nX + 6 ] = bySprCol | pbyChrData[ 1 ];
+//        if ( pbyChrData[ 0 ] )
+//          pSprBuf[ nX + 7 ] = bySprCol | pbyChrData[ 0 ];
+//      }
+//      else
+//      {
+//        // Non flip
+//        if ( pbyChrData[ 0 ] )
+//          pSprBuf[ nX ]     = bySprCol | pbyChrData[ 0 ];
+//        if ( pbyChrData[ 1 ] )
+//          pSprBuf[ nX + 1 ] = bySprCol | pbyChrData[ 1 ];
+//        if ( pbyChrData[ 2 ] )
+//          pSprBuf[ nX + 2 ] = bySprCol | pbyChrData[ 2 ];
+//        if ( pbyChrData[ 3 ] )
+//          pSprBuf[ nX + 3 ] = bySprCol | pbyChrData[ 3 ];
+//        if ( pbyChrData[ 4 ] )
+//          pSprBuf[ nX + 4 ] = bySprCol | pbyChrData[ 4 ];
+//        if ( pbyChrData[ 5 ] )
+//          pSprBuf[ nX + 5 ] = bySprCol | pbyChrData[ 5 ];
+//        if ( pbyChrData[ 6 ] )
+//          pSprBuf[ nX + 6 ] = bySprCol | pbyChrData[ 6 ];
+//        if ( pbyChrData[ 7 ] )
+//          pSprBuf[ nX + 7 ] = bySprCol | pbyChrData[ 7 ];
+//      }
+//    }
+//
+//    // Rendering sprite
+//    pPoint -= ( NES_DISP_WIDTH - PPU_Scr_H_Bit );
+//    for ( nX = 0; nX < NES_DISP_WIDTH; ++nX )
+//    {
+//      nSprData = pSprBuf[ nX ];
+//      if ( nSprData  && ( nSprData & 0x80 || pPoint[ nX ] & 0x8000 ) )
+//      {
+//        pPoint[ nX ] = PalTable[ ( nSprData & 0xf ) + 0x10 ];
+//      }
+//    }
+//
+//    /*-------------------------------------------------------------------*/
+//    /*  Sprite Clipping                                                  */
+//    /*-------------------------------------------------------------------*/
+//    if ( !( PPU_R1 & R1_CLIP_SP ) )
+//    {
+//      WORD *pPointTop;
+//
+//      pPointTop = &WorkFrame[ PPU_Scanline * NES_DISP_WIDTH ];
+//      InfoNES_MemorySet( pPointTop, 0, 8 << 1 );
+//    }
+//
+//    if ( nSprCnt >= 8 )
+//      PPU_R2 |= R2_MAX_SP;  // Set a flag of maximum sprites on scanline
+//  }
+////LOOPY_NEXT_LINE( PPU_Addr );
 //}
-}
-
-void InfoNES_DrawLine()
-{
-/*
- *  Render a scanline
- *
- */
-
-  int nX;
-  int nY;
-  int nY4;
-  int nYBit;
-  WORD *pPalTbl;
-  BYTE *pAttrBase;
-  WORD *pPoint;
-  int nNameTable;
-  BYTE *pbyNameTable;
-  BYTE *pbyChrData;
-  BYTE *pSPRRAM;
-  int nAttr;
-  int nSprCnt;
-  int nIdx;
-  int nSprData;
-  BYTE bySprCol;
-  BYTE pSprBuf[ NES_DISP_WIDTH + 7 ];
-
-  /*-------------------------------------------------------------------*/
-  /*  Render Background                                                */
-  /*-------------------------------------------------------------------*/
-
-  /* MMC5 VROM switch */
-//减容   MapperRenderScreen( 1 );
-	  
-	  ////FCEU
-	  //if ( ( PPU_R1 & R1_SHOW_SP ) || ( PPU_R1 & R1_SHOW_SCR ) )
-	  //{
-		 // PPU_Addr |= PPU_Temp & 0x41F;
-		 // InfoNES_SetupScr();
-	  //}
-//LOOPY_SCANLINE_START( PPU_Addr, PPU_Temp );
-//InfoNES_SetupScr();
-  // Pointer to the render position
-  pPoint = &WorkFrame[ PPU_Scanline * NES_DISP_WIDTH ];//指向图形缓冲区数组中当前扫描线开始地址的指针。
-
-  // Clear a scanline if screen is off
-  if ( !( PPU_R1 & R1_SHOW_SCR ) )//如果背景设定为关闭则将当前扫描线设为黑色（将颜色值设为0）。
-  {
-    InfoNES_MemorySet( pPoint, 0, NES_DISP_WIDTH << 1 );
-  }
-  else
-  {
-    nNameTable = PPU_NameTableBank;//待做PPU_NameTableBank
-
-    nY = PPU_Scr_V_Byte + ( PPU_Scanline >> 3 );
-
-    nYBit = PPU_Scr_V_Bit + ( PPU_Scanline & 7 );
-
-    if ( nYBit > 7 )
-    {
-      ++nY;
-      nYBit &= 7;
-    }
-    nYBit <<= 3;
-
-    if ( nY > 29 )
-    {
-      // Next NameTable (An up-down direction)
-      nNameTable ^= NAME_TABLE_V_MASK;
-      nY -= 30;
-    }
-
-    nX = PPU_Scr_H_Byte;
-
-    nY4 = ( ( nY & 2 ) << 1 );
-
-    /*-------------------------------------------------------------------*/
-    /*  Rendering of the block of the left end                           */
-    /*-------------------------------------------------------------------*/
-
-    pbyNameTable = PPUBANK[ nNameTable ] + nY * 32 + nX;
-    pbyChrData = PPU_BG_Base + ( *pbyNameTable << 6 ) + nYBit;
-    pAttrBase = PPUBANK[ nNameTable ] + 0x3c0 + ( nY / 4 ) * 8;
-    pPalTbl =  &PalTable[ ( ( ( pAttrBase[ nX >> 2 ] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 ) ];
-
-    for ( nIdx = PPU_Scr_H_Bit; nIdx < 8; ++nIdx )
-    {
-      *( pPoint++ ) = pPalTbl[ pbyChrData[ nIdx ] ];
-    }
-
-    // Callback at PPU read/write
-//加速     MapperPPU( PATTBL( pbyChrData ) );
-
-    ++nX;
-    ++pbyNameTable;
-
-    /*-------------------------------------------------------------------*/
-    /*  Rendering of the left table                                      */
-    /*-------------------------------------------------------------------*/
-
-    for ( ; nX < 32; ++nX )
-    {
-      pbyChrData = PPU_BG_Base + ( *pbyNameTable << 6 ) + nYBit;
-      pPalTbl = &PalTable[ ( ( ( pAttrBase[ nX >> 2 ] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 ) ];
-
-      pPoint[ 0 ] = pPalTbl[ pbyChrData[ 0 ] ]; 
-      pPoint[ 1 ] = pPalTbl[ pbyChrData[ 1 ] ];
-      pPoint[ 2 ] = pPalTbl[ pbyChrData[ 2 ] ];
-      pPoint[ 3 ] = pPalTbl[ pbyChrData[ 3 ] ];
-      pPoint[ 4 ] = pPalTbl[ pbyChrData[ 4 ] ];
-      pPoint[ 5 ] = pPalTbl[ pbyChrData[ 5 ] ];
-      pPoint[ 6 ] = pPalTbl[ pbyChrData[ 6 ] ];
-      pPoint[ 7 ] = pPalTbl[ pbyChrData[ 7 ] ];
-      pPoint += 8;
-
-      // Callback at PPU read/write
-//加速       MapperPPU( PATTBL( pbyChrData ) );
-
-      ++pbyNameTable;
-    }
-
-    // Holizontal Mirror
-    nNameTable ^= NAME_TABLE_H_MASK;
-
-    pbyNameTable = PPUBANK[ nNameTable ] + nY * 32;
-    pAttrBase = PPUBANK[ nNameTable ] + 0x3c0 + ( nY / 4 ) * 8;
-
-    /*-------------------------------------------------------------------*/
-    /*  Rendering of the right table                                     */
-    /*-------------------------------------------------------------------*/
-
-    for ( nX = 0; nX < PPU_Scr_H_Byte; ++nX )
-    {
-      pbyChrData = PPU_BG_Base + ( *pbyNameTable << 6 ) + nYBit;
-      pPalTbl = &PalTable[ ( ( ( pAttrBase[ nX >> 2 ] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 ) ];
-
-      pPoint[ 0 ] = pPalTbl[ pbyChrData[ 0 ] ]; 
-      pPoint[ 1 ] = pPalTbl[ pbyChrData[ 1 ] ];
-      pPoint[ 2 ] = pPalTbl[ pbyChrData[ 2 ] ];
-      pPoint[ 3 ] = pPalTbl[ pbyChrData[ 3 ] ];
-      pPoint[ 4 ] = pPalTbl[ pbyChrData[ 4 ] ];
-      pPoint[ 5 ] = pPalTbl[ pbyChrData[ 5 ] ];
-      pPoint[ 6 ] = pPalTbl[ pbyChrData[ 6 ] ];
-      pPoint[ 7 ] = pPalTbl[ pbyChrData[ 7 ] ];
-      pPoint += 8;
-
-      // Callback at PPU read/write
-//加速       MapperPPU( PATTBL( pbyChrData ) );
-
-      ++pbyNameTable;
-    }
-
-    /*-------------------------------------------------------------------*/
-    /*  Rendering of the block of the right end                          */
-    /*-------------------------------------------------------------------*/
-
-    pbyChrData = PPU_BG_Base + ( *pbyNameTable << 6 ) + nYBit;
-    pPalTbl = &PalTable[ ( ( ( pAttrBase[ nX >> 2 ] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 ) ];
-    for ( nIdx = 0; nIdx < PPU_Scr_H_Bit; ++nIdx )
-    {
-      pPoint[ nIdx ] = pPalTbl[ pbyChrData[ nIdx ] ];
-    }
-
-    // Callback at PPU read/write
-//加速     MapperPPU( PATTBL( pbyChrData ) );
-
-    /*-------------------------------------------------------------------*/
-    /*  Backgroud Clipping                                               */
-    /*-------------------------------------------------------------------*/
-    if ( !( PPU_R1 & R1_CLIP_BG ) )
-    {
-      WORD *pPointTop;
-
-      pPointTop = &WorkFrame[ PPU_Scanline * NES_DISP_WIDTH ];
-      InfoNES_MemorySet( pPointTop, 0, 8 << 1 );
-    }
-
-    /*-------------------------------------------------------------------*/
-    /*  Clear a scanline if up and down clipping flag is set             */
-    /*-------------------------------------------------------------------*/
-    /*if ( PPU_UpDown_Clip && 
-       ( SCAN_ON_SCREEN_START > PPU_Scanline || PPU_Scanline > SCAN_BOTTOM_OFF_SCREEN_START ) )
-    {
-      WORD *pPointTop;
-
-      pPointTop = &WorkFrame[ PPU_Scanline * NES_DISP_WIDTH ];
-      InfoNES_MemorySet( pPointTop, 0, NES_DISP_WIDTH << 1 );
-    }*///加速  
-  }
-
-  /*-------------------------------------------------------------------*/
-  /*  Render a sprite                                                  */
-  /*-------------------------------------------------------------------*/
-
-  /* MMC5 VROM switch */
-//减容   MapperRenderScreen( 0 );
-
-  if ( PPU_R1 & R1_SHOW_SP )
-  {
-    // Reset Scanline Sprite Count
-    PPU_R2 &= ~R2_MAX_SP;
-
-    // Reset sprite buffer
-    InfoNES_MemorySet( pSprBuf, 0, sizeof pSprBuf );
-
-    // Render a sprite to the sprite buffer
-    nSprCnt = 0;
-    for ( pSPRRAM = SPRRAM + ( 63 << 2 ); pSPRRAM >= SPRRAM; pSPRRAM -= 4 )
-    {
-      nY = pSPRRAM[ SPR_Y ] + 1;
-      if ( nY > PPU_Scanline || nY + PPU_SP_Height <= PPU_Scanline )
-        continue;  // Next sprite
-
-     /*-------------------------------------------------------------------*/
-     /*  A sprite in scanning line                                        */
-     /*-------------------------------------------------------------------*/
-
-      // Holizontal Sprite Count +1
-      ++nSprCnt;
-      
-      nAttr = pSPRRAM[ SPR_ATTR ];
-      nYBit = PPU_Scanline - nY;
-      nYBit = ( nAttr & SPR_ATTR_V_FLIP ) ? ( PPU_SP_Height - nYBit - 1 ) << 3 : nYBit << 3;
-
-      if ( PPU_R0 & R0_SP_SIZE )
-      {
-        // Sprite size 8x16
-        if ( pSPRRAM[ SPR_CHR ] & 1 )
-        {
-          pbyChrData = ChrBuf + 256 * 64 + ( ( pSPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit;
-        }
-        else
-        {
-          pbyChrData = ChrBuf + ( ( pSPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit;
-        }
-      }
-      else
-      {
-        // Sprite size 8x8
-        pbyChrData = PPU_SP_Base + ( pSPRRAM[ SPR_CHR ] << 6 ) + nYBit;
-      }
-
-      nAttr ^= SPR_ATTR_PRI;
-      bySprCol = ( nAttr & ( SPR_ATTR_COLOR | SPR_ATTR_PRI ) ) << 2;
-      nX = pSPRRAM[ SPR_X ];
-
-      if ( nAttr & SPR_ATTR_H_FLIP )
-      {
-        // Horizontal flip
-        if ( pbyChrData[ 7 ] )
-          pSprBuf[ nX ]     = bySprCol | pbyChrData[ 7 ];
-        if ( pbyChrData[ 6 ] )
-          pSprBuf[ nX + 1 ] = bySprCol | pbyChrData[ 6 ];
-        if ( pbyChrData[ 5 ] )
-          pSprBuf[ nX + 2 ] = bySprCol | pbyChrData[ 5 ];
-        if ( pbyChrData[ 4 ] )
-          pSprBuf[ nX + 3 ] = bySprCol | pbyChrData[ 4 ];
-        if ( pbyChrData[ 3 ] )
-          pSprBuf[ nX + 4 ] = bySprCol | pbyChrData[ 3 ];
-        if ( pbyChrData[ 2 ] )
-          pSprBuf[ nX + 5 ] = bySprCol | pbyChrData[ 2 ];
-        if ( pbyChrData[ 1 ] )
-          pSprBuf[ nX + 6 ] = bySprCol | pbyChrData[ 1 ];
-        if ( pbyChrData[ 0 ] )
-          pSprBuf[ nX + 7 ] = bySprCol | pbyChrData[ 0 ];
-      }
-      else
-      {
-        // Non flip
-        if ( pbyChrData[ 0 ] )
-          pSprBuf[ nX ]     = bySprCol | pbyChrData[ 0 ];
-        if ( pbyChrData[ 1 ] )
-          pSprBuf[ nX + 1 ] = bySprCol | pbyChrData[ 1 ];
-        if ( pbyChrData[ 2 ] )
-          pSprBuf[ nX + 2 ] = bySprCol | pbyChrData[ 2 ];
-        if ( pbyChrData[ 3 ] )
-          pSprBuf[ nX + 3 ] = bySprCol | pbyChrData[ 3 ];
-        if ( pbyChrData[ 4 ] )
-          pSprBuf[ nX + 4 ] = bySprCol | pbyChrData[ 4 ];
-        if ( pbyChrData[ 5 ] )
-          pSprBuf[ nX + 5 ] = bySprCol | pbyChrData[ 5 ];
-        if ( pbyChrData[ 6 ] )
-          pSprBuf[ nX + 6 ] = bySprCol | pbyChrData[ 6 ];
-        if ( pbyChrData[ 7 ] )
-          pSprBuf[ nX + 7 ] = bySprCol | pbyChrData[ 7 ];
-      }
-    }
-
-    // Rendering sprite
-    pPoint -= ( NES_DISP_WIDTH - PPU_Scr_H_Bit );
-    for ( nX = 0; nX < NES_DISP_WIDTH; ++nX )
-    {
-      nSprData = pSprBuf[ nX ];
-      if ( nSprData  && ( nSprData & 0x80 || pPoint[ nX ] & 0x8000 ) )
-      {
-        pPoint[ nX ] = PalTable[ ( nSprData & 0xf ) + 0x10 ];
-      }
-    }
-
-    /*-------------------------------------------------------------------*/
-    /*  Sprite Clipping                                                  */
-    /*-------------------------------------------------------------------*/
-    if ( !( PPU_R1 & R1_CLIP_SP ) )
-    {
-      WORD *pPointTop;
-
-      pPointTop = &WorkFrame[ PPU_Scanline * NES_DISP_WIDTH ];
-      InfoNES_MemorySet( pPointTop, 0, 8 << 1 );
-    }
-
-    if ( nSprCnt >= 8 )
-      PPU_R2 |= R2_MAX_SP;  // Set a flag of maximum sprites on scanline
-  }
-//LOOPY_NEXT_LINE( PPU_Addr );
-}
 
 /*===================================================================*/
 /*                                                                   */
 /* InfoNES_GetSprHitY() : Get a position of scanline hits sprite #0  */
 /*                                                                   */
 /*===================================================================*/
-void InfoNES_GetSprHitY()
-{
-/*
- * Get a position of scanline hits sprite #0
- *
- */
-
-  int nYBit;
-  DWORD *pdwChrData;
-  int nOff;
-
-  if ( SPRRAM[ SPR_ATTR ] & SPR_ATTR_V_FLIP )
-  {
-    // Vertical flip
-    nYBit = ( PPU_SP_Height - 1 ) << 3;
-    nOff = -2;
-  }
-  else
-  {
-    // Non flip
-    nYBit = 0;
-    nOff = 2;
-  }
-
-  if ( PPU_R0 & R0_SP_SIZE )
-  {
-    // Sprite size 8x16
-    if ( SPRRAM[ SPR_CHR ] & 1 )
-    {
-      pdwChrData = (DWORD *)( ChrBuf + 256 * 64 + ( ( SPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit );
-    }
-    else
-    {
-      pdwChrData = (DWORD * )( ChrBuf + ( ( SPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit );
-    } 
-  }
-  else
-  {
-    // Sprite size 8x8
-    pdwChrData = (DWORD *)( PPU_SP_Base + ( SPRRAM[ SPR_CHR ] << 6 ) + nYBit );
-  }
-
-  if ( ( SPRRAM[ SPR_Y ] + 1 <= SCAN_UNKNOWN_START ) && ( SPRRAM[SPR_Y] > 0 ) )
-	{
-		for ( int nLine = 0; nLine < PPU_SP_Height; nLine++ )
-		{
-			if ( pdwChrData[ 0 ] | pdwChrData[ 1 ] )
-			{
-        // Scanline hits sprite #0
-				SpriteJustHit = SPRRAM[SPR_Y] + 1 + nLine;
-				nLine = SCAN_VBLANK_END;
-			}
-			pdwChrData += nOff;
-		}
-  } else {
-    // Scanline didn't hit sprite #0
-		SpriteJustHit = SCAN_UNKNOWN_START + 1;
-  }
-}
+//void InfoNES_GetSprHitY()
+//{
+///*
+// * Get a position of scanline hits sprite #0
+// *
+// */
+//
+//  int nYBit;
+//  DWORD *pdwChrData;
+//  int nOff;
+//
+//  if ( SPRRAM[ SPR_ATTR ] & SPR_ATTR_V_FLIP )
+//  {
+//    // Vertical flip
+//    nYBit = ( PPU_SP_Height - 1 ) << 3;
+//    nOff = -2;
+//  }
+//  else
+//  {
+//    // Non flip
+//    nYBit = 0;
+//    nOff = 2;
+//  }
+//
+//  if ( PPU_R0 & R0_SP_SIZE )
+//  {
+//    // Sprite size 8x16
+//    if ( SPRRAM[ SPR_CHR ] & 1 )
+//    {
+//      pdwChrData = (DWORD *)( ChrBuf + 256 * 64 + ( ( SPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit );
+//    }
+//    else
+//    {
+//      pdwChrData = (DWORD * )( ChrBuf + ( ( SPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit );
+//    } 
+//  }
+//  else
+//  {
+//    // Sprite size 8x8
+//    pdwChrData = (DWORD *)( PPU_SP_Base + ( SPRRAM[ SPR_CHR ] << 6 ) + nYBit );
+//  }
+//
+//  if ( ( SPRRAM[ SPR_Y ] + 1 <= SCAN_UNKNOWN_START ) && ( SPRRAM[SPR_Y] > 0 ) )
+//	{
+//		for ( int nLine = 0; nLine < PPU_SP_Height; nLine++ )
+//		{
+//			if ( pdwChrData[ 0 ] | pdwChrData[ 1 ] )
+//			{
+//        // Scanline hits sprite #0
+//				SpriteJustHit = SPRRAM[SPR_Y] + 1 + nLine;
+//				nLine = SCAN_VBLANK_END;
+//			}
+//			pdwChrData += nOff;
+//		}
+//  } else {
+//    // Scanline didn't hit sprite #0
+//		SpriteJustHit = SCAN_UNKNOWN_START + 1;
+//  }
+//}
 
 /*===================================================================*/
 /*                                                                   */
 /*            InfoNES_SetupChr() : Develop character data            */
 /*                                                                   */
 /*===================================================================*/
-void InfoNES_SetupChr()
-{
-/*
- *  Develop character data
- *
- */
-
-  BYTE *pbyBGData;
-  BYTE byData1;
-  BYTE byData2;
-  int nIdx;
-  int nY;
-  int nOff;
-  static BYTE *pbyPrevBank[ 8 ];
-  int nBank;
-
-  for ( nBank = 0; nBank < 8; ++nBank )
-  {
-    if ( pbyPrevBank[ nBank ] == PPUBANK[ nBank ] && !( ( ChrBufUpdate >> nBank ) & 1 ) )
-      continue;  // Next bank
-
-    /*-------------------------------------------------------------------*/
-    /*  An address is different from the last time                       */
-    /*    or                                                             */
-    /*  An update flag is being set                                      */
-    /*-------------------------------------------------------------------*/
-
-    for ( nIdx = 0; nIdx < 64; ++nIdx )
-    {
-      nOff = ( nBank << 12 ) + ( nIdx << 6 );
-
-      for ( nY = 0; nY < 8; ++nY )
-      {
-        pbyBGData = PPUBANK[ nBank ] + ( nIdx << 4 ) + nY;
-
-        byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
-        byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
-
-        ChrBuf[ nOff ]     = ( byData1 >> 6 ) & 3;
-        ChrBuf[ nOff + 1 ] = ( byData2 >> 6 ) & 3;
-        ChrBuf[ nOff + 2 ] = ( byData1 >> 4 ) & 3;
-        ChrBuf[ nOff + 3 ] = ( byData2 >> 4 ) & 3;
-        ChrBuf[ nOff + 4 ] = ( byData1 >> 2 ) & 3;
-        ChrBuf[ nOff + 5 ] = ( byData2 >> 2 ) & 3;
-        ChrBuf[ nOff + 6 ] = byData1 & 3;
-        ChrBuf[ nOff + 7 ] = byData2 & 3;
-
-        nOff += 8;
-      }
-    }
-    // Keep this address
-    pbyPrevBank[ nBank ] = PPUBANK[ nBank ];
-  }
-
-  // Reset update flag
-  ChrBufUpdate = 0;
-}
+//void InfoNES_SetupChr()
+//{
+///*
+// *  Develop character data
+// *
+// */
+//
+//  BYTE *pbyBGData;
+//  BYTE byData1;
+//  BYTE byData2;
+//  int nIdx;
+//  int nY;
+//  int nOff;
+//  static BYTE *pbyPrevBank[ 8 ];
+//  int nBank;
+//
+//  for ( nBank = 0; nBank < 8; ++nBank )
+//  {
+//    if ( pbyPrevBank[ nBank ] == PPUBANK[ nBank ] && !( ( ChrBufUpdate >> nBank ) & 1 ) )
+//      continue;  // Next bank
+//
+//    /*-------------------------------------------------------------------*/
+//    /*  An address is different from the last time                       */
+//    /*    or                                                             */
+//    /*  An update flag is being set                                      */
+//    /*-------------------------------------------------------------------*/
+//
+//    for ( nIdx = 0; nIdx < 64; ++nIdx )
+//    {
+//      nOff = ( nBank << 12 ) + ( nIdx << 6 );
+//
+//      for ( nY = 0; nY < 8; ++nY )
+//      {
+//        pbyBGData = PPUBANK[ nBank ] + ( nIdx << 4 ) + nY;
+//
+//        byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
+//        byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
+//
+//        ChrBuf[ nOff ]     = ( byData1 >> 6 ) & 3;
+//        ChrBuf[ nOff + 1 ] = ( byData2 >> 6 ) & 3;
+//        ChrBuf[ nOff + 2 ] = ( byData1 >> 4 ) & 3;
+//        ChrBuf[ nOff + 3 ] = ( byData2 >> 4 ) & 3;
+//        ChrBuf[ nOff + 4 ] = ( byData1 >> 2 ) & 3;
+//        ChrBuf[ nOff + 5 ] = ( byData2 >> 2 ) & 3;
+//        ChrBuf[ nOff + 6 ] = byData1 & 3;
+//        ChrBuf[ nOff + 7 ] = byData2 & 3;
+//
+//        nOff += 8;
+//      }
+//    }
+//    // Keep this address
+//    pbyPrevBank[ nBank ] = PPUBANK[ nBank ];
+//  }
+//
+//  // Reset update flag
+//  ChrBufUpdate = 0;
+//}

@@ -39,7 +39,7 @@ void Map11_Init()
 //ºı»›   MapperRenderScreen = Map0_RenderScreen;
 
   /* Set SRAM Banks */
-  SRAMBANK = SRAM;
+//ºı»›   SRAMBANK = SRAM;
 
   /* Set ROM Banks */
   ROMBANK0 = ROMPAGE( 0 );

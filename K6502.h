@@ -56,18 +56,21 @@ void K6502_Reset();
 void K6502_Set_Int_Wiring( BYTE byNMI_Wiring, BYTE byIRQ_Wiring );
 void K6502_Step( register WORD wClocks );
 
+//nesterJ
+void K6502_NMI();
+
 // I/O Operation (User definition)
-static inline BYTE K6502_Read( WORD wAddr );
-static inline WORD K6502_ReadW( WORD wAddr );
-static inline WORD K6502_ReadW2( WORD wAddr );
-static inline BYTE K6502_ReadZp( BYTE byAddr );
-static inline WORD K6502_ReadZpW( BYTE byAddr );
-static inline BYTE K6502_ReadAbsX();
-static inline BYTE K6502_ReadAbsY();
-static inline BYTE K6502_ReadIY();
+//static inline BYTE K6502_Read( WORD wAddr );
+//static inline WORD K6502_ReadW( WORD wAddr );
+//static inline WORD K6502_ReadW2( WORD wAddr );
+//static inline BYTE K6502_ReadZp( BYTE byAddr );
+//static inline WORD K6502_ReadZpW( BYTE byAddr );
+//static inline BYTE K6502_ReadAbsX();
+//static inline BYTE K6502_ReadAbsY();
+//static inline BYTE K6502_ReadIY();
 
 //º”ÀŸ
-static inline BYTE K6502_ReadPC( WORD wAddr );
+//static inline BYTE K6502_ReadPC( WORD wAddr );
 static inline BYTE K6502_ReadIO( WORD wAddr );
 static inline void K6502_WritePPU( WORD wAddr, BYTE byData );
 static inline void K6502_WriteAPU( WORD wAddr, BYTE byData );
@@ -77,8 +80,8 @@ static inline void K6502_WriteAPU( WORD wAddr, BYTE byData );
 //static inline BYTE ROMBANK2_Read ( WORD wAddr );
 //static inline BYTE ROMBANK3_Read ( WORD wAddr );
 
-static inline void K6502_Write( WORD wAddr, BYTE byData );
-static inline void K6502_WriteW( WORD wAddr, WORD wData );
+//static inline void K6502_Write( WORD wAddr, BYTE byData );
+//static inline void K6502_WriteW( WORD wAddr, WORD wData );
 
 // The state of the IRQ pin
 extern BYTE IRQ_State;

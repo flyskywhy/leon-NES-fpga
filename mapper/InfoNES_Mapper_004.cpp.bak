@@ -53,7 +53,7 @@ void Map4_Init()
 //ºı»›   MapperRenderScreen = Map0_RenderScreen;
 
   /* Set SRAM Banks */
-  SRAMBANK = SRAM;
+//ºı»›   SRAMBANK = SRAM;
 
   /* Initialize State Registers */
   for ( int nPage = 0; nPage < 8; nPage++ )

@@ -64,7 +64,7 @@ void Map1_Init()
 //ºı»›   MapperRenderScreen = Map0_RenderScreen;
 
   /* Set SRAM Banks */
-  SRAMBANK = SRAM;
+//ºı»›   SRAMBANK = SRAM;
 
   /* Initialize State Registers */
   Map1_Cnt = 0;

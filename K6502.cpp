@@ -491,7 +491,7 @@ void K6502_Reset()
  */
 
   // Reset Registers
-  PC = K6502_ReadW( VECTOR_RESET );
+  PC = ROMBANK2[ 0x3FFC ] | ROMBANK2[ 0x3FFD ] << 8;//加速K6502_ReadW( VECTOR_RESET );
   SP = 0xFF;
   A = X = Y = 0;
   F = FLAG_Z | FLAG_R | FLAG_I;
@@ -520,6 +520,25 @@ void K6502_Set_Int_Wiring( BYTE byNMI_Wiring, BYTE byIRQ_Wiring )
   IRQ_Wiring = byIRQ_Wiring;
 }
 
+//nesterJ
+void K6502_NMI()			//执行NMI中断
+{
+	//if ( NMI_State != NMI_Wiring )
+	//{
+	//	// NMI Interrupt
+	//	NMI_State = NMI_Wiring;
+		CLK( 7 );
+
+		PUSHW( PC );
+		PUSH( F & ~FLAG_B );
+
+		RSTF( FLAG_D );
+		SETF( FLAG_I );
+
+		PC = ROMBANK2[ 0x3FFA ] | ROMBANK2[ 0x3FFB ] << 8;//加速 K6502_ReadW( VECTOR_NMI );
+	//}
+}
+
 /*===================================================================*/
 /*                                                                   */
 /*  K6502_Step() :                                                   */
@@ -543,40 +562,40 @@ void K6502_Step( WORD wClocks )
   BYTE byD1;
   WORD wD0;
 
-  // Dispose of it if there is an interrupt requirement
-  if ( NMI_State != NMI_Wiring )
-  {
-    // NMI Interrupt
-    NMI_State = NMI_Wiring;
-    CLK( 7 );
+  //// Dispose of it if there is an interrupt requirement
+  //if ( NMI_State != NMI_Wiring )
+  //{
+  //  // NMI Interrupt
+  //  NMI_State = NMI_Wiring;
+  //  CLK( 7 );
 
-    PUSHW( PC );
-    PUSH( F & ~FLAG_B );
+  //  PUSHW( PC );
+  //  PUSH( F & ~FLAG_B );
 
-    RSTF( FLAG_D );
-    SETF( FLAG_I );
+  //  RSTF( FLAG_D );
+  //  SETF( FLAG_I );
 
-    PC = ROMBANK2[ 0x3FFA ] | ROMBANK2[ 0x3FFB ] << 8;//加速 K6502_ReadW( VECTOR_NMI );
-  }
-  else
-  if ( IRQ_State != IRQ_Wiring )
-  {
-    // IRQ Interrupt
-    // Execute IRQ if an I flag isn't being set
-    if ( !( F & FLAG_I ) )
-    {
-      IRQ_State = IRQ_Wiring;
-      CLK( 7 );
+  //  PC = ROMBANK2[ 0x3FFA ] | ROMBANK2[ 0x3FFB ] << 8;//加速 K6502_ReadW( VECTOR_NMI );
+  //}
+  ////else
+  //if ( IRQ_State != IRQ_Wiring )
+  //{
+  //  // IRQ Interrupt
+  //  // Execute IRQ if an I flag isn't being set
+  //  if ( !( F & FLAG_I ) )
+  //  {
+  //    IRQ_State = IRQ_Wiring;
+  //    CLK( 7 );
 
-      PUSHW( PC );
-      PUSH( F & ~FLAG_B );
+  //    PUSHW( PC );
+  //    PUSH( F & ~FLAG_B );
 
-      RSTF( FLAG_D );
-      SETF( FLAG_I );
-    
-      PC = ROMBANK2[ 0x3FFE ] | ROMBANK2[ 0x3FFF ] << 8;//加速 K6502_ReadW( VECTOR_IRQ );
-    }
-  }
+  //    RSTF( FLAG_D );
+  //    SETF( FLAG_I );
+  //  
+  //    PC = ROMBANK2[ 0x3FFE ] | ROMBANK2[ 0x3FFF ] << 8;//加速 K6502_ReadW( VECTOR_IRQ );
+  //  }
+  //}
 
   // It has a loop until a constant clock passes
   while ( g_wPassedClocks < wClocks )
@@ -1289,6 +1308,24 @@ void K6502_Step( WORD wClocks )
 			A |= K6502_ReadIO( wA0 );
 		TEST( A );
 		CLK( 6 );
+
+        break;
+
+	  //nesterJ
+	  case 0x02:  /* JAM */
+	  case 0x12:  /* JAM */
+	  case 0x22:  /* JAM */
+	  case 0x32:  /* JAM */
+	  case 0x42:  /* JAM */
+	  case 0x52:  /* JAM */
+	  case 0x62:  /* JAM */
+	  case 0x72:  /* JAM */
+	  case 0x92:  /* JAM */
+	  case 0xB2:  /* JAM */
+	  case 0xD2:  /* JAM */
+	  case 0xF2:  /* JAM */
+         /* kill the CPU */
+        g_wPassedClocks = wClocks;
 
         break;
 
@@ -2075,10 +2112,20 @@ void K6502_Step( WORD wClocks )
 			wA0 = RAM[ PC++ ];
 			wA0 |= (WORD)RAM[ PC ] << 8;
 		}
-        if ( 0x00ff == ( wA0 & 0x00ff ) )
-          PC = K6502_Read( wA0 ) | (WORD)K6502_Read( wA0 - 0x00ff ) << 8;
+		if ( 0x00ff == ( wA0 & 0x00ff ) )
+			if( wA0 >= 0xC000 )
+				PC = ROMBANK2[ wA0 & 0x3fff ] | (WORD)ROMBANK2[ wA0 & 0x3f00 ] << 8;
+			else if( wA0 >= 0x8000 )
+				PC = ROMBANK0[ wA0 & 0x3fff ] | (WORD)ROMBANK0[ wA0 & 0x3f00 ] << 8;
+			else
+				PC = RAM[ wA0 ] | (WORD)RAM[ wA0 & 0xff00 ] << 8;
         else
-		  PC = K6502_Read( wA0 ) | (WORD)K6502_Read( wA0 + 1 ) << 8;
+			if( wA0 >= 0xC000 )
+				PC = ROMBANK2[ wA0 & 0x3fff ] | (WORD)ROMBANK2[ ( wA0 + 1 ) & 0x3fff ] << 8;
+			else if( wA0 >= 0x8000 )
+				PC = ROMBANK0[ wA0 & 0x3fff ] | (WORD)ROMBANK0[ ( wA0 + 1 ) & 0x3fff ] << 8;
+			else
+				PC = RAM[ wA0 ] | (WORD)RAM[ wA0 + 1 ] << 8;
 		CLK( 5 );
 
         break;

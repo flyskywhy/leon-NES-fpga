@@ -65,7 +65,7 @@ void Map0_Init()
   {
     for ( int nPage = 0; nPage < 8; ++nPage )
       PPUBANK[ nPage ] = VROMPAGE( nPage );
-    InfoNES_SetupChr();
+//    InfoNES_SetupChr();
   }
 
   /* Set up wiring of the interrupt pin */

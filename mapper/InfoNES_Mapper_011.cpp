@@ -52,7 +52,7 @@ void Map11_Init()
   {
     for ( nPage = 0; nPage < 8; ++nPage )
       PPUBANK[ nPage ] = VROMPAGE( nPage );
-    InfoNES_SetupChr();
+//    InfoNES_SetupChr();
   }
 
   /* Name Table Mirroring */
@@ -85,5 +85,5 @@ void Map11_Write( WORD wAddr, BYTE byData )
   PPUBANK[ 5 ] = VROMPAGE( ( byChrBank + 5 ) % ( NesHeader.byVRomSize << 3 ) );
   PPUBANK[ 6 ] = VROMPAGE( ( byChrBank + 6 ) % ( NesHeader.byVRomSize << 3 ) );
   PPUBANK[ 7 ] = VROMPAGE( ( byChrBank + 7 ) % ( NesHeader.byVRomSize << 3 ) );
-  InfoNES_SetupChr();
+//  InfoNES_SetupChr();
 }

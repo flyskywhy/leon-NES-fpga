@@ -915,11 +915,20 @@ void ApuRenderingWave5(void)
       while( ApuC5Phaseacc < 0 ) {
 	ApuC5Phaseacc += ApuC5Freq;
 	if( !( ApuC5DmaLength & 7 ) ) {
-	  ApuC5CurByte = K6502_Read( ApuC5Address );
-	  if( 0xFFFF == ApuC5Address )
-	    ApuC5Address = 0x8000;
-	  else
-	    ApuC5Address++;
+	  //ApuC5CurByte = K6502_Read( ApuC5Address );
+	  //¼ÓËÙ
+	  if( ApuC5Address >= 0xC000 )
+	  {
+		  ApuC5CurByte = ROMBANK2[ ApuC5Address & 0x3fff ];
+		  if( 0xFFFF == ApuC5Address )
+			  ApuC5Address = 0x8000;
+	  }
+	  else// if( ApuC5Address >= 0x8000 )
+		  ApuC5CurByte = ROMBANK0[ ApuC5Address++ & 0x3fff ];
+	  //if( 0xFFFF == ApuC5Address )
+	  //  ApuC5Address = 0x8000;
+	  //else
+	  //  ApuC5Address++;
 	}
 	if( !(--ApuC5DmaLength) ) {
 	  if( ApuC5Looping ) {

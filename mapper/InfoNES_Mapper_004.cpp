@@ -299,7 +299,7 @@ void Map4_Set_PPU_Banks()
       PPUBANK[ 5 ] = VROMPAGE( ( Map4_Chr01 + 1 ) % ( NesHeader.byVRomSize << 3 ) );
       PPUBANK[ 6 ] = VROMPAGE( ( Map4_Chr23 + 0 ) % ( NesHeader.byVRomSize << 3 ) );
       PPUBANK[ 7 ] = VROMPAGE( ( Map4_Chr23 + 1 ) % ( NesHeader.byVRomSize << 3 ) );
-      InfoNES_SetupChr();
+//      InfoNES_SetupChr();
     } else {
       PPUBANK[ 0 ] = VROMPAGE( ( Map4_Chr01 + 0 ) % ( NesHeader.byVRomSize << 3 ) );
       PPUBANK[ 1 ] = VROMPAGE( ( Map4_Chr01 + 1 ) % ( NesHeader.byVRomSize << 3 ) );
@@ -309,7 +309,7 @@ void Map4_Set_PPU_Banks()
       PPUBANK[ 5 ] = VROMPAGE( Map4_Chr5 % ( NesHeader.byVRomSize << 3 ) );
       PPUBANK[ 6 ] = VROMPAGE( Map4_Chr6 % ( NesHeader.byVRomSize << 3 ) );
       PPUBANK[ 7 ] = VROMPAGE( Map4_Chr7 % ( NesHeader.byVRomSize << 3 ) );
-      InfoNES_SetupChr();
+//      InfoNES_SetupChr();
     }
   }
   else
@@ -335,7 +335,7 @@ void Map4_Set_PPU_Banks()
       PPUBANK[ 6 ] = CRAMPAGE( 6 );
       PPUBANK[ 7 ] = CRAMPAGE( 7 );
 #endif
-      InfoNES_SetupChr();
+//      InfoNES_SetupChr();
     } else {
 #if 0
       PPUBANK[ 0 ] = VRAMPAGE1( 0 );
@@ -356,7 +356,7 @@ void Map4_Set_PPU_Banks()
       PPUBANK[ 6 ] = CRAMPAGE( 6 );
       PPUBANK[ 7 ] = CRAMPAGE( 7 );
 #endif
-      InfoNES_SetupChr();
+//      InfoNES_SetupChr();
     }
   }    
 }

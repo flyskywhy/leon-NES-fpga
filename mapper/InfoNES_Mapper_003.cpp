@@ -62,7 +62,7 @@ void Map3_Init()
     {
       PPUBANK[ nPage ] = VROMPAGE( nPage );
     }
-    InfoNES_SetupChr();
+//    InfoNES_SetupChr();
   }
 
   /* Set up wiring of the interrupt pin */
@@ -90,5 +90,5 @@ void Map3_Write( WORD wAddr, BYTE byData )
   PPUBANK[ 6 ] = VROMPAGE( dwBase + 6 );
   PPUBANK[ 7 ] = VROMPAGE( dwBase + 7 );
 
-  InfoNES_SetupChr();
+//  InfoNES_SetupChr();
 }

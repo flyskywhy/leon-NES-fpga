@@ -955,12 +955,27 @@ void InfoNES_LoadFrame()
  *
  */
 
-  // Set screen data
-  memcpy( pScreenMem, WorkFrame, NES_DISP_WIDTH * NES_DISP_HEIGHT * 2 );
+  //// Set screen data
+  //memcpy( pScreenMem, WorkFrame, NES_DISP_WIDTH * NES_DISP_HEIGHT * 2 );
 
-////nesterJ
-//  for( int i = 0; i < 240; i++ )
-//    memcpy( pScreenMem + NES_DISP_WIDTH * i * 2, WorkFrame + NES_BACKBUF_WIDTH * i + 8 , NES_DISP_WIDTH * 2 );
+//nesterJ
+  for( int i = 0; i < NES_DISP_HEIGHT; i++ )
+    memcpy( pScreenMem + i * NES_DISP_WIDTH * 2, WorkFrame + i * NES_BACKBUF_WIDTH + 8 , NES_DISP_WIDTH * 2 );
+
+ // //ÑÕÉ«
+  //for( int i = 0; i < NES_DISP_HEIGHT; i++ )
+  //  memcpy( pScreenMem + i * NES_DISP_WIDTH * 2, WorkFrame + i * NES_BACKBUF_WIDTH + 8 , NES_DISP_WIDTH );
+ // for ( register int y = 0; y < NES_DISP_HEIGHT; y++ ) 
+ //   for ( register int x = 0; x < NES_DISP_WIDTH; x++ )
+	//{
+ //     *(pScreenMem + x * y * 2 ) = BYTE( NesPalette[ WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] ] & 0x00FF );
+ //     *(pScreenMem + x * y * 2 + 1 ) = BYTE( NesPalette[ WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] ] >> 8 ) | 0x80;
+	//}
+  //WORD RGBWorkFrame[ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
+  //for ( register int y = 0; y < NES_DISP_HEIGHT; y++ ) 
+  //  for ( register int x = 0; x < NES_DISP_WIDTH; x++ )
+  //    RGBWorkFrame[ x * y ] = NesPalette[ WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] ] | 0x8000;
+  //memcpy( pScreenMem, RGBWorkFrame, NES_DISP_WIDTH * NES_DISP_HEIGHT * 2 );
 
   // Screen update
   HDC hDC = GetDC( hWndMain );
