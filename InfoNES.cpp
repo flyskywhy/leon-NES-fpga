@@ -67,6 +67,10 @@ BYTE *ROMBANK1;
 BYTE *ROMBANK2;
 BYTE *ROMBANK3;
 
+#if PocketNES == 1
+BYTE *memmap_tbl[8];
+#endif
+
 //加速
 //readfunc ReadPC[0x8000];
 //BYTE **ReadPC[0x8000];
@@ -136,7 +140,7 @@ WORD PPU_Increment;
 WORD PPU_Scanline;
 
 /* Scanline Table */
-BYTE PPU_ScanTable[ 263 ];
+//BYTE PPU_ScanTable[ 263 ];
 
 /* Name Table Bank */
 BYTE PPU_NameTableBank;
@@ -181,26 +185,35 @@ WORD FrameSkip;
 WORD FrameCnt;
 
 /* Display Buffer */
-#if 0
-WORD DoubleFrame[ 2 ][ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
-WORD *WorkFrame;
-WORD WorkFrameIdx;
-#else
+//#if 0
+//WORD DoubleFrame[ 2 ][ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
+//WORD *WorkFrame;
+//WORD WorkFrameIdx;
+//#else
 //WORD WorkFrame[ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
 
 //nesterJ
+#ifdef LEON
+BYTE WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//图形缓冲区数组，保存RGB值
+#else
 WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//图形缓冲区数组，保存RGB值
+#endif
 
 ////颜色
 //BYTE WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//图形缓冲区数组，保存4位颜色索引值
 
-#endif
+//#endif
 
 //nesterJ
 /* InfoNES_DrawLine2() */
   BYTE solid_buf[ NES_DISP_WIDTH ];							//扫描线与Sprite重叠标记数组，只有在Sprite中的某点像素颜色不是透明色时才在该数组的相应位置设置标记
+#ifdef LEON
+  BYTE *buf;
+  BYTE *p;					//指向图形缓冲区数组中当前所绘像素地址的指针
+#else
   WORD *buf;
   WORD *p;					//指向图形缓冲区数组中当前所绘像素地址的指针
+#endif
 ////颜色
 //  BYTE *p;
 
@@ -240,7 +253,11 @@ WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//图形缓冲区数组，保存RG
 //BYTE ChrBufUpdate;
 
 /* Palette Table */
+#ifdef LEON
+BYTE PalTable[ 32 ];
+#else
 WORD PalTable[ 32 ];
+#endif
 
 /* Table for Mirroring */
 BYTE PPU_MirrorTable[][ 4 ] =
@@ -262,7 +279,7 @@ BYTE APU_Reg[ 0x18 ];
 
 /* APU Mute ( 0:OFF, 1:ON ) */
 //音频int APU_Mute = 1;
-int APU_Mute = 0;
+int APU_Mute = 1;
 
 /* Pad data */
 DWORD PAD1_Latch;
@@ -326,28 +343,28 @@ void InfoNES_Init()
  *  Remarks
  *    Initialize K6502 and Scanline Table.
  */
-  int nIdx;
+  //int nIdx;
 
   // Initialize 6502
   K6502_Init();
 
-  // Initialize Scanline Table
-  for ( nIdx = 0; nIdx < 263; ++nIdx )
-  {
-    if ( nIdx < SCAN_ON_SCREEN_START )
-      PPU_ScanTable[ nIdx ] = SCAN_ON_SCREEN;
-    else
-    if ( nIdx < SCAN_BOTTOM_OFF_SCREEN_START )
-      PPU_ScanTable[ nIdx ] = SCAN_ON_SCREEN;
-    else
-    if ( nIdx < SCAN_UNKNOWN_START )
-      PPU_ScanTable[ nIdx ] = SCAN_ON_SCREEN;	//[0	-	239] SCAN_ON_SCREEN
-    else
-    if ( nIdx < SCAN_VBLANK_START )
-      PPU_ScanTable[ nIdx ] = SCAN_UNKNOWN;		//[240	-	242] SCAN_UNKNOWN
-    else
-      PPU_ScanTable[ nIdx ] = SCAN_VBLANK;		//[243	-	262] SCAN_VBLANK
-  }
+  //// Initialize Scanline Table
+  //for ( nIdx = 0; nIdx < 263; ++nIdx )
+  //{
+  //  if ( nIdx < SCAN_ON_SCREEN_START )
+  //    PPU_ScanTable[ nIdx ] = SCAN_ON_SCREEN;
+  //  else
+  //  if ( nIdx < SCAN_BOTTOM_OFF_SCREEN_START )
+  //    PPU_ScanTable[ nIdx ] = SCAN_ON_SCREEN;
+  //  else
+  //  if ( nIdx < SCAN_UNKNOWN_START )
+  //    PPU_ScanTable[ nIdx ] = SCAN_ON_SCREEN;	//[0	-	239] SCAN_ON_SCREEN
+  //  else
+  //  if ( nIdx < SCAN_VBLANK_START )
+  //    PPU_ScanTable[ nIdx ] = SCAN_UNKNOWN;		//[240	-	242] SCAN_UNKNOWN
+  //  else
+  //    PPU_ScanTable[ nIdx ] = SCAN_VBLANK;		//[243	-	262] SCAN_VBLANK
+  //}
 }
 
 /*===================================================================*/
@@ -464,11 +481,11 @@ int InfoNES_Reset()
   FrameSkip = 0;
   FrameCnt = 0;
 
-#if 0
-  // Reset work frame
-  WorkFrame = DoubleFrame[ 0 ];
-  WorkFrameIdx = 0;
-#endif
+//#if 0
+//  // Reset work frame
+//  WorkFrame = DoubleFrame[ 0 ];
+//  WorkFrameIdx = 0;
+//#endif
 
   //// Reset update flag of ChrBuf
   //ChrBufUpdate = 0xff;
@@ -515,7 +532,14 @@ int InfoNES_Reset()
 
   // Set up a mapper initialization function
   MapperTable[ nIdx ].pMapperInit();
-  
+
+#if PocketNES == 1
+  memmap_tbl[ 4 ] = ROMBANK0 - 0x8000;		//这里- 0x8000是为了在encodePC中不用再做& 0x1FFF的运算了，下同
+  memmap_tbl[ 5 ] = ROMBANK1 - 0xA000;
+  memmap_tbl[ 6 ] = ROMBANK2 - 0xC000;
+  memmap_tbl[ 7 ] = ROMBANK3 - 0xE000;
+#endif
+
 //加速
 /*for ( WORD i = 0x0000; i < 0x2000; i++ )
     ReadPC[ i ] = ROMBANK0_Read;
@@ -793,7 +817,7 @@ void InfoNES_Cycle()
 		for( ; PPU_Scanline < 232; PPU_Scanline++ )		//显示在屏幕上的8-231共224条扫描线
 		{
 			//加速
-			if( PPU_Scanline < 140 || PPU_Scanline > 201)		//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
+			//if( PPU_Scanline < 140 || PPU_Scanline > 201)		//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
 			K6502_Step( STEP_PER_SCANLINE );								//执行1条扫描线
 
 			buf = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8;			//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
@@ -829,8 +853,9 @@ void InfoNES_Cycle()
 		K6502_NMI();													//执行NMI中断
 	//PPU_Latch_Flag = 0;											//nesterJ没有在VBlank开始时复位PPU_Latch_Flag标记
 	//MapperVSync();												//在VBlank期间的Mapper交换，但我们现在的几个Mapper格式用不着这种交换方式
-
-	K6502_Step( STEP_PER_SCANLINE * 21 );							//执行21条扫描线
+//for(; PPU_Scanline < 261; PPU_Scanline++)
+//K6502_Step( STEP_PER_SCANLINE);
+	K6502_Step( STEP_PER_SCANLINE * 20 );							//执行20条扫描线
 	//加速
 	//K6502_Step( STEP_PER_SCANLINE * 11 );							//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
 
@@ -1008,6 +1033,79 @@ void InfoNES_DrawLine2()
 				pattern_hi   = VRAM(pattern_addr+8);		//获取待绘制的位于当前扫描线上的Tile中的8个像素颜色索引值的1位的字节值
 
 				//将相关像素颜色值绘制到图形缓冲区的数组中，该方法参考自FCEU，比InfoNES用的方法快
+#ifdef LEON
+				int dummy1,dummy2;
+				__asm__ __volatile__(
+					//"xor %%o5,%%o5,%%o5\n\t"	//o5 = 0
+					"mov %0,%%o4\n\t"			//o4 = pattern_lo
+					"mov %1,%%o5\n\t"			//o5 = pattern_hi
+					"srl %%o4,1,%%o4\n\t"		//o4 = pattern_lo >> 1
+					"and %%o5,0xAA,%%o5\n\t"	//o5 = pattern_hi & 0xAA
+					"and %%o4,0x55,%%o4\n\t"	//o4 = ( pattern_lo >> 1 ) & 0x55
+
+					"and %0,0x55,%0\n\t"		//dummy1 = pattern_lo & 0x55
+					"sll %1,1,%1\n\t"			//dummy2 = pattern_hi << 1
+					"and %1,0xAA,%1\n\t"		//dummy2 = ( pattern_hi << 1 ) & 0xAA
+					"or  %%o5,%%o4,%%o4\n\t"	//o4 |= o5
+					"or  %0,%1,%1\n\t"			//dummy2 |= dummy1
+					//"xor %0,%0,%0\n\t"			//dummy1 = 0
+					//"xor %%o5,%%o5,%%o5\n\t"	//o5 = 0
+
+					/*	此时，o4保存着c1，dummy2保存着c2					*/
+					/*	%2保存着attrib_bits，%3保存着p，%4保存着PalTable	*/
+					/*	dummy1将用于zz，o5将用于zz2							*/
+
+					"mov %%o4,%0\n\t"			//dummy1 = c1
+					"mov %1,%%o5\n\t"			//o5 = c2
+					"and %0,3,%0\n\t"			//dummy1 = c1&3
+					"and %%o5,3,%%o5\n\t"		//o5 = c2&3
+					"or  %2,%0,%0\n\t"			//dummy1 = c1&3 | attrib_bits
+					"or  %2,%%o5,%%o5\n\t"		//o5 = c2&3 | attrib_bits
+					"ldub [%4+%0],%0\n\t"		//dummy1 = PalTable[dummy1]
+					"ldub [%4+%%o5],%%o5\n\t"	//o5 = PalTable[o5]
+					"stb %0,[%3+6]\n\t"			//p[6] = dummy1
+					"stb %%o5,[%3+7]\n\t"		//p[7] = o5
+
+					"mov %%o4,%0\n\t"			//dummy1 = c1
+					"mov %1,%%o5\n\t"			//o5 = c2
+					"srl %0,2,%0\n\t"			//dummy1 = c1>>2
+					"srl %%o5,2,%%o5\n\t"		//o5 = c2>>2
+					"and %0,3,%0\n\t"			//dummy1 = (c1>>2)&3
+					"and %%o5,3,%%o5\n\t"		//o5 = (c2>>2)&3
+					"or  %2,%0,%0\n\t"			//dummy1 = (c1>>2)&3 | attrib_bits
+					"or  %2,%%o5,%%o5\n\t"		//o5 = (c2>>2)&3 | attrib_bits
+					"ldub [%4+%0],%0\n\t"		//dummy1 = PalTable[dummy1]
+					"ldub [%4+%%o5],%%o5\n\t"	//o5 = PalTable[o5]
+					"stb %0,[%3+4]\n\t"			//p[4] = dummy1
+					"stb %%o5,[%3+5]\n\t"		//p[5] = o5
+					
+					"mov %%o4,%0\n\t"			//dummy1 = c1
+					"mov %1,%%o5\n\t"			//o5 = c2
+					"srl %0,4,%0\n\t"			//dummy1 = c1>>4
+					"srl %%o5,4,%%o5\n\t"		//o5 = c2>>4
+					"and %0,3,%0\n\t"			//dummy1 = (c1>>4)&3
+					"and %%o5,3,%%o5\n\t"		//o5 = (c2>>4)&3
+					"or  %2,%0,%0\n\t"			//dummy1 = (c1>>4)&3 | attrib_bits
+					"or  %2,%%o5,%%o5\n\t"		//o5 = (c2>>4)&3 | attrib_bits
+					"ldub [%4+%0],%0\n\t"		//dummy1 = PalTable[dummy1]
+					"ldub [%4+%%o5],%%o5\n\t"	//o5 = PalTable[o5]
+					"stb %0,[%3+2]\n\t"			//p[2] = dummy1
+					"stb %%o5,[%3+3]\n\t"		//p[3] = o5
+
+					"srl %%o4,6,%%o4\n\t"		//o4 = c1>>6
+					"srl %1,6,%1\n\t"			//dummy2 = c2>>6
+					"or  %2,%%o4,%%o4\n\t"		//o4 = c1>>6 | attrib_bits
+					"or  %2,%1,%1\n\t"			//dummy2 = c2>>6 | attrib_bits
+					"ldub [%4+%%o4],%%o4\n\t"	//o4 = PalTable[o4]
+					"ldub [%4+%1],%1\n\t"		//dummy2 = PalTable[dummy2]
+					"stb %%o4,[%3]\n\t"			//p[0] = dummy1
+					"stb %1,[%3+1]\n\t"			//p[1] = o5
+					: "=r" (dummy1), "=r" (dummy2)
+					: "r"(attrib_bits), "r" (p), "r" (PalTable), "0" (pattern_lo), "1" (pattern_hi)
+					: "%l0", "%o2", "%o4", "%o5"
+					);
+				p += 8;
+#else
 				c1 = ( ( pattern_lo >> 1 ) & 0x55 ) | ( pattern_hi & 0xAA );	//获取待绘制的位于当前扫描线上的Tile中的8个像素中的第0、2、4、6个像素的颜色索引值的低二位组成的的字节值
 				c2 = ( pattern_lo & 0x55 ) | ( ( pattern_hi << 1 ) & 0xAA );	//获取待绘制的位于当前扫描线上的Tile中的8个像素中的第1、3、5、7个像素的颜色索引值的低二位组成的的字节值
 				p[6]=PalTable[c1&3 | attrib_bits];
@@ -1019,6 +1117,7 @@ void InfoNES_DrawLine2()
 				p[0]=PalTable[c1>>6 | attrib_bits];
 				p[1]=PalTable[c2>>6 | attrib_bits];
 				p += 8;
+#endif
 
 				// //颜色
 				//p[6]=PPURAM[ 0x3f00 | ( c1&3 | attrib_bits ) ];

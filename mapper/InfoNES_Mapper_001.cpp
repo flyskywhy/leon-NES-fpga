@@ -284,17 +284,17 @@ void Map1_Write( WORD wAddr, BYTE byData )
           if ( Map1_Regs[ 0 ] & 0x10 )
           {
             byBankNum <<= 2;
-#if 0
-            PPUBANK[ 4 ] = VRAMPAGE0( byBankNum+0 );
-            PPUBANK[ 5 ] = VRAMPAGE0( byBankNum+1 );
-            PPUBANK[ 6 ] = VRAMPAGE0( byBankNum+2 );
-            PPUBANK[ 7 ] = VRAMPAGE0( byBankNum+3 );
-#else
+//#if 0
+//            PPUBANK[ 4 ] = VRAMPAGE0( byBankNum+0 );
+//            PPUBANK[ 5 ] = VRAMPAGE0( byBankNum+1 );
+//            PPUBANK[ 6 ] = VRAMPAGE0( byBankNum+2 );
+//            PPUBANK[ 7 ] = VRAMPAGE0( byBankNum+3 );
+//#else
             PPUBANK[ 4 ] = CRAMPAGE( byBankNum+0 );
             PPUBANK[ 5 ] = CRAMPAGE( byBankNum+1 );
             PPUBANK[ 6 ] = CRAMPAGE( byBankNum+2 );
             PPUBANK[ 7 ] = CRAMPAGE( byBankNum+3 );
-#endif
+//#endif
 //            InfoNES_SetupChr();
             break;
           }

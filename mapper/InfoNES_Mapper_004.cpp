@@ -316,16 +316,16 @@ void Map4_Set_PPU_Banks()
   {
     if ( Map4_Chr_Swap() )
     { 
-#if 0
-      PPUBANK[ 0 ] = VRAMPAGE0( 0 );
-      PPUBANK[ 1 ] = VRAMPAGE0( 1 );
-      PPUBANK[ 2 ] = VRAMPAGE0( 2 );
-      PPUBANK[ 3 ] = VRAMPAGE0( 3 );
-      PPUBANK[ 4 ] = VRAMPAGE1( 0 );
-      PPUBANK[ 5 ] = VRAMPAGE1( 1 );
-      PPUBANK[ 6 ] = VRAMPAGE1( 2 );
-      PPUBANK[ 7 ] = VRAMPAGE1( 3 );
-#else
+//#if 0
+//      PPUBANK[ 0 ] = VRAMPAGE0( 0 );
+//      PPUBANK[ 1 ] = VRAMPAGE0( 1 );
+//      PPUBANK[ 2 ] = VRAMPAGE0( 2 );
+//      PPUBANK[ 3 ] = VRAMPAGE0( 3 );
+//      PPUBANK[ 4 ] = VRAMPAGE1( 0 );
+//      PPUBANK[ 5 ] = VRAMPAGE1( 1 );
+//      PPUBANK[ 6 ] = VRAMPAGE1( 2 );
+//      PPUBANK[ 7 ] = VRAMPAGE1( 3 );
+//#else
       PPUBANK[ 0 ] = CRAMPAGE( 0 );
       PPUBANK[ 1 ] = CRAMPAGE( 1 );
       PPUBANK[ 2 ] = CRAMPAGE( 2 );
@@ -334,19 +334,19 @@ void Map4_Set_PPU_Banks()
       PPUBANK[ 5 ] = CRAMPAGE( 5 );
       PPUBANK[ 6 ] = CRAMPAGE( 6 );
       PPUBANK[ 7 ] = CRAMPAGE( 7 );
-#endif
+//#endif
 //      InfoNES_SetupChr();
     } else {
-#if 0
-      PPUBANK[ 0 ] = VRAMPAGE1( 0 );
-      PPUBANK[ 1 ] = VRAMPAGE1( 1 );
-      PPUBANK[ 2 ] = VRAMPAGE1( 2 );
-      PPUBANK[ 3 ] = VRAMPAGE1( 3 );
-      PPUBANK[ 4 ] = VRAMPAGE0( 0 );
-      PPUBANK[ 5 ] = VRAMPAGE0( 1 );
-      PPUBANK[ 6 ] = VRAMPAGE0( 2 );
-      PPUBANK[ 7 ] = VRAMPAGE0( 3 );
-#else
+//#if 0
+//      PPUBANK[ 0 ] = VRAMPAGE1( 0 );
+//      PPUBANK[ 1 ] = VRAMPAGE1( 1 );
+//      PPUBANK[ 2 ] = VRAMPAGE1( 2 );
+//      PPUBANK[ 3 ] = VRAMPAGE1( 3 );
+//      PPUBANK[ 4 ] = VRAMPAGE0( 0 );
+//      PPUBANK[ 5 ] = VRAMPAGE0( 1 );
+//      PPUBANK[ 6 ] = VRAMPAGE0( 2 );
+//      PPUBANK[ 7 ] = VRAMPAGE0( 3 );
+//#else
       PPUBANK[ 0 ] = CRAMPAGE( 0 );
       PPUBANK[ 1 ] = CRAMPAGE( 1 );
       PPUBANK[ 2 ] = CRAMPAGE( 2 );
@@ -355,7 +355,7 @@ void Map4_Set_PPU_Banks()
       PPUBANK[ 5 ] = CRAMPAGE( 5 );
       PPUBANK[ 6 ] = CRAMPAGE( 6 );
       PPUBANK[ 7 ] = CRAMPAGE( 7 );
-#endif
+//#endif
 //      InfoNES_SetupChr();
     }
   }    

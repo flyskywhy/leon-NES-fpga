@@ -99,9 +99,9 @@ DIRSOUND* lpSndDevice = NULL;
 /*-------------------------------------------------------------------*/
 
 LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam );
-#if 0
-LRESULT CALLBACK AboutDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
-#endif
+//#if 0
+//LRESULT CALLBACK AboutDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
+//#endif
 void ShowTitle( HWND hWnd );
 void SetWindowSize( WORD wMag );
 int LoadSRAM();
@@ -155,19 +155,19 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
   ShowWindow( hWndMain, nCmdShow );
   UpdateWindow( hWndMain );
 
-#if 0
-  /*-------------------------------------------------------------------*/
-  /*  Expired or Not?                                                  */
-  /*-------------------------------------------------------------------*/
-  SYSTEMTIME st;
-  GetLocalTime( &st );
-
-  if ( st.wYear > EXPIRED_YEAR || st.wMonth > EXPIRED_MONTH)
-  {
-    InfoNES_MessageBox( EXPIRED_MSG );
-    exit( -1 );
-  }
-#endif
+//#if 0
+//  /*-------------------------------------------------------------------*/
+//  /*  Expired or Not?                                                  */
+//  /*-------------------------------------------------------------------*/
+//  SYSTEMTIME st;
+//  GetLocalTime( &st );
+//
+//  if ( st.wYear > EXPIRED_YEAR || st.wMonth > EXPIRED_MONTH)
+//  {
+//    InfoNES_MessageBox( EXPIRED_MSG );
+//    exit( -1 );
+//  }
+//#endif
 
   /*-------------------------------------------------------------------*/
   /*  Init Resources                                                   */
@@ -517,12 +517,12 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 					/*-------------------------------------------------------------------*/
           /*  About button                                                     */
           /*-------------------------------------------------------------------*/
-#if 0
-          DialogBox(wc.hInstance, 
-                    MAKEINTRESOURCE(IDD_DIALOG), 
-                    hWndMain, 
-                    (DLGPROC)AboutDlgProc);
-#else
+//#if 0
+//          DialogBox(wc.hInstance, 
+//                    MAKEINTRESOURCE(IDD_DIALOG), 
+//                    hWndMain, 
+//                    (DLGPROC)AboutDlgProc);
+//#else
           {
             /* Version Infomation */
             char pszInfo[1024];
@@ -531,7 +531,7 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 			                        APP_NAME );
             MessageBox( hWndMain, pszInfo, APP_NAME, MB_OK | MB_ICONINFORMATION );   
           }
-#endif
+//#endif
           break;
       }
 			break;
@@ -542,30 +542,30 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
   return 0;
 }
 
-#if 0
-/*===================================================================*/
-/*                                                                   */
-/*           AboutDlgProc() : The About Dialog Box Procedure         */
-/*                                                                   */
-/*===================================================================*/
-LRESULT CALLBACK AboutDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
-{
-  switch (uMsg)
-  {
-    case WM_INITDIALOG:
-      return TRUE;
-    case WM_COMMAND:
-      switch ( LOWORD(wParam) )
-      {
-        case IDOK:
-          EndDialog(hDlg, TRUE);
-          return TRUE;
-      }
-      break;
-    }
-    return FALSE;
-}
-#endif
+//#if 0
+///*===================================================================*/
+///*                                                                   */
+///*           AboutDlgProc() : The About Dialog Box Procedure         */
+///*                                                                   */
+///*===================================================================*/
+//LRESULT CALLBACK AboutDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
+//{
+//  switch (uMsg)
+//  {
+//    case WM_INITDIALOG:
+//      return TRUE;
+//    case WM_COMMAND:
+//      switch ( LOWORD(wParam) )
+//      {
+//        case IDOK:
+//          EndDialog(hDlg, TRUE);
+//          return TRUE;
+//      }
+//      break;
+//    }
+//    return FALSE;
+//}
+//#endif
 
 /*===================================================================*/
 /*                                                                   */

@@ -303,12 +303,12 @@ BOOL DIRSOUND::SoundMute( BOOL flag )
   } 
   else 
   {
-#if 0
-    /* Clear buffer */
-    FillMemory( sound[ch1], len[ch1], 0 ); 
-    for ( int i = 0; i < Loops; i++ )
-      SoundOutput( len[ch1], sound[ch1] );
-#endif
+//#if 0
+//    /* Clear buffer */
+//    FillMemory( sound[ch1], len[ch1], 0 ); 
+//    for ( int i = 0; i < Loops; i++ )
+//      SoundOutput( len[ch1], sound[ch1] );
+//#endif
 
     /* Mute off : Begin to play sound */    
     iCnt = Loops * 3 / 4;

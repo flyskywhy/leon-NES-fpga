@@ -1,0 +1,2 @@
+运行到InfoNES_Reset->InfoNES_pAPUInit->apu_reset->apu_regwrite->APU_WRC3:时会出错
+现暂时注释掉了apu_reset，并将APU_Mute设为1。

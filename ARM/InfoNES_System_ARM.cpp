@@ -977,6 +977,9 @@ void InfoNES_LoadFrame()
 
 //lizheng   gdk_gc_destroy(gc);
 
+      //测试memcpy的速度
+//      WORD memcpy_test[0x8000];
+
 cFStart = clock();
 cOTime = cFStart - cFEnd;
 
@@ -986,6 +989,9 @@ cOTime = cFStart - cFEnd;
   for ( register int y = 110; y < 120; y++ ) 
     for ( register int x = 0; x < NES_DISP_WIDTH; x++ )
       PutPixel(x, y, (U8)((WorkFrame[ ( y << 8 ) + x ] & 0x7c00 ) >> 7));
+
+      //测试memcpy的速度
+//      InfoNES_MemoryCopy(memcpy_test, WorkFrame, 16384);
       
 cFEnd = clock();
 cFTime = cFEnd - cFStart;

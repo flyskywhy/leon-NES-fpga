@@ -939,14 +939,35 @@ void InfoNES_LoadFrame()
 //    for ( register int x = 0; x < NES_DISP_WIDTH; x++ )
 //      PutPixel(x, y, (U8)((WorkFrame[ ( y << 8 ) + x ] & 0x7c00 ) >> 7));
 
-//LEON
+
+//LEON	//用printf()模拟打印出游戏画面的一部分
+//if( FrameCount++ > 32)
+//  for ( register int y = 130; y < 210; y++ ) 
+//    for ( register int x = 0; x < 190; x++ )
+//      if( x != 189 )
+//      	printf( "%c", (BYTE)WorkFrame[ ( y << 8 ) + x ] );
+//      else
+//      	printf( "\n" );
+
+//nesterJ
+#ifdef LEON
 if( FrameCount++ > 32)
   for ( register int y = 130; y < 210; y++ ) 
     for ( register int x = 0; x < 190; x++ )
       if( x != 189 )
-      	printf( "%c", (BYTE)WorkFrame[ ( y << 8 ) + x ] );
+      	printf( "%c", WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] );
       else
       	printf( "\n" );
+#else
+if( FrameCount++ > 32)
+  for ( register int y = 130; y < 210; y++ ) 
+    for ( register int x = 0; x < 190; x++ )
+      if( x != 189 )
+      	printf( "%c", (BYTE)WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] );
+      else
+      	printf( "\n" );
+#endif
+
 
 //	printf( "Outputing Frame %d\n", FrameCount++ );
 //	printf( "Pixel 46080's RGB is %x\n", WorkFrame[ 46080 ] );

@@ -15,6 +15,9 @@
 
 #include "InfoNES_Types.h"
 
+#define PocketNES 1
+//#define LEON
+
 /*-------------------------------------------------------------------*/
 /*  NES resources                                                    */
 /*-------------------------------------------------------------------*/
@@ -41,6 +44,10 @@ extern BYTE *ROMBANK0;
 extern BYTE *ROMBANK1;
 extern BYTE *ROMBANK2;
 extern BYTE *ROMBANK3;
+
+#if PocketNES == 1
+extern BYTE *memmap_tbl[8];
+#endif
 
 //¼ÓËÙ
 //typedef BYTE ( *readfunc )( WORD wAddr );
@@ -142,21 +149,21 @@ extern BYTE PPU_UpDown_Clip;
 #define R2_MAX_SP      0x20
 #define R2_WRITE_FLAG  0x10
 
-#define SCAN_TOP_OFF_SCREEN     0
-#define SCAN_ON_SCREEN          1
-#define SCAN_BOTTOM_OFF_SCREEN  2
-#define SCAN_UNKNOWN            3
-#define SCAN_VBLANK             4
-
-#define SCAN_TOP_OFF_SCREEN_START       0 
-#define SCAN_ON_SCREEN_START            8
-#define SCAN_BOTTOM_OFF_SCREEN_START  232
-#define SCAN_UNKNOWN_START            240
-#define SCAN_VBLANK_START             243
-#define SCAN_VBLANK_END               262
+//#define SCAN_TOP_OFF_SCREEN     0
+//#define SCAN_ON_SCREEN          1
+//#define SCAN_BOTTOM_OFF_SCREEN  2
+//#define SCAN_UNKNOWN            3
+//#define SCAN_VBLANK             4
+//
+//#define SCAN_TOP_OFF_SCREEN_START       0 
+//#define SCAN_ON_SCREEN_START            8
+//#define SCAN_BOTTOM_OFF_SCREEN_START  232
+//#define SCAN_UNKNOWN_START            240
+//#define SCAN_VBLANK_START             243
+//#define SCAN_VBLANK_END               262
 
 #define STEP_PER_SCANLINE             112
-#define STEP_PER_FRAME                29828
+//#define STEP_PER_FRAME                29828
 
 /* Develop Scroll Registers */
 //#define InfoNES_SetupScr() \
@@ -234,7 +241,7 @@ extern BYTE PPU_UpDown_Clip;
 extern WORD PPU_Scanline;
 
 /* Scanline Table */
-extern BYTE PPU_ScanTable[];
+//extern BYTE PPU_ScanTable[];
 
 /* Name Table Bank */
 extern BYTE PPU_NameTableBank;
@@ -278,26 +285,34 @@ extern WORD FrameSkip;
 extern WORD FrameCnt;
 extern WORD FrameWait;
 
-#if 0
-extern WORD DoubleFrame[ 2 ][ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
-extern WORD *WorkFrame;
-extern WORD WorkFrameIdx;
-#else
+//#if 0
+//extern WORD DoubleFrame[ 2 ][ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
+//extern WORD *WorkFrame;
+//extern WORD WorkFrameIdx;
+//#else
 //extern WORD WorkFrame[ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
 
 //nesterJ
+#ifdef LEON
+extern BYTE WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
+#else
 extern WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
+#endif
 
 ////ÑÕÉ«
 //extern BYTE WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
 
-#endif
+//#endif
 
 //extern BYTE ChrBuf[];
 //
 //extern BYTE ChrBufUpdate;
 
+#ifdef LEON
+extern BYTE PalTable[];
+#else
 extern WORD PalTable[];
+#endif
 
 /*-------------------------------------------------------------------*/
 /*  APU and Pad resources                                            */

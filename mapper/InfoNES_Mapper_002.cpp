@@ -60,4 +60,9 @@ void Map2_Write( WORD wAddr, BYTE byData )
 
   ROMBANK0 = ROMPAGE( byData );
   ROMBANK1 = ROMPAGE( byData + 1 );
+
+#if PocketNES == 1
+  memmap_tbl[ 4 ] = ROMBANK0 - 0x8000;		//这里- 0x8000是为了在encodePC中不用再做& 0x1FFF的运算了，下同
+  memmap_tbl[ 5 ] = ROMBANK1 - 0xA000;
+#endif
 }

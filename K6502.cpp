@@ -151,6 +151,9 @@
 
 // Addressing Op.
 //从PRG或RAM中读取操作码或操作数，然后PC++。
+#if PocketNES == 1
+#define ReadPC(a)  a = *nes_pc++
+#else
 #define ReadPC(a)  \
 	if( PC >= 0xC000 ) \
 		a = ROMBANK2[ PC++ & 0x3fff ]; \
@@ -158,8 +161,12 @@
 		a = ROMBANK0[ PC++ & 0x3fff ]; \
 	else \
 		a = RAM[ PC++ ]
+#endif
 
 //从PRG或RAM中读取操作数地址，然后PC++。
+#if PocketNES == 1  
+#define ReadPCW(a)  a = *nes_pc++; a |= *nes_pc++ << 8
+#else
 #define ReadPCW(a)  \
 		if( PC >= 0xC000 ) \
 		{ \
@@ -176,6 +183,7 @@
 			a = RAM[ PC++ ]; \
 			a |= RAM[ PC++ ] << 8; \
 		}
+#endif
 
 //从PRG或RAM中读取操作数并加上X，然后PC++。，可以视游戏的兼容情况而决定是否将其改为上面一行。
 //#define ReadPCX(a)  \
@@ -185,6 +193,9 @@
 //		a = (BYTE)( ROMBANK0[ PC++ & 0x3fff ] + X ); \
 //	else \
 //		a = (BYTE)( RAM[ PC++ ] + X)
+#if PocketNES == 1  
+#define ReadPCX(a)  a = *nes_pc++ + X
+#else
 #define ReadPCX(a)  \
 	if( PC >= 0xC000 ) \
 		a = ROMBANK2[ PC++ & 0x3fff ] + X; \
@@ -192,8 +203,12 @@
 		a = ROMBANK0[ PC++ & 0x3fff ] + X; \
 	else \
 		a = RAM[ PC++ ] + X
+#endif
 
 //从PRG或RAM中读取操作数并加上Y，然后PC++。
+#if PocketNES == 1  
+#define ReadPCY(a)  a = *nes_pc++ + Y
+#else
 #define ReadPCY(a)  \
 	if( PC >= 0xC000 ) \
 		a = ROMBANK2[ PC++ & 0x3fff ] + Y; \
@@ -201,6 +216,7 @@
 		a = ROMBANK0[ PC++ & 0x3fff ] + Y; \
 	else \
 		a = RAM[ PC++ ] + X
+#endif
 
 //从RAM中读取操作数地址。
 #define ReadZpW(a)  a = RAM[ a ] | ( RAM[ a + 1 ] << 8 )
@@ -290,18 +306,33 @@
 			{ byD0 = ROMBANK2[ wA0 & 0x3fff ]; ++byD0; MapperWrite( wA0, byD0 ); }
 
 // Jump Op.
+#if PocketNES == 1
 #define BRA(a) { \
   if ( a ) \
   { \
 	ReadPC( BRAdisp ); \
-    wA0 = PC; \
+    /*BRAtemp = nes_pc;*/ \
+	nes_pc += BRAdisp; \
+	CLK( 3 /*+ ( ( BRAtemp & 0x0100 ) != ( nes_pc & 0x0100 ) )*/ ); \
+  } else { \
+	++nes_pc; \
+	CLK( 2 ); \
+  } \
+}
+#else
+#define BRA(a) { \
+  if ( a ) \
+  { \
+	ReadPC( BRAdisp ); \
+    /*wA0 = PC;*/ \
 	PC += BRAdisp; \
-	CLK( 3 + ( ( wA0 & 0x0100 ) != ( PC & 0x0100 ) ) ); \
+	CLK( 3 /*+ ( ( wA0 & 0x0100 ) != ( PC & 0x0100 ) )*/ ); \
   } else { \
 	++PC; \
 	CLK( 2 ); \
   } \
 }
+#endif
 
 //// Zero Page
 //#define AA_ZP    ReadPC( wA0 )
@@ -321,24 +352,38 @@
 /*-------------------------------------------------------------------*/
 
 // 6502 Register
+
+#if PocketNES == 1
+/*register */BYTE *nes_pc;			//为了避免每次读取一个指令时就判断一次指令的位置，参考PocketNES中的汇编代码，引入指向指令的指针
+BYTE *lastbank;
+#define encodePC lastbank = memmap_tbl[ ((WORD)nes_pc) >> 13 ]; nes_pc = lastbank + (WORD)nes_pc
+
+//BYTE *pSpPC[ 256 ];
+//BYTE SpPC = 0;
+//#define PUSH32(a) pSpPC[ SpPC++ ] = a;
+//#define POP32(a) a = pSpPC[ SpPC-- ];
+
+#else
 WORD PC;
+#endif
+
 BYTE SP;
 BYTE F;
 BYTE A;
 BYTE X;
 BYTE Y;
 
-// The state of the IRQ pin
-BYTE IRQ_State;
-
-// Wiring of the IRQ pin
-BYTE IRQ_Wiring;
-
-// The state of the NMI pin
-BYTE NMI_State;
-
-// Wiring of the NMI pin
-BYTE NMI_Wiring;
+//// The state of the IRQ pin
+//BYTE IRQ_State;
+//
+//// Wiring of the IRQ pin
+//BYTE IRQ_Wiring;
+//
+//// The state of the NMI pin
+//BYTE NMI_State;
+//
+//// Wiring of the NMI pin
+//BYTE NMI_Wiring;
 
 // The number of the clocks that it passed
 WORD g_wPassedClocks;
@@ -384,9 +429,9 @@ void K6502_Init()
   BYTE idx;
   BYTE idx2;
 
-  // The establishment of the IRQ pin
-  NMI_Wiring = NMI_State = 1;
-  IRQ_Wiring = IRQ_State = 1;
+  //// The establishment of the IRQ pin
+  //NMI_Wiring = NMI_State = 1;
+  //IRQ_Wiring = IRQ_State = 1;
 
   // Make a table for the test
   idx = 0;
@@ -496,18 +541,26 @@ void K6502_Reset()
  */
 
   // Reset Registers
-  PC = ROMBANK2[ 0x3FFC ] | ROMBANK2[ 0x3FFD ] << 8;//加速K6502_ReadW( VECTOR_RESET );
+
+#if PocketNES == 1
+	nes_pc = (BYTE*)(ROMBANK3[ 0x1FFC ] | ROMBANK3[ 0x1FFD ] << 8);//加速K6502_ReadW( VECTOR_RESET );
+	encodePC;
+#else
+	PC = ROMBANK2[ 0x3FFC ] | ROMBANK2[ 0x3FFD ] << 8;//加速K6502_ReadW( VECTOR_RESET );
+#endif
+
   SP = 0xFF;
   A = X = Y = 0;
   F = FLAG_Z | FLAG_R | FLAG_I;
 
-  // Set up the state of the Interrupt pin.
-  NMI_State = NMI_Wiring;
-  IRQ_State = IRQ_Wiring;
+  //// Set up the state of the Interrupt pin.
+  //NMI_State = NMI_Wiring;
+  //IRQ_State = IRQ_Wiring;
 
   // Reset Passed Clocks
   g_wPassedClocks = 0;
 
+  //APU
   total_cycles = 0;
 }
 
@@ -516,16 +569,16 @@ void K6502_Reset()
 /*    K6502_Set_Int_Wiring() : Set up wiring of the interrupt pin    */
 /*                                                                   */
 /*===================================================================*/
-void K6502_Set_Int_Wiring( BYTE byNMI_Wiring, BYTE byIRQ_Wiring )
-{
-/*
- * Set up wiring of the interrupt pin
- *
- */
-
-  NMI_Wiring = byNMI_Wiring;
-  IRQ_Wiring = byIRQ_Wiring;
-}
+//void K6502_Set_Int_Wiring( BYTE byNMI_Wiring, BYTE byIRQ_Wiring )
+//{
+///*
+// * Set up wiring of the interrupt pin
+// *
+// */
+//
+//  NMI_Wiring = byNMI_Wiring;
+//  IRQ_Wiring = byIRQ_Wiring;
+//}
 
 //nesterJ
 void K6502_NMI()			//执行NMI中断
@@ -536,6 +589,13 @@ void K6502_NMI()			//执行NMI中断
 	//	NMI_State = NMI_Wiring;
 		CLK( 7 );
 
+#if PocketNES == 1
+		  nes_pc -= (DWORD)lastbank;
+		  PUSHW( (WORD)nes_pc ); PUSH( F & ~FLAG_B ); RSTF( FLAG_D ); SETF( FLAG_I );
+		  nes_pc = (BYTE *)( ROMBANK3[ 0x1FFA ] | ROMBANK3[ 0x1FFB ] << 8 );
+		  encodePC;
+#else
+
 		PUSHW( PC );
 		PUSH( F & ~FLAG_B );
 
@@ -544,6 +604,7 @@ void K6502_NMI()			//执行NMI中断
 
 		PC = ROMBANK2[ 0x3FFA ] | ROMBANK2[ 0x3FFB ] << 8;//加速 K6502_ReadW( VECTOR_NMI );
 	//}
+#endif
 }
 
 /*===================================================================*/
@@ -564,7 +625,13 @@ void K6502_Step( WORD wClocks )
 
   BYTE byCode;
   signed char BRAdisp;
-  WORD wA0, wA1;
+
+#if PocketNES == 1
+  BYTE *BRAtemp;
+#endif
+
+  register WORD wA0;
+  WORD wA1;
   BYTE byD0;
   BYTE byD1;
   WORD wD0;
@@ -642,12 +709,16 @@ void K6502_Step( WORD wClocks )
 	  //else
 		 // byCode = RAM[ PC++ ];
 
+#if PocketNES == 1
+	  byCode = *nes_pc++;
+#else
 		if( PC >= 0xC000 )
 			byCode = ROMBANK2[ PC++ & 0x3fff ];
 		else if( PC >= 0x8000 )
 			byCode = ROMBANK0[ PC++ & 0x3fff ];
 		else
 			byCode = RAM[ PC++ ];
+#endif
 
     //byCode = K6502_ReadPC( PC++ );
 
@@ -1290,11 +1361,19 @@ void K6502_Step( WORD wClocks )
 
 //加速
       case 0x00:  // BRK
-        //++PC; PUSHW( PC ); SETF( FLAG_B ); PUSH( F ); SETF( FLAG_I ); RSTF( FLAG_D ); PC = K6502_ReadW( VECTOR_IRQ ); CLK( 7 );
+		  //++PC; PUSHW( PC ); SETF( FLAG_B ); PUSH( F ); SETF( FLAG_I ); RSTF( FLAG_D ); PC = K6502_ReadW( VECTOR_IRQ ); CLK( 7 );
 
-		//加速
+		  //加速
+#if PocketNES == 1
+		  nes_pc -= (DWORD)lastbank;
+		  ++nes_pc;
+		  PUSHW( (WORD)nes_pc ); SETF( FLAG_B ); PUSH( F ); SETF( FLAG_I ); RSTF( FLAG_D );
+		  nes_pc = (BYTE *)(ROMBANK3[ 0x1FFE ] | ROMBANK3[ 0x1FFF ] << 8);
+		  encodePC;
+#else
 		++PC; PUSHW( PC ); SETF( FLAG_B ); PUSH( F ); SETF( FLAG_I ); RSTF( FLAG_D );
 		PC = ROMBANK2[ 0x3FFE ] | ROMBANK2[ 0x3FFF ] << 8;
+#endif
 		CLK( 7 );
 
 		break;
@@ -1368,12 +1447,16 @@ void K6502_Step( WORD wClocks )
         //ORA( A_IMM ); CLK( 2 );
 
 		//加速
+#if PocketNES == 1
+		  A |= *nes_pc++;
+#else
 		if( PC >= 0xC000 )
 			A |= ROMBANK2[ PC++ & 0x3fff ];
 		else if( PC >= 0x8000 )
 			A |= ROMBANK0[ PC++ & 0x3fff ];
 		else
 			A |= RAM[ PC++ ];
+#endif
 		TEST( A );
 		CLK( 2 );
 
@@ -1523,6 +1606,14 @@ void K6502_Step( WORD wClocks )
         //JSR; CLK( 6 );
         
 		//加速
+#if PocketNES == 1
+		  wA0 = *nes_pc++;
+		  wA0 |= *nes_pc << 8;
+		  nes_pc -= (DWORD)lastbank;
+		  PUSHW( (WORD)nes_pc );
+		  nes_pc = (BYTE *)wA0;
+		  encodePC;
+#else
 		if( PC >= 0xC000 )
 		{
 			wA0 = ROMBANK2[ PC++ & 0x3fff ];
@@ -1540,6 +1631,7 @@ void K6502_Step( WORD wClocks )
 		}
         PUSHW( PC );
 		PC = wA0;
+#endif
         CLK( 6 );
 
         break;
@@ -1608,12 +1700,16 @@ void K6502_Step( WORD wClocks )
         //AND( A_IMM ); CLK( 2 );
 
 		//加速
+#if PocketNES == 1
+		  A &= *nes_pc++;
+#else
 		if( PC >= 0xC000 )
 			A &= ROMBANK2[ PC++ & 0x3fff ];
 		else if( PC >= 0x8000 )
 			A &= ROMBANK0[ PC++ & 0x3fff ];
 		else
 			A &= RAM[ PC++ ];
+#endif
 		TEST( A );
 		CLK( 2 );
 
@@ -1782,7 +1878,15 @@ void K6502_Step( WORD wClocks )
         break;
 
       case 0x40: // RTI
-        POP( F ); SETF( FLAG_R ); POPW( PC ); CLK( 6 );
+        POP( F ); SETF( FLAG_R );
+#if PocketNES == 1
+		nes_pc = (BYTE *)RAM[ BASE_STACK + ++SP ];
+		nes_pc += RAM[ BASE_STACK + ++SP ] << 8;
+		encodePC;
+#else
+		POPW( PC );
+#endif
+		CLK( 6 );
         break;
 
       case 0x41: // EOR (Zpg,X)
@@ -1836,12 +1940,16 @@ void K6502_Step( WORD wClocks )
         //EOR( A_IMM ); CLK( 2 );
 
 		//加速
+#if PocketNES == 1
+		  A ^= *nes_pc++;
+#else
 		if( PC >= 0xC000 )
 			A ^= ROMBANK2[ PC++ & 0x3fff ];
 		else if( PC >= 0x8000 )
 			A ^= ROMBANK0[ PC++ & 0x3fff ];
 		else
 			A ^= RAM[ PC++ ];
+#endif
 		TEST( A );
 		CLK( 2 );
 
@@ -1855,6 +1963,11 @@ void K6502_Step( WORD wClocks )
         //JMP( AA_ABS ); CLK( 3 );
 
 		//加速
+#if PocketNES == 1
+		  wA0 = *nes_pc++;
+		  nes_pc = (BYTE *)( wA0 | *nes_pc << 8 );
+		  encodePC;
+#else
 		if( PC >= 0xC000 )
 		{
 			wA0 = ROMBANK2[ PC++ & 0x3fff ];
@@ -1870,6 +1983,7 @@ void K6502_Step( WORD wClocks )
 			wA0 = RAM[ PC++ ];
 			PC = wA0 | RAM[ PC ] << 8;
 		}
+#endif
 		CLK( 3 );
 
         break;
@@ -2030,7 +2144,15 @@ void K6502_Step( WORD wClocks )
 		break;
 
       case 0x60: // RTS
-        POPW( PC ); ++PC; CLK( 6 );
+#if PocketNES == 1
+		  nes_pc = (BYTE *)RAM[ BASE_STACK + ++SP ];
+		  nes_pc += RAM[ BASE_STACK + ++SP ] << 8;
+		  ++nes_pc;
+		  encodePC;
+#else
+        POPW( PC ); ++PC;
+#endif
+		CLK( 6 );
         break;
 
       case 0x61: // ADC (Zpg,X)
@@ -2104,6 +2226,17 @@ void K6502_Step( WORD wClocks )
         //JMP( K6502_ReadW2( AA_ABS ) ); CLK( 5 );
 
 		//加速
+#if PocketNES == 1
+		  wA0 = *nes_pc++;
+		  wA0 |= *nes_pc << 8;
+		  if( wA0 >= 0xC000 )
+			  nes_pc = (BYTE *)( ROMBANK2[ wA0 & 0x3fff ] | (WORD)ROMBANK2[ ( wA0 + 1 ) & 0x3fff ] << 8 );
+		  else if( wA0 >= 0x8000 )
+			  nes_pc = (BYTE *)( ROMBANK0[ wA0 & 0x3fff ] | (WORD)ROMBANK0[ ( wA0 + 1 ) & 0x3fff ] << 8 );
+		  else
+			  nes_pc = (BYTE *)( RAM[ wA0 ] | (WORD)RAM[ wA0 + 1 ] << 8 );
+		  encodePC;
+#else
 		if( PC >= 0xC000 )
 		{
 			wA0 = ROMBANK2[ PC++ & 0x3fff ];
@@ -2133,6 +2266,7 @@ void K6502_Step( WORD wClocks )
 				PC = ROMBANK0[ wA0 & 0x3fff ] | (WORD)ROMBANK0[ ( wA0 + 1 ) & 0x3fff ] << 8;
 			else
 				PC = RAM[ wA0 ] | (WORD)RAM[ wA0 + 1 ] << 8;
+#endif
 		CLK( 5 );
 
         break;
@@ -2427,12 +2561,16 @@ void K6502_Step( WORD wClocks )
         //LDY( A_IMM ); CLK( 2 );
 
 		//加速
+#if PocketNES == 1
+		  Y = *nes_pc++;
+#else
 		if( PC >= 0xC000 )
 			Y = ROMBANK2[ PC++ & 0x3fff ];
 		else if( PC >= 0x8000 )
 			Y = ROMBANK0[ PC++ & 0x3fff ];
 		else
 			Y = RAM[ PC++ ];
+#endif
 		TEST( Y );
 		CLK( 2 );
 
@@ -2461,12 +2599,16 @@ void K6502_Step( WORD wClocks )
         //LDX( A_IMM ); CLK( 2 );
 
 		//加速
+#if PocketNES == 1
+		  X = *nes_pc++;
+#else
 		if( PC >= 0xC000 )
 			X = ROMBANK2[ PC++ & 0x3fff ];
 		else if( PC >= 0x8000 )
 			X = ROMBANK0[ PC++ & 0x3fff ];
 		else
 			X = RAM[ PC++ ];
+#endif
 		TEST( X );
 		CLK( 2 );
 
@@ -2513,12 +2655,16 @@ void K6502_Step( WORD wClocks )
         //LDA( A_IMM ); CLK( 2 );
 
 		//加速
+#if PocketNES == 1
+		  A = *nes_pc++;
+#else
 		if( PC >= 0xC000 )
 			A = ROMBANK2[ PC++ & 0x3fff ];
 		else if( PC >= 0x8000 )
 			A = ROMBANK0[ PC++ & 0x3fff ];
 		else
 			A = RAM[ PC++ ];
+#endif
 		TEST( A );
 		CLK( 2 );
 
@@ -2732,12 +2878,16 @@ void K6502_Step( WORD wClocks )
         //CPY( A_IMM ); CLK( 2 );
         
 		//加速
+#if PocketNES == 1
+		  wD0 = Y - *nes_pc++;
+#else
 		if( PC >= 0xC000 )
 			wD0 = Y - ROMBANK2[ PC++ & 0x3fff ];
 		else if( PC >= 0x8000 )
 			wD0 = Y - ROMBANK0[ PC++ & 0x3fff ];
 		else
 			wD0 = Y - RAM[ PC++ ];
+#endif
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
 		CLK( 2 );
@@ -2809,12 +2959,16 @@ void K6502_Step( WORD wClocks )
         //CMP( A_IMM ); CLK( 2 );
 
 		//加速
+#if PocketNES == 1
+		  wD0 = A - *nes_pc++;
+#else
 		if( PC >= 0xC000 )
 			wD0 = A - ROMBANK2[ PC++ & 0x3fff ];
 		else if( PC >= 0x8000 )
 			wD0 = A - ROMBANK0[ PC++ & 0x3fff ];
 		else
 			wD0 = A - RAM[ PC++ ];
+#endif
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
 		CLK( 2 );
@@ -2987,12 +3141,16 @@ void K6502_Step( WORD wClocks )
         //CPX( A_IMM ); CLK( 2 );
         
 		//加速
+#if PocketNES == 1
+		  wD0 = X - *nes_pc++;
+#else
 		if( PC >= 0xC000 )
 			wD0 = X - ROMBANK2[ PC++ & 0x3fff ];
 		else if( PC >= 0x8000 )
 			wD0 = X - ROMBANK0[ PC++ & 0x3fff ];
 		else
 			wD0 = X - RAM[ PC++ ];
+#endif
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
 		CLK( 2 );
@@ -3239,14 +3397,22 @@ void K6502_Step( WORD wClocks )
 			case	0x89: // DOP (CYCLES 2)
 			case	0xC2: // DOP (CYCLES 2)
 			case	0xE2: // DOP (CYCLES 2)
+#if PocketNES == 1
+				nes_pc++;
+#else
 				PC++;
+#endif
 				CLK( 2 );
 				break;
 
 			case	0x04: // DOP (CYCLES 3)
 			case	0x44: // DOP (CYCLES 3)
 			case	0x64: // DOP (CYCLES 3)
+#if PocketNES == 1
+				nes_pc++;
+#else
 				PC++;
+#endif
 				CLK( 3 );
 				break;
 
@@ -3256,7 +3422,11 @@ void K6502_Step( WORD wClocks )
 			case	0x74: // DOP (CYCLES 4)
 			case	0xD4: // DOP (CYCLES 4)
 			case	0xF4: // DOP (CYCLES 4)
-        PC++; 
+#if PocketNES == 1
+				nes_pc++;
+#else
+				PC++;
+#endif
         CLK( 4 );
         break;
 
@@ -3267,15 +3437,19 @@ void K6502_Step( WORD wClocks )
 			case	0x7C: // TOP
 			case	0xDC: // TOP
 			case	0xFC: // TOP
-				PC+=2;
+#if PocketNES == 1
+				nes_pc += 2;
+#else
+				PC += 2;
+#endif
 				CLK( 4 );
 				break;
 
       default:   // Unknown Instruction
         CLK( 2 );
-#if 0
-        InfoNES_MessageBox( "0x%02x is unknown instruction.\n", byCode ) ;
-#endif
+//#if 0
+//        InfoNES_MessageBox( "0x%02x is unknown instruction.\n", byCode ) ;
+//#endif
         break;
         
     }  /* end of switch ( byCode ) */

@@ -329,26 +329,26 @@ static inline void K6502_WritePPU( WORD wAddr, BYTE byData )
           if ( PPU_Latch_Flag )
           {
             /* Low *///2006第二次写入
-#if 0
-            PPU_Addr = ( PPU_Addr & 0xff00 ) | ( (WORD)byData );
-#else
+//#if 0
+//            PPU_Addr = ( PPU_Addr & 0xff00 ) | ( (WORD)byData );
+//#else
         // t:0000000011111111=d:11111111
             PPU_Temp = ( PPU_Temp & 0xFF00 ) | byData;//加速( ( (WORD)byData ) & 0x00FF);
 	    PPU_Addr = PPU_Temp;
-#endif
+//#endif
             //InfoNES_SetupScr();
           }
           else
           {
             /* High *///2006第一次写入
-#if 0
-            PPU_Addr = ( PPU_Addr & 0x00ff ) | ( (WORD)( byData & 0x3f ) << 8 );
-            InfoNES_SetupScr();
-#else
+//#if 0
+//            PPU_Addr = ( PPU_Addr & 0x00ff ) | ( (WORD)( byData & 0x3f ) << 8 );
+//            InfoNES_SetupScr();
+//#else
         // t:0011111100000000=d:00111111
         // t:1100000000000000=0
             PPU_Temp = ( PPU_Temp & 0x00FF ) | ( ( byData & 0x3F ) << 8 );//加速( ( ((WORD)byData) & 0x003F ) << 8 );
-#endif            
+//#endif            
           }
           PPU_Latch_Flag ^= 1;
           break;
@@ -378,20 +378,32 @@ static inline void K6502_WritePPU( WORD wAddr, BYTE byData )
 
       if(0x0000 == (addr & 0x000F)) // is it THE 0 entry?
       {
+#ifdef LEON
+		PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
+#else
         PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = byData;
 		PalTable[ 0x00 ] = PalTable[ 0x10 ] = NesPalette[ byData ] | 0x8000;
+#endif
       }
       else if(0x0000 == (addr & 0x0010))
       {
         // background palette
+#ifdef LEON
+		PPURAM[ addr ] = PalTable[ addr & 0x000F ] = byData;
+#else
         PPURAM[ addr ] = byData;
 		PalTable[ addr & 0x000F ] = NesPalette[ byData ];
+#endif
       }
       else
       {
         // sprite palette
+#ifdef LEON
+		PPURAM[ addr/* & 0x000F*/ ] = PalTable[ addr & 0x001F ] = byData; 
+#else
         PPURAM[ addr/* & 0x000F*/ ] = byData;
 		PalTable[ addr & 0x001F ] = NesPalette[ byData ]; 
+#endif
       }
       PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] = PalTable[ 0x10 ] = 
       PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ]  = PalTable[ 0x00 ];
@@ -516,16 +528,17 @@ static inline void K6502_WriteAPU( WORD wAddr, BYTE byData )
           //InfoNES_pAPUWriteControl( wAddr, byData );
 
 		//APU
+          if ( !APU_Mute )
 		apu_write( wAddr , byData );
 
 		  APU_Reg[ wAddr & 0x1f ] = byData;
-#if 0
-          /* Unknown */
-          if ( byData & 0x10 ) 
-          {
-	    byData &= ~0x80;
-	  }
-#endif
+//#if 0
+//          /* Unknown */
+//          if ( byData & 0x10 ) 
+//          {
+//	    byData &= ~0x80;
+//	  }
+//#endif
           break;
 
         case 0x4016:  /* 0x4016 */

@@ -2,7 +2,7 @@ AS=sparc-rtems-as
 CC=sparc-rtems-gcc
 DUMP=sparc-rtems-objdump
 
-CFLAGS = -g -c -O2 -mv8 -mno-fpu -msoft-float 
+CFLAGS = -g -c -O2 -mv8 -mno-fpu -msoft-float -DLEON
 #ASFLAGS = -D -gstabs 
 LDFLAGS = -g -N -Ttext=40000000 #-nostdlib -nodefaultlibs -nostdinclude #-e main 
 LIBS= -LD:/cygwin/opt/rtems/sparc-rtems/lib -lgcc -lm

@@ -805,7 +805,7 @@ void InfoNES_pAPUInit(void)
 	num_samples = sample_rate / refresh_rate;
 
 	apu_setparams(sample_rate, refresh_rate, frag_size, sample_bits);
-	apu_reset(); //DCR
+	//apu_reset(); //DCR
 	InfoNES_MemorySet( (void *)wave_buffers, 0, num_samples );  
 
 	InfoNES_SoundOpen( num_samples, sample_rate );
