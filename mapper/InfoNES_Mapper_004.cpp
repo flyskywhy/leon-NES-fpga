@@ -32,16 +32,16 @@ void Map4_Init()
   MapperWrite = Map4_Write;
 
   /* Write to SRAM */
-  MapperSram = Map0_Sram;
+//加速   MapperSram = Map0_Sram;
 
   /* Write to APU */
-  MapperApu = Map0_Apu;
+//加速   MapperApu = Map0_Apu;
 
   /* Read from APU */
-  MapperReadApu = Map0_ReadApu;
+//加速  MapperReadApu = Map0_ReadApu;
 
   /* Callback at VSync */
-  MapperVSync = Map0_VSync;
+//加速   MapperVSync = Map0_VSync;
 
   /* Callback at HSync */
   MapperHSync = Map4_HSync;
@@ -53,7 +53,7 @@ void Map4_Init()
 //减容   MapperRenderScreen = Map0_RenderScreen;
 
   /* Set SRAM Banks */
-  SRAMBANK = SRAM;
+//减容   SRAMBANK = SRAM;
 
   /* Initialize State Registers */
   for ( int nPage = 0; nPage < 8; nPage++ )

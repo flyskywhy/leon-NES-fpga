@@ -34,7 +34,7 @@ extern BYTE SRAM[];
 extern BYTE *ROM;
 
 /* SRAM BANK ( 8Kb ) */
-extern BYTE *SRAMBANK;
+//减容 extern BYTE *SRAMBANK;
 
 /* ROM BANK ( 8Kb * 4 ) */
 extern BYTE *ROMBANK0;
@@ -45,7 +45,7 @@ extern BYTE *ROMBANK3;
 //加速
 //typedef BYTE ( *readfunc )( WORD wAddr );
 //extern readfunc ReadPC[];
-extern BYTE **ReadPC[];
+//extern BYTE **ReadPC[];
 //extern BYTE PAGE[];
 
 /*-------------------------------------------------------------------*/
@@ -88,6 +88,10 @@ extern BYTE PPU_R2;
 extern BYTE PPU_R3;
 extern BYTE PPU_R7;
 
+//FCEU
+extern BYTE PPUGenLatch;
+extern BYTE PPUSPL;
+
 extern BYTE PPU_Scr_V;
 extern BYTE PPU_Scr_V_Next;
 extern BYTE PPU_Scr_V_Byte;
@@ -105,6 +109,10 @@ extern BYTE PPU_Scr_H_Bit_Next;
 extern BYTE PPU_Latch_Flag;
 extern WORD PPU_Addr;
 extern WORD PPU_Temp;
+
+//nesterJ
+extern BYTE PPU_x;
+
 extern WORD PPU_Increment;
 
 extern BYTE PPU_Latch_Flag;
@@ -172,8 +180,14 @@ extern BYTE PPU_NameTableBank;
 /* BG Base Address */
 extern BYTE *PPU_BG_Base;
 
+//nesterJ
+extern WORD  bg_pattern_table_addr;
+
 /* Sprite Base Address */
 extern BYTE *PPU_SP_Base;
+
+//nesterJ
+extern WORD  spr_pattern_table_addr;
 
 /* Sprite Height */
 extern WORD PPU_SP_Height;
@@ -181,6 +195,10 @@ extern WORD PPU_SP_Height;
 /* NES display size */
 #define NES_DISP_WIDTH      256
 #define NES_DISP_HEIGHT     240
+
+//nesterJ
+#define NES_BACKBUF_WIDTH	272		//NES_DISP_WIDTH + 8 + 8，这里加两个8是为了能将背景绘制到256 * 240两面外边的额外空白8各像素中，方便进行像素极的水平卷轴，也就是说每条扫描线都要绘制32 + 1个Tile
+//#define NES_BACKBUF_WIDTH	256		//NES_DISP_WIDTH，只有在使用分段绘制背景时才使用，需要修正InfoNES_LoadFrame()和InfoNES_DrawLine2()中和WorkFrame[]相关的语句
 
 /* VRAM Write Enable ( 0: Disable, 1: Enable ) */
 extern BYTE byVramWriteEnable;
@@ -204,7 +222,15 @@ extern WORD *WorkFrame;
 extern WORD WorkFrameIdx;
 #else
 extern WORD WorkFrame[ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
+
+////nesterJ
+//extern WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
+//extern BYTE solid_buf[ NES_DISP_WIDTH ];
+
 #endif
+
+//nesterJ
+extern BYTE solid_buf[ NES_DISP_WIDTH ];
 
 extern BYTE ChrBuf[];
 
@@ -244,13 +270,13 @@ extern void (*MapperInit)();
 /* Write to Mapper */
 extern void (*MapperWrite)( WORD wAddr, BYTE byData );
 /* Write to SRAM */
-extern void (*MapperSram)( WORD wAddr, BYTE byData );
+//加速 extern void (*MapperSram)( WORD wAddr, BYTE byData );
 /* Write to APU */
-extern void (*MapperApu)( WORD wAddr, BYTE byData );
+//加速 extern void (*MapperApu)( WORD wAddr, BYTE byData );
 /* Read from Apu */
-extern BYTE (*MapperReadApu)( WORD wAddr );
+//加速 extern BYTE (*MapperReadApu)( WORD wAddr );
 /* Callback at VSync */
-extern void (*MapperVSync)();
+//加速 extern void (*MapperVSync)();
 /* Callback at HSync */
 extern void (*MapperHSync)();
 /* Callback at PPU read/write */
@@ -318,6 +344,7 @@ int InfoNES_HSync();
 
 /* Render a scanline */
 void InfoNES_DrawLine();
+void InfoNES_DrawLine2();
 
 /* Get a position of scanline hits sprite #0 */
 void InfoNES_GetSprHitY();

@@ -37,7 +37,7 @@
 #include "glib.h"
 #include "slib.h"
 
-#include "./gamefile/contra.h"
+#include "../gamefile/contra.h"
 int pIrqStart = 0;
 int pIrqHandler = 0;
 int pIrqFinish = 0;

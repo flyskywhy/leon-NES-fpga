@@ -27,43 +27,43 @@
 // Addressing Op.
 // Address
 // (Indirect,X)
-#define AA_IX    K6502_ReadZpW( K6502_Read( PC++ ) + X )
+#define AA_IX    K6502_ReadZpW( K6502_ReadPC( PC++ ) + X )//(BYTE)( K6502_ReadPC( PC++ ) + X ) )修不修正好像没啥影响
 // (Indirect),Y
-#define AA_IY    K6502_ReadZpW( K6502_Read( PC++ ) ) + Y
+#define AA_IY    K6502_ReadZpW( K6502_ReadPC( PC++ ) ) + Y
 // Zero Page
-#define AA_ZP    K6502_Read( PC++ )
+#define AA_ZP    K6502_ReadPC( PC++ )
 // Zero Page,X
-#define AA_ZPX   (BYTE)( K6502_Read( PC++ ) + X )
+#define AA_ZPX   K6502_ReadPC( PC++ ) + X//(BYTE)( K6502_ReadPC( PC++ ) + X )修不修正好像没啥影响
 // Zero Page,Y
-#define AA_ZPY   (BYTE)( K6502_Read( PC++ ) + Y )
+#define AA_ZPY   K6502_ReadPC( PC++ ) + Y//(BYTE)( K6502_ReadPC( PC++ ) + Y )修不修正好像没啥影响
 // Absolute
-#define AA_ABS   ( K6502_Read( PC++ ) | (WORD)K6502_Read( PC++ ) << 8 )
+#define AA_ABS   ( K6502_ReadPC( PC++ ) | (WORD)K6502_ReadPC( PC++ ) << 8 )
 // Absolute2 ( PC-- )
-#define AA_ABS2  ( K6502_Read( PC++ ) | (WORD)K6502_Read( PC ) << 8 )
+#define AA_ABS2  ( K6502_ReadPC( PC++ ) | (WORD)K6502_ReadPC( PC ) << 8 )
 // Absolute,X
 #define AA_ABSX  AA_ABS + X
 // Absolute,Y
 #define AA_ABSY  AA_ABS + Y
 
 // Data
-// (Indirect,X)
+// (Indirect,X)	零页X间址寻址
 #define A_IX    K6502_Read( AA_IX )
-// (Indirect),Y
+// (Indirect),Y	零页Y间址寻址
 #define A_IY    K6502_ReadIY()
-// Zero Page
+// Zero Page	零页寻址
 #define A_ZP    K6502_ReadZp( AA_ZP )
-// Zero Page,X
+// Zero Page,X	零页X变址寻址
 #define A_ZPX   K6502_ReadZp( AA_ZPX )
-// Zero Page,Y
+// Zero Page,Y	零页Y变址寻址
 #define A_ZPY   K6502_ReadZp( AA_ZPY )
-// Absolute
+// Absolute		绝对地址寻址
 #define A_ABS   K6502_Read( AA_ABS )
-// Absolute,X
+// Absolute,X	绝对X变址寻址
 #define A_ABSX  K6502_ReadAbsX()
-// Absolute,Y
+// Absolute,Y	绝对Y变址寻址
 #define A_ABSY  K6502_ReadAbsY()
-// Immediate
-#define A_IMM   K6502_Read( PC++ )
+// Immediate	立即数寻址
+#define A_IMM   K6502_ReadPC( PC++ )
 
 // Flag Op.
 #define SETF(a)  F |= (a)
@@ -79,10 +79,10 @@
 #define LDY(a)    Y = (a); TEST( Y );
 
 // Stack Op.
-#define PUSH(a)   K6502_Write( BASE_STACK + SP--, (a) )
+#define PUSH(a)   RAM[ BASE_STACK + SP-- ] = (a) 
 #define PUSHW(a)  PUSH( (a) >> 8 ); PUSH( (a) & 0xff )
-#define POP(a)    a = K6502_Read( BASE_STACK + ++SP )
-#define POPW(a)   POP(a); a |= ( K6502_Read( BASE_STACK + ++SP ) << 8 )
+#define POP(a)    a = RAM[ BASE_STACK + ++SP ]
+#define POPW(a)   POP(a); a |= ( RAM[ BASE_STACK + ++SP ] << 8 )
 
 // Logical Op.
 #define ORA(a)  A |= (a); TEST( A )
@@ -124,13 +124,13 @@
 // Jump Op.
 #define JSR     wA0 = AA_ABS2; PUSHW( PC ); PC = wA0; 
 #if 0
-#define BRA(a)  if ( a ) { wA0 = PC; PC += (char)K6502_Read( PC ); CLK( 3 + ( ( wA0 & 0x0100 ) != ( PC & 0x0100 ) ) ); ++PC; } else { ++PC; CLK( 2 ); }
+#define BRA(a)  if ( a ) { wA0 = PC; PC += (char)K6502_ReadPC( PC ); CLK( 3 + ( ( wA0 & 0x0100 ) != ( PC & 0x0100 ) ) ); ++PC; } else { ++PC; CLK( 2 ); }
 #else
 #define BRA(a) { \
   if ( a ) \
   { \
     wA0 = PC; \
-	byD0 = K6502_Read( PC ); \
+	byD0 = K6502_ReadPC( PC ); \
 	PC += ( ( byD0 & 0x80 ) ? ( 0xFF00 | (WORD)byD0 ) : (WORD)byD0 ); \
 	CLK( 3 + ( ( wA0 & 0x0100 ) != ( PC & 0x0100 ) ) ); \
     ++PC; \
@@ -148,122 +148,171 @@
 #define CLK(a)   g_wPassedClocks += (a);
 
 // Addressing Op.
-// Address
-// (Indirect,X)
-#define AA_IX    K6502_ReadZpW( *( *ReadPC[ PC - 0x8000 ] + ( PC++ & 0x1fff) ) + X )
-// (Indirect),Y
-#define AA_IY    K6502_ReadZpW( *( *ReadPC[ PC - 0x8000 ] + ( PC++ & 0x1fff) ) ) + Y
-// Zero Page
-#define AA_ZP    *( *ReadPC[ PC - 0x8000 ] + ( PC++ & 0x1fff) )
-// Zero Page,X
-#define AA_ZPX   (BYTE)( *( *ReadPC[ PC - 0x8000 ] + ( PC++ & 0x1fff) ) + X )
-// Zero Page,Y
-#define AA_ZPY   (BYTE)( *( *ReadPC[ PC - 0x8000 ] + ( PC++ & 0x1fff) ) + Y )
-// Absolute
-#define AA_ABS   ( K6502_Read( PC++ ) | (WORD)K6502_Read( PC++ ) << 8 )
-// Absolute2 ( PC-- )
-#define AA_ABS2  ( K6502_Read( PC++ ) | (WORD)K6502_Read( PC ) << 8 )
-// Absolute,X
-#define AA_ABSX  AA_ABS + X
-// Absolute,Y
-#define AA_ABSY  AA_ABS + Y
+//从PRG或RAM中读取操作码或操作数，然后PC++。
+#define ReadPC(a)  \
+	if( PC >= 0xC000 ) \
+		a = ROMBANK2[ PC++ & 0x3fff ]; \
+	else if( PC >= 0x8000 ) \
+		a = ROMBANK0[ PC++ & 0x3fff ]; \
+	else \
+		a = RAM[ PC++ ]
 
-// Data
-// (Indirect,X)
-#define A_IX    K6502_Read( AA_IX )
-// (Indirect),Y
-#define A_IY    K6502_ReadIY()
-// Zero Page
-#define A_ZP    K6502_ReadZp( AA_ZP )
-// Zero Page,X
-#define A_ZPX   K6502_ReadZp( AA_ZPX )
-// Zero Page,Y
-#define A_ZPY   K6502_ReadZp( AA_ZPY )
-// Absolute
-#define A_ABS   K6502_Read( AA_ABS )
-// Absolute,X
-#define A_ABSX  K6502_ReadAbsX()
-// Absolute,Y
-#define A_ABSY  K6502_ReadAbsY()
-// Immediate
-#define A_IMM   *( *ReadPC[ PC - 0x8000 ] + ( PC++ & 0x1fff) )
+//从PRG或RAM中读取操作数地址，然后PC++。
+#define ReadPCW(a)  \
+		if( PC >= 0xC000 ) \
+		{ \
+			a = ROMBANK2[ PC++ & 0x3fff ]; \
+			a |= ROMBANK2[ PC++ & 0x3fff ] << 8; \
+		} \
+		else if( PC >= 0x8000 ) \
+		{ \
+			a = ROMBANK0[ PC++ & 0x3fff ]; \
+			a |= ROMBANK0[ PC++ & 0x3fff ] << 8; \
+		} \
+		else \
+		{ \
+			a = RAM[ PC++ ]; \
+			a |= RAM[ PC++ ] << 8; \
+		}
+
+//从PRG或RAM中读取操作数并加上X，然后PC++。，可以视游戏的兼容情况而决定是否将其改为上面一行。
+//#define ReadPCX(a)  \
+//	if( PC >= 0xC000 ) \
+//		a = (BYTE)( ROMBANK2[ PC++ & 0x3fff ] + X ); \
+//	else if( PC >= 0x8000 ) \
+//		a = (BYTE)( ROMBANK0[ PC++ & 0x3fff ] + X ); \
+//	else \
+//		a = (BYTE)( RAM[ PC++ ] + X)
+#define ReadPCX(a)  \
+	if( PC >= 0xC000 ) \
+		a = ROMBANK2[ PC++ & 0x3fff ] + X; \
+	else if( PC >= 0x8000 ) \
+		a = ROMBANK0[ PC++ & 0x3fff ] + X; \
+	else \
+		a = RAM[ PC++ ] + X
+
+//从PRG或RAM中读取操作数并加上Y，然后PC++。
+#define ReadPCY(a)  \
+	if( PC >= 0xC000 ) \
+		a = ROMBANK2[ PC++ & 0x3fff ] + Y; \
+	else if( PC >= 0x8000 ) \
+		a = ROMBANK0[ PC++ & 0x3fff ] + Y; \
+	else \
+		a = RAM[ PC++ ] + X
+
+//从RAM中读取操作数地址。
+#define ReadZpW(a)  a = RAM[ a ] | ( RAM[ a + 1 ] << 8 )
+//从RAM中读取操作数。
+#define ReadZp(a)  byD0 = RAM[ a ]
+
+//向RAM中写入操作数，可以视游戏的兼容情况而决定是否将其改为上面两行之一。
+//#define WriteZp(a, b)  RAM[ a & 0x7ff ] = RAM[ a & 0xfff ] = RAM[ a & 0x17ff ] = RAM[ a & 0x1fff ] = b
+//#define WriteZp(a, b)  RAM[ a & 0x7ff ] = b
+#define WriteZp(a, b)  RAM[ a ] = b
+
+//从6502RAM中读取操作数。
+#define Read6502RAM(a)  \
+	if( a >= 0xC000 ) \
+		byD0 = ROMBANK2[ a & 0x3fff ]; \
+	else if( a >= 0x8000 ) \
+		byD0 = ROMBANK0[ a & 0x3fff ]; \
+	else if( a < 0x2000 ) \
+		byD0 = RAM[ a ]; \
+	else \
+		byD0 = K6502_ReadIO( a )
+
+//向6502RAM中写入操作数。
+#define Write6502RAM(a, b)  \
+		if( a < 0x2000 ) \
+			WriteZp( a, b ); \
+		else if( a < 0x4000 ) \
+			{ /*if ( FrameCnt == 0 || FrameCnt == 1 ||FrameCnt == FrameSkip )*/ K6502_WritePPU( a, b ); } \
+		else if( a < 0x8000 ) \
+			K6502_WriteAPU( a, b ); \
+		else \
+			MapperWrite( a, b )
 
 // Flag Op.
 #define SETF(a)  F |= (a)
 #define RSTF(a)  F &= ~(a)
 #define TEST(a)  RSTF( FLAG_N | FLAG_Z ); SETF( g_byTestTable[ a ] )
 
-// Load & Store Op.
-#define STA(a)    K6502_Write( (a), A );
-#define STX(a)    K6502_Write( (a), X );
-#define STY(a)    K6502_Write( (a), Y );
-#define LDA(a)    A = (a); TEST( A );
-#define LDX(a)    X = (a); TEST( X );
-#define LDY(a)    Y = (a); TEST( Y );
-
 // Stack Op.
-#define PUSH(a)   K6502_Write( BASE_STACK + SP--, (a) )
+#define PUSH(a)   RAM[ BASE_STACK + SP-- ] = (a) 
 #define PUSHW(a)  PUSH( (a) >> 8 ); PUSH( (a) & 0xff )
-#define POP(a)    a = K6502_Read( BASE_STACK + ++SP )
-#define POPW(a)   POP(a); a |= ( K6502_Read( BASE_STACK + ++SP ) << 8 )
-
-// Logical Op.
-#define ORA(a)  A |= (a); TEST( A )
-#define AND(a)  A &= (a); TEST( A )
-#define EOR(a)  A ^= (a); TEST( A )
-#define BIT(a)  byD0 = (a); RSTF( FLAG_N | FLAG_V | FLAG_Z ); SETF( ( byD0 & ( FLAG_N | FLAG_V ) ) | ( ( byD0 & A ) ? 0 : FLAG_Z ) );
-#define CMP(a)  wD0 = (WORD)A - (a); RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
-#define CPX(a)  wD0 = (WORD)X - (a); RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
-#define CPY(a)  wD0 = (WORD)Y - (a); RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
-  
-// Math Op. (A D flag isn't being supported.)
-#define ADC(a)  byD0 = (a); \
-                wD0 = A + byD0 + ( F & FLAG_C ); \
-                byD1 = (BYTE)wD0; \
-                RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C ); \
-                SETF( g_byTestTable[ byD1 ] | ( ( ~( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 > 0xff ) ); \
-                A = byD1;
-
-#define SBC(a)  byD0 = (a); \
-                wD0 = A - byD0 - ( ~F & FLAG_C ); \
-                byD1 = (BYTE)wD0; \
-                RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C ); \
-                SETF( g_byTestTable[ byD1 ] | ( ( ( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 < 0x100 ) ); \
-                A = byD1;
-
-#define DEC(a)  wA0 = a; byD0 = K6502_Read( wA0 ); --byD0; K6502_Write( wA0, byD0 ); TEST( byD0 )
-#define INC(a)  wA0 = a; byD0 = K6502_Read( wA0 ); ++byD0; K6502_Write( wA0, byD0 ); TEST( byD0 )
+#define POP(a)    a = RAM[ BASE_STACK + ++SP ]
+#define POPW(a)   POP(a); a |= ( RAM[ BASE_STACK + ++SP ] << 8 )
 
 // Shift Op.
 #define ASLA    RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_ASLTable[ A ].byFlag ); A = g_ASLTable[ A ].byValue 
-#define ASL(a)  RSTF( FLAG_N | FLAG_Z | FLAG_C ); wA0 = a; byD0 = K6502_Read( wA0 ); SETF( g_ASLTable[ byD0 ].byFlag ); K6502_Write( wA0, g_ASLTable[ byD0 ].byValue )
 #define LSRA    RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_LSRTable[ A ].byFlag ); A = g_LSRTable[ A ].byValue 
-#define LSR(a)  RSTF( FLAG_N | FLAG_Z | FLAG_C ); wA0 = a; byD0 = K6502_Read( wA0 ); SETF( g_LSRTable[ byD0 ].byFlag ); K6502_Write( wA0, g_LSRTable[ byD0 ].byValue ) 
 #define ROLA    byD0 = F & FLAG_C; RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_ROLTable[ byD0 ][ A ].byFlag ); A = g_ROLTable[ byD0 ][ A ].byValue 
-#define ROL(a)  byD1 = F & FLAG_C; RSTF( FLAG_N | FLAG_Z | FLAG_C ); wA0 = a; byD0 = K6502_Read( wA0 ); SETF( g_ROLTable[ byD1 ][ byD0 ].byFlag ); K6502_Write( wA0, g_ROLTable[ byD1 ][ byD0 ].byValue )
 #define RORA    byD0 = F & FLAG_C; RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_RORTable[ byD0 ][ A ].byFlag ); A = g_RORTable[ byD0 ][ A ].byValue 
-#define ROR(a)  byD1 = F & FLAG_C; RSTF( FLAG_N | FLAG_Z | FLAG_C ); wA0 = a; byD0 = K6502_Read( wA0 ); SETF( g_RORTable[ byD1 ][ byD0 ].byFlag ); K6502_Write( wA0, g_RORTable[ byD1 ][ byD0 ].byValue )
+//作用于ASL LSR ROL ROR四类对6502RAM进行位操作的指令
+#define Bit6502RAM(a)  \
+		if( wA0 < 0x2000 ) \
+			{ byD0 = RAM[ wA0 ]; WriteZp( wA0, a ); } \
+		else if( wA0 < 0x4000 ) \
+			{ byD0 = K6502_ReadIO( wA0 ); K6502_WritePPU( wA0, a ); } \
+		else if( wA0 < 0x8000 ) \
+			{ byD0 = K6502_ReadIO( wA0 ); K6502_WriteAPU( wA0, a ); } \
+		else if( wA0 < 0xC000 ) \
+			{ byD0 = ROMBANK0[ wA0 & 0x3fff ]; MapperWrite( wA0, a ); } \
+		else \
+			{ byD0 = ROMBANK2[ wA0 & 0x3fff ]; MapperWrite( wA0, a ); }
+
+// Math Op. (A D flag isn't being supported.)
+//作用于对6502RAM进行减一操作的DEC指令
+#define DEC6502RAM  \
+		if( wA0 < 0x2000 ) \
+			{ byD0 = RAM[ wA0 ]; --byD0; WriteZp( wA0, byD0 ); } \
+		else if( wA0 < 0x4000 ) \
+			{ byD0 = K6502_ReadIO( wA0 ); --byD0; K6502_WritePPU( wA0, byD0 ); } \
+		else if( wA0 < 0x8000 ) \
+			{ byD0 = K6502_ReadIO( wA0 ); --byD0; K6502_WriteAPU( wA0, byD0 ); } \
+		else if( wA0 < 0xC000 ) \
+			{ byD0 = ROMBANK0[ wA0 & 0x3fff ]; --byD0; MapperWrite( wA0, byD0 ); } \
+		else \
+			{ byD0 = ROMBANK2[ wA0 & 0x3fff ]; --byD0; MapperWrite( wA0, byD0 ); }
+//作用于对6502RAM进行加一操作的INC命令
+#define INC6502RAM  \
+		if( wA0 < 0x2000 ) \
+			{ byD0 = RAM[ wA0 ]; ++byD0; WriteZp( wA0, byD0 ); } \
+		else if( wA0 < 0x4000 ) \
+			{ byD0 = K6502_ReadIO( wA0 ); ++byD0; K6502_WritePPU( wA0, byD0 ); } \
+		else if( wA0 < 0x8000 ) \
+			{ byD0 = K6502_ReadIO( wA0 ); ++byD0; K6502_WriteAPU( wA0, byD0 ); } \
+		else if( wA0 < 0xC000 ) \
+			{ byD0 = ROMBANK0[ wA0 & 0x3fff ]; ++byD0; MapperWrite( wA0, byD0 ); } \
+		else \
+			{ byD0 = ROMBANK2[ wA0 & 0x3fff ]; ++byD0; MapperWrite( wA0, byD0 ); }
 
 // Jump Op.
-#define JSR     wA0 = AA_ABS2; PUSHW( PC ); PC = wA0; 
-#if 0
-#define BRA(a)  if ( a ) { wA0 = PC; PC += (char)K6502_Read( PC ); CLK( 3 + ( ( wA0 & 0x0100 ) != ( PC & 0x0100 ) ) ); ++PC; } else { ++PC; CLK( 2 ); }
-#else
 #define BRA(a) { \
   if ( a ) \
   { \
+	ReadPC( BRAdisp ); \
     wA0 = PC; \
-	byD0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); \
-	PC += ( ( byD0 & 0x80 ) ? ( 0xFF00 | (WORD)byD0 ) : (WORD)byD0 ); \
+	PC += BRAdisp; \
 	CLK( 3 + ( ( wA0 & 0x0100 ) != ( PC & 0x0100 ) ) ); \
-    ++PC; \
   } else { \
 	++PC; \
 	CLK( 2 ); \
   } \
 }
-#endif
-#define JMP(a)  PC = a;
+
+//// Zero Page
+//#define AA_ZP    ReadPC( wA0 )
+//
+//
+//// (Indirect,X)	零页X间址寻址
+//#define A_IX	ReadPCX( wA0 ); ReadZpW( wA0 ); Read6502RAM( wA0 )
+//// Zero Page	零页寻址
+//#define A_ZP	ReadPC( wA0 ); ReadZp( wA0 )
+//
+//#define ORA(a)  a; A |= byD0; TEST( A )
+//#define ASL(a)  RSTF( FLAG_N | FLAG_Z | FLAG_C ); a; ReadZp( wA0 ); SETF( g_ASLTable[ byD0 ].byFlag ); K6502_Write( wA0, g_ASLTable[ byD0 ].byValue )
+
 
 /*-------------------------------------------------------------------*/
 /*  Global valiables                                                 */
@@ -488,7 +537,7 @@ void K6502_Step( WORD wClocks )
  */
 
   BYTE byCode;
-
+  signed char BRAdisp;
   WORD wA0, wA1;
   BYTE byD0;
   BYTE byD1;
@@ -507,7 +556,7 @@ void K6502_Step( WORD wClocks )
     RSTF( FLAG_D );
     SETF( FLAG_I );
 
-    PC = K6502_ReadW( VECTOR_NMI );
+    PC = ROMBANK2[ 0x3FFA ] | ROMBANK2[ 0x3FFB ] << 8;//加速 K6502_ReadW( VECTOR_NMI );
   }
   else
   if ( IRQ_State != IRQ_Wiring )
@@ -525,7 +574,7 @@ void K6502_Step( WORD wClocks )
       RSTF( FLAG_D );
       SETF( FLAG_I );
     
-      PC = K6502_ReadW( VECTOR_IRQ );
+      PC = ROMBANK2[ 0x3FFE ] | ROMBANK2[ 0x3FFF ] << 8;//加速 K6502_ReadW( VECTOR_IRQ );
     }
   }
 
@@ -533,17 +582,69 @@ void K6502_Step( WORD wClocks )
   while ( g_wPassedClocks < wClocks )
   {
     // Read an instruction
-    //byCode = K6502_Read( PC++ );
+    //byCode = K6502_ReadPC( PC++ );
 
 //加速
 //byCode = ReadPC[ PC - 0x8000 ]( PC ); PC++;
-byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
+
+	  //if( PC >= 0x8000 )
+	  //{
+		 // byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) );
+		 // PC++;
+	  //}
+	  //else
+		 // byCode = RAM[ PC++ ];
+
+	  //if( PC > 0xDFFF )
+		 // byCode = ROMBANK3[ PC++ & 0x1fff ];
+	  //else if( PC > 0xBFFF )
+		 // byCode = ROMBANK2[ PC++ & 0x1fff ];
+	  //else if( PC > 0x9FFF )
+		 // byCode = ROMBANK1[ PC++ & 0x1fff ];
+	  //else if( PC > 0x7FFF )
+		 // byCode = ROMBANK0[ PC++ & 0x1fff ];
+	  //else
+		 // byCode = RAM[ PC++ ];
+
+	  //if( PC > 0x7fff )
+	  //{
+	  //    if( PC > 0xBFFF )
+		 //     byCode = ROMBANK2[ PC++ & 0x3fff ];
+		 // else
+			//  byCode = ROMBANK0[ PC++ & 0x3fff ];
+	  //}
+	  //else
+		 // byCode = RAM[ PC++ ];
+
+		if( PC >= 0xC000 )
+			byCode = ROMBANK2[ PC++ & 0x3fff ];
+		else if( PC >= 0x8000 )
+			byCode = ROMBANK0[ PC++ & 0x3fff ];
+		else
+			byCode = RAM[ PC++ ];
+
+    //byCode = K6502_ReadPC( PC++ );
+
+	//   if( PC >= 0xC000 )
+		 // byCode = ROMBANK2[ PC++ - 0xC000 ];
+	  //else if( PC >= 0x8000 )
+		 // byCode = ROMBANK0[ PC++ - 0x8000 ];
+	  //else
+		 // byCode = RAM[ PC++ ];
+
+   //   if( PC >= 0xC000 )
+		 // byCode = ROMBANK2[ PC++ & 0x3fff ];
+	  //else
+		 // byCode = ROMBANK0[ PC++ & 0x3fff ];
+
 //byCode = *( PAGE + PC++ - 0x8000);
 
     // Execute an instruction.
     switch ( byCode )
     {
-      case 0x00:  // BRK
+
+		//Map4
+/*      case 0x00:  // BRK
         ++PC; PUSHW( PC ); SETF( FLAG_B ); PUSH( F ); SETF( FLAG_I ); RSTF( FLAG_D ); PC = K6502_ReadW( VECTOR_IRQ ); CLK( 7 );
         break;
 
@@ -572,26 +673,11 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0x0D:  // ORA Abs
-        //ORA( A_ABS ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		A |= K6502_Read( wA0 ); TEST( A );
-        CLK( 4 );
-
+        ORA( A_ABS ); CLK( 4 );
         break;
 
       case 0x0e:  // ASL Abs 
-        //ASL( AA_ABS ); CLK( 6 );
-        
-		//加速
-        RSTF( FLAG_N | FLAG_Z | FLAG_C );
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		byD0 = K6502_Read( wA0 ); SETF( g_ASLTable[ byD0 ].byFlag ); K6502_Write( wA0, g_ASLTable[ byD0 ].byValue );
-        CLK( 6 );
-
+        ASL( AA_ABS ); CLK( 6 );
         break;
 
       case 0x10: // BPL Oper
@@ -615,52 +701,19 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0x19: // ORA Abs,Y
-        //ORA( A_ABSY ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-		A |= K6502_Read( wA1 ); TEST( A );
-        CLK( 4 );
-
+        ORA( A_ABSY ); CLK( 4 );
         break;
 
       case 0x1D: // ORA Abs,X
-        //ORA( A_ABSX ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        wA1 = wA0 + X; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-		A |= K6502_Read( wA1 ); TEST( A );
-        CLK( 4 );
-
+        ORA( A_ABSX ); CLK( 4 );
         break;
 
       case 0x1E: // ASL Abs,X
-        //ASL( AA_ABSX ); CLK( 7 );
-        
-		//加速
-        RSTF( FLAG_N | FLAG_Z | FLAG_C );
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        wA0 += X;
-		byD0 = K6502_Read( wA0 ); SETF( g_ASLTable[ byD0 ].byFlag ); K6502_Write( wA0, g_ASLTable[ byD0 ].byValue );
-        CLK( 7 );
-
+        ASL( AA_ABSX ); CLK( 7 );
         break;
 
       case 0x20: // JSR Abs
-        //JSR; CLK( 6 );
-        
-		//加速
-        wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8;
-        PUSHW( PC );
-		PC = wA0;
-        CLK( 6 );
-
+        JSR; CLK( 6 );
         break;
 
       case 0x21: // AND (Zpg,X)
@@ -692,38 +745,15 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0x2C: // BIT Abs
-        //BIT( A_ABS ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		byD0 = K6502_Read( wA0 );
-        RSTF( FLAG_N | FLAG_V | FLAG_Z ); SETF( ( byD0 & ( FLAG_N | FLAG_V ) ) | ( ( byD0 & A ) ? 0 : FLAG_Z ) );
-		CLK( 4 );
-
+        BIT( A_ABS ); CLK( 4 );
         break;
 
       case 0x2D: // AND Abs 
-        //AND( A_ABS ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        A &= K6502_Read( wA0 ); TEST( A );
-		CLK( 4 );
-
+        AND( A_ABS ); CLK( 4 );
         break;
 
       case 0x2E: // ROL Abs
-        //ROL( AA_ABS ); CLK( 6 );
-        
-		//加速
-        byD1 = F & FLAG_C; RSTF( FLAG_N | FLAG_Z | FLAG_C );
-        wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		byD0 = K6502_Read( wA0 ); SETF( g_ROLTable[ byD1 ][ byD0 ].byFlag ); K6502_Write( wA0, g_ROLTable[ byD1 ][ byD0 ].byValue );
-		CLK( 6 );
-
+        ROL( AA_ABS ); CLK( 6 );
         break;
 
       case 0x30: // BMI Oper 
@@ -747,40 +777,15 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0x39: // AND Abs,Y
-        //AND( A_ABSY ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-        A &= K6502_Read( wA1 ); TEST( A );
-        CLK( 4 );
-
+        AND( A_ABSY ); CLK( 4 );
         break;
 
       case 0x3D: // AND Abs,X
-        //AND( A_ABSX ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        wA1 = wA0 + X; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-        A &= K6502_Read( wA1 ); TEST( A );
-        CLK( 4 );
-
+        AND( A_ABSX ); CLK( 4 );
         break;
 
       case 0x3E: // ROL Abs,X
-        //ROL( AA_ABSX ); CLK( 7 );
-        
-		//加速
-        byD1 = F & FLAG_C; RSTF( FLAG_N | FLAG_Z | FLAG_C );
-        wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        wA0 += X;
-		byD0 = K6502_Read( wA0 ); SETF( g_ROLTable[ byD1 ][ byD0 ].byFlag ); K6502_Write( wA0, g_ROLTable[ byD1 ][ byD0 ].byValue );
-		CLK( 6 );
-
+        ROL( AA_ABSX ); CLK( 7 );
         break;
 
       case 0x40: // RTI
@@ -812,37 +817,15 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0x4C: // JMP Abs
-        //JMP( AA_ABS ); CLK( 3 );
-
-		//加速
-		wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		PC = wA0 | (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8;
-		//PC = ( *( *ReadPC[ PC - 0x8000 ] + ( PC++ & 0x1fff) ) | (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC++ & 0x1fff) )) << 8 );
-		CLK( 3 );
-
+        JMP( AA_ABS ); CLK( 3 );
         break;
 
       case 0x4D: // EOR Abs
-        //EOR( A_ABS ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        A ^= K6502_Read( wA0 ); TEST( A );
-		CLK( 4 );
-
+        EOR( A_ABS ); CLK( 4 );
         break;
 
       case 0x4E: // LSR Abs
-        //LSR( AA_ABS ); CLK( 6 );
-
-		//加速
-        RSTF( FLAG_N | FLAG_Z | FLAG_C );
-		wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |=  (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        byD0 = K6502_Read( wA0 ); SETF( g_LSRTable[ byD0 ].byFlag ); K6502_Write( wA0, g_LSRTable[ byD0 ].byValue );
-		CLK( 6 );
-
+        LSR( AA_ABS ); CLK( 6 );
         break;
 
       case 0x50: // BVC
@@ -880,40 +863,15 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0x59: // EOR Abs,Y
-        //EOR( A_ABSY ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-        A ^= K6502_Read( wA1 ); TEST( A );
-        CLK( 4 );
-
+        EOR( A_ABSY ); CLK( 4 );
         break;
 
       case 0x5D: // EOR Abs,X
-        //EOR( A_ABSX ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        wA1 = wA0 + X; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-        A ^= K6502_Read( wA1 ); TEST( A );
-        CLK( 4 );
-
+        EOR( A_ABSX ); CLK( 4 );
         break;
 
       case 0x5E: // LSR Abs,X
-        //LSR( AA_ABSX ); CLK( 7 );
-
-		//加速
-        RSTF( FLAG_N | FLAG_Z | FLAG_C );
-		wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |=  (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		wA0 += X;
-        byD0 = K6502_Read( wA0 ); SETF( g_LSRTable[ byD0 ].byFlag ); K6502_Write( wA0, g_LSRTable[ byD0 ].byValue );
-		CLK( 7 );
-
+        LSR( AA_ABSX ); CLK( 7 );
         break;
 
       case 0x60: // RTS
@@ -945,46 +903,15 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0x6C: // JMP (Abs)
-        //JMP( K6502_ReadW2( AA_ABS ) ); CLK( 5 );
-
-		//加速
-		wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8;
-        if ( 0x00ff == ( wA0 & 0x00ff ) )
-          PC = K6502_Read( wA0 ) | (WORD)K6502_Read( wA0 - 0x00ff ) << 8;
-        else
-		  PC = K6502_Read( wA0 ) | (WORD)K6502_Read( wA0 + 1 ) << 8;
-		CLK( 5 );
-
+        JMP( K6502_ReadW2( AA_ABS ) ); CLK( 5 );
         break;
 
       case 0x6D: // ADC Abs
-        //ADC( A_ABS ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        byD0 = K6502_Read( wA0 );
-		wD0 = A + byD0 + ( F & FLAG_C );
-		byD1 = (BYTE)wD0;
-		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
-		SETF( g_byTestTable[ byD1 ] | ( ( ~( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 > 0xff ) ); 
-		A = byD1;
-		CLK( 4 );
-
+        ADC( A_ABS ); CLK( 4 );
         break;
 
       case 0x6E: // ROR Abs
-        //ROR( AA_ABS ); CLK( 6 );
-        
-		//加速
-        byD1 = F & FLAG_C; RSTF( FLAG_N | FLAG_Z | FLAG_C );
-		wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        byD0 = K6502_Read( wA0 );
-		SETF( g_RORTable[ byD1 ][ byD0 ].byFlag ); K6502_Write( wA0, g_RORTable[ byD1 ][ byD0 ].byValue );
-		CLK( 6 );
-
+        ROR( AA_ABS ); CLK( 6 );
         break;
 
       case 0x70: // BVS
@@ -1008,50 +935,15 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0x79: // ADC Abs,Y
-        //ADC( A_ABSY ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-        byD0 = K6502_Read( wA1 );
-		wD0 = A + byD0 + ( F & FLAG_C );
-		byD1 = (BYTE)wD0;
-		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
-		SETF( g_byTestTable[ byD1 ] | ( ( ~( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 > 0xff ) ); 
-		A = byD1;
-		CLK( 4 );
-
+        ADC( A_ABSY ); CLK( 4 );
         break;
 
       case 0x7D: // ADC Abs,X
-        //ADC( A_ABSX ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		wA1 = wA0 + X; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-        byD0 = K6502_Read( wA1 );
-		wD0 = A + byD0 + ( F & FLAG_C );
-		byD1 = (BYTE)wD0;
-		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
-		SETF( g_byTestTable[ byD1 ] | ( ( ~( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 > 0xff ) ); 
-		A = byD1;
-		CLK( 4 );
-
+        ADC( A_ABSX ); CLK( 4 );
         break;
 
       case 0x7E: // ROR Abs,X
-        //ROR( AA_ABSX ); CLK( 7 );
-        
-		//加速
-        byD1 = F & FLAG_C; RSTF( FLAG_N | FLAG_Z | FLAG_C );
-		wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        wA0 += X;
-		byD0 = K6502_Read( wA0 ); SETF( g_RORTable[ byD1 ][ byD0 ].byFlag ); K6502_Write( wA0, g_RORTable[ byD1 ][ byD0 ].byValue );
-		CLK( 7 );
-
+        ROR( AA_ABSX ); CLK( 7 );
         break;
 
       case 0x81: // STA (Zpg,X)
@@ -1079,36 +971,15 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0x8C: // STY Abs
-        //STY( AA_ABS ); CLK( 4 );
-        
-		//加速
-		wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		K6502_Write( wA0, Y );
-		CLK( 4 );
-
+        STY( AA_ABS ); CLK( 4 );
         break;
 
       case 0x8D: // STA Abs
-        //STA( AA_ABS ); CLK( 4 );
-        
-		//加速
-		wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		K6502_Write( wA0, A );
-		CLK( 4 );
-
+        STA( AA_ABS ); CLK( 4 );
         break;
 
       case 0x8E: // STX Abs
-        //STX( AA_ABS ); CLK( 4 );
-        
-		//加速
-		wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		K6502_Write( wA0, X );
-		CLK( 4 );
-
+        STX( AA_ABS ); CLK( 4 );
         break;
 
       case 0x90: // BCC
@@ -1136,15 +1007,7 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0x99: // STA Abs,Y
-        //STA( AA_ABSY ); CLK( 5 );
-        
-		//加速
-		wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		wA0 += Y;
-		K6502_Write( wA0, A );
-		CLK( 5 );
-
+        STA( AA_ABSY ); CLK( 5 );
         break;
 
       case 0x9A: // TXS
@@ -1152,15 +1015,7 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0x9D: // STA Abs,X
-        //STA( AA_ABSX ); CLK( 5 );
-        
-		//加速
-		wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		wA0 += X;
-		K6502_Write( wA0, A );
-		CLK( 5 );
-
+        STA( AA_ABSX ); CLK( 5 );
         break;
 
       case 0xA0: // LDY #Oper
@@ -1200,36 +1055,15 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0xAC: // LDY Abs
-        //LDY( A_ABS ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        Y = K6502_Read( wA0 ); TEST( Y );
-		CLK( 4 );
-
+        LDY( A_ABS ); CLK( 4 );
         break;
 
       case 0xAD: // LDA Abs
-        //LDA( A_ABS ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        A = K6502_Read( wA0 ); TEST( A );
-		CLK( 4 );
-
+        LDA( A_ABS ); CLK( 4 );
         break;
 
       case 0xAE: // LDX Abs
-        //LDX( A_ABS ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        X = K6502_Read( wA0 ); TEST( X );
-		CLK( 4 );
-
+        LDX( A_ABS ); CLK( 4 );
         break;
 
       case 0xB0: // BCS
@@ -1257,15 +1091,7 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0xB9: // LDA Abs,Y
-        //LDA( A_ABSY ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-		A = K6502_Read( wA1 ); TEST( A );
-		CLK( 4 );
-
+        LDA( A_ABSY ); CLK( 4 );
         break;
 
       case 0xBA: // TSX
@@ -1273,39 +1099,15 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0xBC: // LDY Abs,X
-        //LDY( A_ABSX ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        wA1 = wA0 + X; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-		Y = K6502_Read( wA1 ); TEST( Y );
-		CLK( 4 );
-
+        LDY( A_ABSX ); CLK( 4 );
         break;
 
       case 0xBD: // LDA Abs,X
-        //LDA( A_ABSX ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        wA1 = wA0 + X; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-		A = K6502_Read( wA1 ); TEST( A );
-		CLK( 4 );
-
+        LDA( A_ABSX ); CLK( 4 );
         break;
 
       case 0xBE: // LDX Abs,Y
-        //LDX( A_ABSY ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-        wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-		X = K6502_Read( wA1 ); TEST( X );
-		CLK( 4 );
-
+        LDX( A_ABSY ); CLK( 4 );
         break;
 
       case 0xC0: // CPY #Oper
@@ -1341,36 +1143,15 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0xCC: // CPY Abs
-        //CPY( A_ABS ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		wD0 = (WORD)Y - K6502_Read( wA0 ); RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
-		CLK( 4 );
-
+        CPY( A_ABS ); CLK( 4 );
         break;
 
       case 0xCD: // CMP Abs
-        //CMP( A_ABS ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		wD0 = (WORD)A - K6502_Read( wA0 ); RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
-		CLK( 4 );
-
+        CMP( A_ABS ); CLK( 4 );
         break;
 
       case 0xCE: // DEC Abs
-        //DEC( AA_ABS ); CLK( 6 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		byD0 = K6502_Read( wA0 ); --byD0; K6502_Write( wA0, byD0 ); TEST( byD0 );
-		CLK( 6 );
-
+        DEC( AA_ABS ); CLK( 6 );
         break;
 
       case 0xD0: // BNE
@@ -1394,39 +1175,15 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0xD9: // CMP Abs,Y
-        //CMP( A_ABSY ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-		wD0 = (WORD)A - K6502_Read( wA1 ); RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
-		CLK( 4 );
-
+        CMP( A_ABSY ); CLK( 4 );
         break;
 
       case 0xDD: // CMP Abs,X
-        //CMP( A_ABSX ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		wA1 = wA0 + X; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-		wD0 = (WORD)A - K6502_Read( wA1 ); RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
-		CLK( 4 );
-
+        CMP( A_ABSX ); CLK( 4 );
         break;
 
       case 0xDE: // DEC Abs,X
-        //DEC( AA_ABSX ); CLK( 7 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		wA0 += X;
-		byD0 = K6502_Read( wA0 ); --byD0; K6502_Write( wA0, byD0 ); TEST( byD0 );
-		CLK( 7 );
-
+        DEC( AA_ABSX ); CLK( 7 );
         break;
 
       case 0xE0: // CPX #Oper
@@ -1462,41 +1219,15 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0xEC: // CPX Abs
-        //CPX( A_ABS ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		wD0 = (WORD)X - K6502_Read( wA0 ); RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
-		CLK( 4 );
-
+        CPX( A_ABS ); CLK( 4 );
         break;
 
       case 0xED: // SBC Abs
-        //SBC( A_ABS ); CLK( 4 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		byD0 = K6502_Read( wA0 );
-		wD0 = A - byD0 - ( ~F & FLAG_C );
-		byD1 = (BYTE)wD0;
-		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
-		SETF( g_byTestTable[ byD1 ] | ( ( ( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 < 0x100 ) );
-		A = byD1;
-		CLK( 4 );
-
+        SBC( A_ABS ); CLK( 4 );
         break;
 
       case 0xEE: // INC Abs
-        //INC( AA_ABS ); CLK( 6 );
-        
-		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		byD0 = K6502_Read( wA0 ); ++byD0; K6502_Write( wA0, byD0 ); TEST( byD0 );
-		CLK( 6 );
-
+        INC( AA_ABS ); CLK( 6 );
         break;
 
       case 0xF0: // BEQ
@@ -1520,13 +1251,1884 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         break;
 
       case 0xF9: // SBC Abs,Y
+        SBC( A_ABSY ); CLK( 4 );
+        break;
+
+      case 0xFD: // SBC Abs,X
+        SBC( A_ABSX ); CLK( 4 );
+        break;
+
+      case 0xFE: // INC Abs,X
+        INC( AA_ABSX ); CLK( 7 );
+        break;*/
+
+//加速
+      case 0x00:  // BRK
+        //++PC; PUSHW( PC ); SETF( FLAG_B ); PUSH( F ); SETF( FLAG_I ); RSTF( FLAG_D ); PC = K6502_ReadW( VECTOR_IRQ ); CLK( 7 );
+
+		//加速
+		++PC; PUSHW( PC ); SETF( FLAG_B ); PUSH( F ); SETF( FLAG_I ); RSTF( FLAG_D );
+		PC = ROMBANK2[ 0x3FFE ] | ROMBANK2[ 0x3FFF ] << 8;
+		CLK( 7 );
+
+		break;
+
+      case 0x01:  // ORA (Zpg,X)
+        //ORA( A_IX ); CLK( 6 );
+
+		//加速
+		ReadPCX( wA0 );
+		ReadZpW( wA0 );
+		if( wA0 >= 0xC000 )
+			A |= ROMBANK2[ wA0 & 0x3fff ];
+		else if( wA0 >= 0x8000 )
+			A |= ROMBANK0[ wA0 & 0x3fff ];
+		else if( wA0 < 0x2000 )
+			A |= RAM[ wA0 ];
+		else
+			A |= K6502_ReadIO( wA0 );
+		TEST( A );
+		CLK( 6 );
+
+        break;
+
+      case 0x05:  // ORA Zpg
+        //ORA( A_ZP ); CLK( 3 );
+
+		//加速
+		ReadPC( wA0 );
+		A |= RAM[ wA0 ];
+		TEST( A );
+		CLK( 3 );
+		
+		break;
+
+      case 0x06:  // ASL Zpg
+        //ASL( AA_ZP ); CLK( 5 );
+
+		//加速
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		ReadPC( wA0 );
+		ReadZp( wA0 );
+		SETF( g_ASLTable[ byD0 ].byFlag );
+		WriteZp( wA0, g_ASLTable[ byD0 ].byValue );
+		CLK( 5 );
+
+        break;
+
+      case 0x08:  // PHP
+        SETF( FLAG_B ); PUSH( F ); CLK( 3 );
+        break;
+
+      case 0x09:  // ORA #Oper
+        //ORA( A_IMM ); CLK( 2 );
+
+		//加速
+		if( PC >= 0xC000 )
+			A |= ROMBANK2[ PC++ & 0x3fff ];
+		else if( PC >= 0x8000 )
+			A |= ROMBANK0[ PC++ & 0x3fff ];
+		else
+			A |= RAM[ PC++ ];
+		TEST( A );
+		CLK( 2 );
+
+		break;
+
+      case 0x0A:  // ASL A
+        ASLA; CLK( 2 );
+        break;
+
+      case 0x0D:  // ORA Abs
+        //ORA( A_ABS ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		if( wA0 >= 0xC000 )
+			A |= ROMBANK2[ wA0 & 0x3fff ];
+		else if( wA0 >= 0x8000 )
+			A |= ROMBANK0[ wA0 & 0x3fff ];
+		else if( wA0 < 0x2000 )
+			A |= RAM[ wA0 ];
+		else
+			A |= K6502_ReadIO( wA0 );
+		TEST( A );
+		CLK( 4 );
+
+        break;
+
+      case 0x0e:  // ASL Abs 
+        //ASL( AA_ABS ); CLK( 6 );
+        
+		//加速
+        RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		ReadPCW( wA0 );
+		Bit6502RAM( g_ASLTable[ byD0 ].byValue );
+		SETF( g_ASLTable[ byD0 ].byFlag );
+		CLK( 6 );
+
+        break;
+
+      case 0x10: // BPL Oper
+        BRA( !( F & FLAG_N ) );
+        break;
+
+      case 0x11: // ORA (Zpg),Y
+        //ORA( A_IY ); CLK( 5 );
+        
+		//加速
+		ReadPC( wA0 );
+		ReadZpW( wA0 );
+		wA1 = wA0 + Y;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		if( wA1 >= 0xC000 )
+			A |= ROMBANK2[ wA1 & 0x3fff ];
+		else if( wA1 >= 0x8000 )
+			A |= ROMBANK0[ wA1 & 0x3fff ];
+		else if( wA1 < 0x2000 )
+			A |= RAM[ wA1 ];
+		else
+			A |= K6502_ReadIO( wA1 );
+		TEST( A );
+		CLK( 5 );
+
+        break;
+
+      case 0x15: // ORA Zpg,X
+        //ORA( A_ZPX ); CLK( 4 );
+        
+		//加速
+        ReadPCX( wA0 );
+		A |= RAM[ wA0 ];
+		TEST( A );
+		CLK( 4 );
+
+		break;
+
+      case 0x16: // ASL Zpg,X
+        //ASL( AA_ZPX ); CLK( 6 );
+        
+		//加速
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		ReadPCX( wA0 );
+		ReadZp( wA0 );
+		SETF( g_ASLTable[ byD0 ].byFlag );
+		WriteZp( wA0, g_ASLTable[ byD0 ].byValue );
+		CLK( 6 );
+
+        break;
+
+      case 0x18: // CLC
+        RSTF( FLAG_C ); CLK( 2 );
+        break;
+
+      case 0x19: // ORA Abs,Y
+        //ORA( A_ABSY ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+        wA1 = wA0 + Y;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		if( wA1 >= 0xC000 )
+			A |= ROMBANK2[ wA1 & 0x3fff ];
+		else if( wA1 >= 0x8000 )
+			A |= ROMBANK0[ wA1 & 0x3fff ];
+		else if( wA1 < 0x2000 )
+			A |= RAM[ wA1 ];
+		else
+			A |= K6502_ReadIO( wA1 );
+		TEST( A );
+        CLK( 4 );
+
+        break;
+
+      case 0x1D: // ORA Abs,X
+        //ORA( A_ABSX ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		wA1 = wA0 + X;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		if( wA1 >= 0xC000 )
+			A |= ROMBANK2[ wA1 & 0x3fff ];
+		else if( wA1 >= 0x8000 )
+			A |= ROMBANK0[ wA1 & 0x3fff ];
+		else if( wA1 < 0x2000 )
+			A |= RAM[ wA1 ];
+		else
+			A |= K6502_ReadIO( wA1 );
+		TEST( A );
+        CLK( 4 );
+
+        break;
+
+      case 0x1E: // ASL Abs,X
+        //ASL( AA_ABSX ); CLK( 7 );
+        
+		//加速
+        RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		ReadPCW( wA0 );
+        wA0 += X;
+		Bit6502RAM( g_ASLTable[ byD0 ].byValue );
+		SETF( g_ASLTable[ byD0 ].byFlag );
+        CLK( 7 );
+
+        break;
+
+      case 0x20: // JSR Abs
+        //JSR; CLK( 6 );
+        
+		//加速
+		if( PC >= 0xC000 )
+		{
+			wA0 = ROMBANK2[ PC++ & 0x3fff ];
+			wA0 |= (WORD)ROMBANK2[ PC & 0x3fff ] << 8;
+		}
+		else if( PC >= 0x8000 )
+		{
+			wA0 = ROMBANK0[ PC++ & 0x3fff ];
+			wA0 |= (WORD)ROMBANK0[ PC & 0x3fff ] << 8;
+		}
+		else
+		{
+			wA0 = RAM[ PC++ ];
+			wA0 |= (WORD)RAM[ PC ] << 8;
+		}
+        PUSHW( PC );
+		PC = wA0;
+        CLK( 6 );
+
+        break;
+
+      case 0x21: // AND (Zpg,X)
+        //AND( A_IX ); CLK( 6 );
+        
+		//加速
+		ReadPCX( wA0 );
+		ReadZpW( wA0 );
+		if( wA0 >= 0xC000 )
+			A &= ROMBANK2[ wA0 & 0x3fff ];
+		else if( wA0 >= 0x8000 )
+			A &= ROMBANK0[ wA0 & 0x3fff ];
+		else if( wA0 < 0x2000 )
+			A &= RAM[ wA0 ];
+		else
+			A &= K6502_ReadIO( wA0 );
+		TEST( A );
+		CLK( 6 );
+
+		break;
+
+      case 0x24: // BIT Zpg
+        //BIT( A_ZP ); CLK( 3 );
+        
+		//加速
+		ReadPC( wA0 );
+		ReadZp( wA0 );
+		RSTF( FLAG_N | FLAG_V | FLAG_Z );
+		SETF( ( byD0 & ( FLAG_N | FLAG_V ) ) | ( ( byD0 & A ) ? 0 : FLAG_Z ) );
+		CLK( 3 );
+
+        break;
+
+      case 0x25: // AND Zpg
+        //AND( A_ZP ); CLK( 3 );
+
+		//加速
+		ReadPC( wA0 );
+		A &= RAM[ wA0 ];
+		TEST( A );
+		CLK( 3 );
+		
+        break;
+
+      case 0x26: // ROL Zpg
+        //ROL( AA_ZP ); CLK( 5 );
+
+		//加速
+		byD1 = F & FLAG_C;
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		ReadPC( wA0 );
+		ReadZp( wA0 );
+		SETF( g_ROLTable[ byD1 ][ byD0 ].byFlag );
+		WriteZp( wA0, g_ROLTable[ byD1 ][ byD0 ].byValue );
+		CLK( 5 );
+
+        break;
+
+      case 0x28: // PLP
+        POP( F ); SETF( FLAG_R ); CLK( 4 );
+        break;
+
+      case 0x29: // AND #Oper
+        //AND( A_IMM ); CLK( 2 );
+
+		//加速
+		if( PC >= 0xC000 )
+			A &= ROMBANK2[ PC++ & 0x3fff ];
+		else if( PC >= 0x8000 )
+			A &= ROMBANK0[ PC++ & 0x3fff ];
+		else
+			A &= RAM[ PC++ ];
+		TEST( A );
+		CLK( 2 );
+
+        break;
+
+      case 0x2A: // ROL A
+        ROLA; CLK( 2 );
+        break;
+
+      case 0x2C: // BIT Abs
+        //BIT( A_ABS ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		if( wA0 >= 0xC000 )
+			byD0 = ROMBANK2[ wA0 & 0x3fff ];
+		else if( wA0 >= 0x8000 )
+			byD0 = ROMBANK0[ wA0 & 0x3fff ];
+		else if( wA0 < 0x2000 )
+			byD0 = RAM[ wA0 ];
+		else
+			byD0 = K6502_ReadIO( wA0 );
+        RSTF( FLAG_N | FLAG_V | FLAG_Z );
+		SETF( ( byD0 & ( FLAG_N | FLAG_V ) ) | ( ( byD0 & A ) ? 0 : FLAG_Z ) );
+		CLK( 4 );
+
+        break;
+
+      case 0x2D: // AND Abs 
+        //AND( A_ABS ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		if( wA0 >= 0xC000 )
+			A &= ROMBANK2[ wA0 & 0x3fff ];
+		else if( wA0 >= 0x8000 )
+			A &= ROMBANK0[ wA0 & 0x3fff ];
+		else if( wA0 < 0x2000 )
+			A &= RAM[ wA0 ];
+		else
+			A &= K6502_ReadIO( wA0 );
+		TEST( A );
+		CLK( 4 );
+
+        break;
+
+      case 0x2E: // ROL Abs
+        //ROL( AA_ABS ); CLK( 6 );
+        
+		//加速
+        byD1 = F & FLAG_C;
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		ReadPCW( wA0 );
+		Bit6502RAM( g_ROLTable[ byD1 ][ byD0 ].byValue );
+		SETF( g_ROLTable[ byD1 ][ byD0 ].byFlag );
+		CLK( 6 );
+
+        break;
+
+      case 0x30: // BMI Oper 
+        BRA( F & FLAG_N );
+        break;
+
+      case 0x31: // AND (Zpg),Y
+        //AND( A_IY ); CLK( 5 );
+        
+		//加速
+		ReadPC( wA0 );
+		ReadZpW( wA0 );
+		wA1 = wA0 + Y;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		if( wA1 >= 0xC000 )
+			A &= ROMBANK2[ wA1 & 0x3fff ];
+		else if( wA1 >= 0x8000 )
+			A &= ROMBANK0[ wA1 & 0x3fff ];
+		else if( wA1 < 0x2000 )
+			A &= RAM[ wA1 ];
+		else
+			A &= K6502_ReadIO( wA1 );
+		TEST( A );
+		CLK( 5 );
+
+        break;
+
+      case 0x35: // AND Zpg,X
+        //AND( A_ZPX ); CLK( 4 );
+        
+		//加速
+        ReadPCX( wA0 );
+		A &= RAM[ wA0 ];
+		TEST( A );
+		CLK( 4 );
+
+        break;
+
+      case 0x36: // ROL Zpg,X
+        //ROL( AA_ZPX ); CLK( 6 );
+        
+		//加速
+        byD1 = F & FLAG_C;
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		ReadPCX( wA0 );
+		ReadZp( wA0 );
+		SETF( g_ROLTable[ byD1 ][ byD0 ].byFlag );
+		WriteZp( wA0, g_ROLTable[ byD1 ][ byD0 ].byValue );
+		CLK( 6 );
+
+        break;
+
+      case 0x38: // SEC
+        SETF( FLAG_C ); CLK( 2 );
+        break;
+
+      case 0x39: // AND Abs,Y
+        //AND( A_ABSY ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+        wA1 = wA0 + Y;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		if( wA1 >= 0xC000 )
+			A &= ROMBANK2[ wA1 & 0x3fff ];
+		else if( wA1 >= 0x8000 )
+			A &= ROMBANK0[ wA1 & 0x3fff ];
+		else if( wA1 < 0x2000 )
+			A &= RAM[ wA1 ];
+		else
+			A &= K6502_ReadIO( wA1 );
+		TEST( A );
+        CLK( 4 );
+
+        break;
+
+      case 0x3D: // AND Abs,X
+        //AND( A_ABSX ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		wA1 = wA0 + X;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		if( wA1 >= 0xC000 )
+			A &= ROMBANK2[ wA1 & 0x3fff ];
+		else if( wA1 >= 0x8000 )
+			A &= ROMBANK0[ wA1 & 0x3fff ];
+		else if( wA1 < 0x2000 )
+			A &= RAM[ wA1 ];
+		else
+			A &= K6502_ReadIO( wA1 );
+		TEST( A );
+        CLK( 4 );
+
+        break;
+
+      case 0x3E: // ROL Abs,X
+        //ROL( AA_ABSX ); CLK( 7 );
+        
+		//加速
+        byD1 = F & FLAG_C;
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		ReadPCW( wA0 );
+        wA0 += X;
+		Bit6502RAM( g_ROLTable[ byD1 ][ byD0 ].byValue );
+		SETF( g_ROLTable[ byD1 ][ byD0 ].byFlag );
+		CLK( 7 );
+
+        break;
+
+      case 0x40: // RTI
+        POP( F ); SETF( FLAG_R ); POPW( PC ); CLK( 6 );
+        break;
+
+      case 0x41: // EOR (Zpg,X)
+        //EOR( A_IX ); CLK( 6 );
+        
+		//加速
+		ReadPCX( wA0 );
+		ReadZpW( wA0 );
+		if( wA0 >= 0xC000 )
+			A ^= ROMBANK2[ wA0 & 0x3fff ];
+		else if( wA0 >= 0x8000 )
+			A ^= ROMBANK0[ wA0 & 0x3fff ];
+		else if( wA0 < 0x2000 )
+			A ^= RAM[ wA0 ];
+		else
+			A ^= K6502_ReadIO( wA0 );
+		TEST( A );
+		CLK( 6 );
+
+        break;
+
+      case 0x45: // EOR Zpg
+        //EOR( A_ZP ); CLK( 3 );
+
+		//加速
+		ReadPC( wA0 );
+		A ^= RAM[ wA0 ];
+		TEST( A );
+		CLK( 3 );
+		
+        break;
+
+      case 0x46: // LSR Zpg
+        //LSR( AA_ZP ); CLK( 5 );
+        
+		//加速
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		ReadPC( wA0 );
+		ReadZp( wA0 );
+		SETF( g_LSRTable[ byD0 ].byFlag );
+		WriteZp( wA0, g_LSRTable[ byD0 ].byValue );
+		CLK( 5 );
+
+        break;
+
+      case 0x48: // PHA
+        PUSH( A ); CLK( 3 );
+        break;
+
+      case 0x49: // EOR #Oper
+        //EOR( A_IMM ); CLK( 2 );
+
+		//加速
+		if( PC >= 0xC000 )
+			A ^= ROMBANK2[ PC++ & 0x3fff ];
+		else if( PC >= 0x8000 )
+			A ^= ROMBANK0[ PC++ & 0x3fff ];
+		else
+			A ^= RAM[ PC++ ];
+		TEST( A );
+		CLK( 2 );
+
+        break;
+
+      case 0x4A: // LSR A
+        LSRA; CLK( 2 );
+        break;
+
+      case 0x4C: // JMP Abs
+        //JMP( AA_ABS ); CLK( 3 );
+
+		//加速
+		if( PC >= 0xC000 )
+		{
+			wA0 = ROMBANK2[ PC++ & 0x3fff ];
+			PC = wA0 | ROMBANK2[ PC & 0x3fff ] << 8;
+		}
+		else if( PC >= 0x8000 )
+		{
+			wA0 = ROMBANK0[ PC++ & 0x3fff ];
+			PC = wA0 | ROMBANK0[ PC & 0x3fff ] << 8;
+		}
+		else
+		{
+			wA0 = RAM[ PC++ ];
+			PC = wA0 | RAM[ PC ] << 8;
+		}
+		CLK( 3 );
+
+        break;
+
+      case 0x4D: // EOR Abs
+        //EOR( A_ABS ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		if( wA0 >= 0xC000 )
+			A ^= ROMBANK2[ wA0 & 0x3fff ];
+		else if( wA0 >= 0x8000 )
+			A ^= ROMBANK0[ wA0 & 0x3fff ];
+		else if( wA0 < 0x2000 )
+			A ^= RAM[ wA0 ];
+		else
+			A ^= K6502_ReadIO( wA0 );
+		TEST( A );
+		CLK( 4 );
+
+        break;
+
+      case 0x4E: // LSR Abs
+        //LSR( AA_ABS ); CLK( 6 );
+
+		//加速
+        RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		ReadPCW( wA0 );
+		Bit6502RAM( g_LSRTable[ byD0 ].byValue );
+		SETF( g_LSRTable[ byD0 ].byFlag );
+		CLK( 6 );
+
+        break;
+
+      case 0x50: // BVC
+        BRA( !( F & FLAG_V ) );
+        break;
+
+      case 0x51: // EOR (Zpg),Y
+        //EOR( A_IY ); CLK( 5 );
+        
+		//加速
+		ReadPC( wA0 );
+		ReadZpW( wA0 );
+		wA1 = wA0 + Y;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		if( wA1 >= 0xC000 )
+			A ^= ROMBANK2[ wA1 & 0x3fff ];
+		else if( wA1 >= 0x8000 )
+			A ^= ROMBANK0[ wA1 & 0x3fff ];
+		else if( wA1 < 0x2000 )
+			A ^= RAM[ wA1 ];
+		else
+			A ^= K6502_ReadIO( wA1 );
+		TEST( A );
+		CLK( 5 );
+
+        break;
+
+      case 0x55: // EOR Zpg,X
+        //EOR( A_ZPX ); CLK( 4 );
+        
+		//加速
+        ReadPCX( wA0 );
+		A ^= RAM[ wA0 ];
+		TEST( A );
+		CLK( 4 );
+
+        break;
+
+      case 0x56: // LSR Zpg,X
+        //LSR( AA_ZPX ); CLK( 6 );
+        
+		//加速
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		ReadPCX( wA0 );
+		ReadZp( wA0 );
+		SETF( g_LSRTable[ byD0 ].byFlag );
+		WriteZp( wA0, g_LSRTable[ byD0 ].byValue );
+		CLK( 6 );
+
+        break;
+
+      case 0x58: // CLI
+        //byD0 = F;
+        //RSTF( FLAG_I ); CLK( 2 );
+        //if ( ( byD0 & FLAG_I ) && IRQ_State != IRQ_Wiring )  
+        //{
+        //  IRQ_State = IRQ_Wiring;          
+        //  CLK( 7 );
+
+        //  PUSHW( PC );
+        //  PUSH( F & ~FLAG_B );
+
+        //  RSTF( FLAG_D );
+        //  SETF( FLAG_I );
+    
+        //  PC = ROMBANK2[ 0x3FFE ] | ROMBANK2[ 0x3FFF ] << 8;//加速 K6502_ReadW( VECTOR_IRQ );
+        //}
+        
+		//FCEU
+		RSTF( FLAG_I ); CLK( 2 );
+
+        break;
+
+      case 0x59: // EOR Abs,Y
+        //EOR( A_ABSY ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+        wA1 = wA0 + Y;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		if( wA1 >= 0xC000 )
+			A ^= ROMBANK2[ wA1 & 0x3fff ];
+		else if( wA1 >= 0x8000 )
+			A ^= ROMBANK0[ wA1 & 0x3fff ];
+		else if( wA1 < 0x2000 )
+			A ^= RAM[ wA1 ];
+		else
+			A ^= K6502_ReadIO( wA1 );
+		TEST( A );
+        CLK( 4 );
+
+        break;
+
+      case 0x5D: // EOR Abs,X
+        //EOR( A_ABSX ); CLK( 4 );
+        
+		//加速
+		//加速
+		ReadPCW( wA0 );
+		wA1 = wA0 + X;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		if( wA1 >= 0xC000 )
+			A ^= ROMBANK2[ wA1 & 0x3fff ];
+		else if( wA1 >= 0x8000 )
+			A ^= ROMBANK0[ wA1 & 0x3fff ];
+		else if( wA1 < 0x2000 )
+			A ^= RAM[ wA1 ];
+		else
+			A ^= K6502_ReadIO( wA1 );
+		TEST( A );
+        CLK( 4 );
+
+        break;
+
+      case 0x5E: // LSR Abs,X
+        //LSR( AA_ABSX ); CLK( 7 );
+
+		//加速
+        RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		ReadPCW( wA0 );
+        wA0 += X;
+		Bit6502RAM( g_LSRTable[ byD0 ].byValue );
+		SETF( g_LSRTable[ byD0 ].byFlag );
+        CLK( 7 );
+
+		break;
+
+      case 0x60: // RTS
+        POPW( PC ); ++PC; CLK( 6 );
+        break;
+
+      case 0x61: // ADC (Zpg,X)
+        //ADC( A_IX ); CLK( 6 );
+        
+		//加速
+		ReadPCX( wA0 );
+		ReadZpW( wA0 );
+		Read6502RAM( wA0 );
+        wD0 = A + byD0 + ( F & FLAG_C );
+		byD1 = (BYTE)wD0;
+		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ byD1 ] | ( ( ~( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 > 0xff ) );
+		A = byD1;
+		CLK( 6 );
+
+		break;
+
+      case 0x65: // ADC Zpg
+        //ADC( A_ZP ); CLK( 3 );
+        
+		//加速
+		ReadPC( wA0 );
+		ReadZp( wA0 );
+		wD0 = A + byD0 + ( F & FLAG_C );
+		byD1 = (BYTE)wD0;
+		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ byD1 ] | ( ( ~( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 > 0xff ) );
+		A = byD1;
+		CLK( 3 );
+
+        break;
+
+      case 0x66: // ROR Zpg
+        //ROR( AA_ZP ); CLK( 5 );
+
+		//加速
+		byD1 = F & FLAG_C;
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		ReadPC( wA0 );
+		ReadZp( wA0 );
+		SETF( g_RORTable[ byD1 ][ byD0 ].byFlag );
+		WriteZp( wA0, g_RORTable[ byD1 ][ byD0 ].byValue );
+		CLK( 5 );
+
+        break;
+
+      case 0x68: // PLA
+        POP( A ); TEST( A ); CLK( 4 );
+        break;
+
+      case 0x69: // ADC #Oper
+        //ADC( A_IMM ); CLK( 2 );
+        
+		//加速
+		ReadPC( byD0 );
+		wD0 = A + byD0 + ( F & FLAG_C );
+		byD1 = (BYTE)wD0;
+		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ byD1 ] | ( ( ~( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 > 0xff ) );
+		A = byD1;
+		CLK( 2 );
+
+        break;
+
+      case 0x6A: // ROR A
+        RORA; CLK( 2 );
+        break;
+
+      case 0x6C: // JMP (Abs)
+        //JMP( K6502_ReadW2( AA_ABS ) ); CLK( 5 );
+
+		//加速
+		if( PC >= 0xC000 )
+		{
+			wA0 = ROMBANK2[ PC++ & 0x3fff ];
+			wA0 |= (WORD)ROMBANK2[ PC & 0x3fff ] << 8;
+		}
+		else if( PC >= 0x8000 )
+		{
+			wA0 = ROMBANK0[ PC++ & 0x3fff ];
+			wA0 |= (WORD)ROMBANK0[ PC & 0x3fff ] << 8;
+		}
+		else
+		{
+			wA0 = RAM[ PC++ ];
+			wA0 |= (WORD)RAM[ PC ] << 8;
+		}
+        if ( 0x00ff == ( wA0 & 0x00ff ) )
+          PC = K6502_Read( wA0 ) | (WORD)K6502_Read( wA0 - 0x00ff ) << 8;
+        else
+		  PC = K6502_Read( wA0 ) | (WORD)K6502_Read( wA0 + 1 ) << 8;
+		CLK( 5 );
+
+        break;
+
+      case 0x6D: // ADC Abs
+        //ADC( A_ABS ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		Read6502RAM( wA0 );
+		wD0 = A + byD0 + ( F & FLAG_C );
+		byD1 = (BYTE)wD0;
+		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ byD1 ] | ( ( ~( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 > 0xff ) ); 
+		A = byD1;
+		CLK( 4 );
+
+        break;
+
+      case 0x6E: // ROR Abs
+        //ROR( AA_ABS ); CLK( 6 );
+        
+		//加速
+        byD1 = F & FLAG_C;
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		ReadPCW( wA0 );
+		Bit6502RAM( g_RORTable[ byD1 ][ byD0 ].byValue );
+		SETF( g_RORTable[ byD1 ][ byD0 ].byFlag );
+		CLK( 6 );
+
+        break;
+
+      case 0x70: // BVS
+        BRA( F & FLAG_V );
+        break;
+
+      case 0x71: // ADC (Zpg),Y
+        //ADC( A_IY ); CLK( 5 );
+        
+		//加速
+		ReadPC( wA0 );
+		ReadZpW( wA0 );
+		wA1 = wA0 + Y;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		Read6502RAM( wA1 );
+		wD0 = A + byD0 + ( F & FLAG_C );
+		byD1 = (BYTE)wD0;
+		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ byD1 ] | ( ( ~( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 > 0xff ) ); 
+		A = byD1;
+		CLK( 5 );
+
+        break;
+
+      case 0x75: // ADC Zpg,X
+        //ADC( A_ZPX ); CLK( 4 );
+        
+		//加速
+		ReadPCX( wA0 );
+		ReadZp( wA0 );
+		wD0 = A + byD0 + ( F & FLAG_C );
+		byD1 = (BYTE)wD0;
+		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ byD1 ] | ( ( ~( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 > 0xff ) ); 
+		A = byD1;
+		CLK( 4 );
+
+        break;
+
+      case 0x76: // ROR Zpg,X
+        //ROR( AA_ZPX ); CLK( 6 );
+        
+		//加速
+        byD1 = F & FLAG_C;
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		ReadPCX( wA0 );
+		ReadZp( wA0 );
+		SETF( g_RORTable[ byD1 ][ byD0 ].byFlag );
+		WriteZp( wA0, g_RORTable[ byD1 ][ byD0 ].byValue );
+		CLK( 6 );
+
+        break;
+
+      case 0x78: // SEI
+        SETF( FLAG_I ); CLK( 2 );
+        break;
+
+      case 0x79: // ADC Abs,Y
+        //ADC( A_ABSY ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+        wA1 = wA0 + Y;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		Read6502RAM( wA1 );
+		wD0 = A + byD0 + ( F & FLAG_C );
+		byD1 = (BYTE)wD0;
+		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ byD1 ] | ( ( ~( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 > 0xff ) ); 
+		A = byD1;
+		CLK( 4 );
+
+        break;
+
+      case 0x7D: // ADC Abs,X
+        //ADC( A_ABSX ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		wA1 = wA0 + X;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		Read6502RAM( wA1 );
+		wD0 = A + byD0 + ( F & FLAG_C );
+		byD1 = (BYTE)wD0;
+		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ byD1 ] | ( ( ~( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 > 0xff ) ); 
+		A = byD1;
+		CLK( 4 );
+
+        break;
+
+      case 0x7E: // ROR Abs,X
+        //ROR( AA_ABSX ); CLK( 7 );
+        
+		//加速
+        byD1 = F & FLAG_C;
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		ReadPCW( wA0 );
+        wA0 += X;
+		Bit6502RAM( g_RORTable[ byD1 ][ byD0 ].byValue );
+		SETF( g_RORTable[ byD1 ][ byD0 ].byFlag );
+		CLK( 7 );
+
+        break;
+
+      case 0x81: // STA (Zpg,X)
+        //STA( AA_IX ); CLK( 6 );
+        
+		//加速
+		ReadPCX( wA0 );
+		ReadZpW( wA0 );
+		Write6502RAM( wA0, A );
+		CLK( 6 );
+
+		break;
+      
+      case 0x84: // STY Zpg
+        //STY( AA_ZP ); CLK( 3 );
+
+		//加速
+		ReadPC( wA0 );
+		WriteZp( wA0, Y );
+		CLK( 3 );
+
+        break;
+
+      case 0x85: // STA Zpg
+        //STA( AA_ZP ); CLK( 3 );
+
+		//加速
+		ReadPC( wA0 );
+		WriteZp( wA0, A );
+		CLK( 3 );
+
+        break;
+
+      case 0x86: // STX Zpg
+        //STX( AA_ZP ); CLK( 3 );
+
+		//加速
+		ReadPC( wA0 );
+		WriteZp( wA0, X );
+		CLK( 3 );
+
+        break;
+
+      case 0x88: // DEY
+        --Y; TEST( Y ); CLK( 2 );
+        break;
+
+      case 0x8A: // TXA
+        A = X; TEST( A ); CLK( 2 );
+        break;
+
+      case 0x8C: // STY Abs
+        //STY( AA_ABS ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		Write6502RAM( wA0, Y );
+		CLK( 4 );
+
+        break;
+
+      case 0x8D: // STA Abs
+        //STA( AA_ABS ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		Write6502RAM( wA0, A );
+		CLK( 4 );
+
+        break;
+
+      case 0x8E: // STX Abs
+        //STX( AA_ABS ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		Write6502RAM( wA0, X );
+		CLK( 4 );
+
+        break;
+
+      case 0x90: // BCC
+        BRA( !( F & FLAG_C ) );
+        break;
+
+      case 0x91: // STA (Zpg),Y
+        //STA( AA_IY ); CLK( 6 );
+        
+		//加速
+		ReadPC( wA0 );
+		ReadZpW( wA0 );
+		wA1 = wA0 + Y;
+		Write6502RAM( wA1, A );
+		CLK( 6 );
+
+        break;
+
+      case 0x94: // STY Zpg,X
+        //STY( AA_ZPX ); CLK( 4 );
+        
+		//加速
+        ReadPCX( wA0 );
+		WriteZp( wA0, Y );
+		CLK( 4 );
+
+        break;
+
+      case 0x95: // STA Zpg,X
+        //STA( AA_ZPX ); CLK( 4 );
+        
+		//加速
+        ReadPCX( wA0 );
+		WriteZp( wA0, A );
+		CLK( 4 );
+
+        break;
+
+      case 0x96: // STX Zpg,Y
+        //STX( AA_ZPY ); CLK( 4 );
+        
+		//加速
+        ReadPCY( wA0 );
+		WriteZp( wA0, X );
+		CLK( 4 );
+
+        break;
+
+      case 0x98: // TYA
+        A = Y; TEST( A ); CLK( 2 );
+        break;
+
+      case 0x99: // STA Abs,Y
+        //STA( AA_ABSY ); CLK( 5 );
+        
+		//加速
+		ReadPCW( wA0 );
+		wA0 += Y;
+		Write6502RAM( wA0, A );
+		CLK( 5 );
+
+        break;
+
+      case 0x9A: // TXS
+        SP = X; CLK( 2 );
+        break;
+
+      case 0x9D: // STA Abs,X
+        //STA( AA_ABSX ); CLK( 5 );
+        
+		//加速
+		ReadPCW( wA0 );
+		wA0 += X;
+		Write6502RAM( wA0, A );
+		CLK( 5 );
+
+        break;
+
+      case 0xA0: // LDY #Oper
+        //LDY( A_IMM ); CLK( 2 );
+
+		//加速
+		if( PC >= 0xC000 )
+			Y = ROMBANK2[ PC++ & 0x3fff ];
+		else if( PC >= 0x8000 )
+			Y = ROMBANK0[ PC++ & 0x3fff ];
+		else
+			Y = RAM[ PC++ ];
+		TEST( Y );
+		CLK( 2 );
+
+        break;
+
+      case 0xA1: // LDA (Zpg,X)
+        //LDA( A_IX ); CLK( 6 );
+        
+		//加速
+		ReadPCX( wA0 );
+		ReadZpW( wA0 );
+		if( wA0 >= 0xC000 )
+			A = ROMBANK2[ wA0 & 0x3fff ];
+		else if( wA0 >= 0x8000 )
+			A = ROMBANK0[ wA0 & 0x3fff ];
+		else if( wA0 < 0x2000 )
+			A = RAM[ wA0 ];
+		else
+			A = K6502_ReadIO( wA0 );
+		TEST( A );
+		CLK( 6 );
+
+		break;
+
+      case 0xA2: // LDX #Oper
+        //LDX( A_IMM ); CLK( 2 );
+
+		//加速
+		if( PC >= 0xC000 )
+			X = ROMBANK2[ PC++ & 0x3fff ];
+		else if( PC >= 0x8000 )
+			X = ROMBANK0[ PC++ & 0x3fff ];
+		else
+			X = RAM[ PC++ ];
+		TEST( X );
+		CLK( 2 );
+
+        break;
+
+      case 0xA4: // LDY Zpg
+        //LDY( A_ZP ); CLK( 3 );
+        
+		//加速
+		ReadPC( wA0 );
+		Y = RAM[ wA0 ];
+		TEST( Y );
+		CLK( 3 );
+
+        break;
+
+      case 0xA5: // LDA Zpg
+        //LDA( A_ZP ); CLK( 3 );
+        
+		//加速
+		ReadPC( wA0 );
+		A = RAM[ wA0 ];
+		TEST( A );
+		CLK( 3 );
+
+        break;
+
+      case 0xA6: // LDX Zpg
+        //LDX( A_ZP ); CLK( 3 );
+        
+		//加速
+		ReadPC( wA0 );
+		X = RAM[ wA0 ];
+		TEST( X );
+		CLK( 3 );
+
+        break;
+
+      case 0xA8: // TAY
+        Y = A; TEST( A ); CLK( 2 );
+        break;
+
+      case 0xA9: // LDA #Oper
+        //LDA( A_IMM ); CLK( 2 );
+
+		//加速
+		if( PC >= 0xC000 )
+			A = ROMBANK2[ PC++ & 0x3fff ];
+		else if( PC >= 0x8000 )
+			A = ROMBANK0[ PC++ & 0x3fff ];
+		else
+			A = RAM[ PC++ ];
+		TEST( A );
+		CLK( 2 );
+
+        break;
+
+      case 0xAA: // TAX
+        X = A; TEST( A ); CLK( 2 );
+        break;
+
+      case 0xAC: // LDY Abs
+        //LDY( A_ABS ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		if( wA0 >= 0xC000 )
+			Y = ROMBANK2[ wA0 & 0x3fff ];
+		else if( wA0 >= 0x8000 )
+			Y = ROMBANK0[ wA0 & 0x3fff ];
+		else if( wA0 < 0x2000 )
+			Y = RAM[ wA0 ];
+		else
+			Y = K6502_ReadIO( wA0 );
+		TEST( Y );
+		CLK( 4 );
+
+        break;
+
+      case 0xAD: // LDA Abs
+        //LDA( A_ABS ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		if( wA0 >= 0xC000 )
+			A = ROMBANK2[ wA0 & 0x3fff ];
+		else if( wA0 >= 0x8000 )
+			A = ROMBANK0[ wA0 & 0x3fff ];
+		else if( wA0 < 0x2000 )
+			A = RAM[ wA0 ];
+		else
+			A = K6502_ReadIO( wA0 );
+		TEST( A );
+		CLK( 4 );
+
+        break;
+
+      case 0xAE: // LDX Abs
+        //LDX( A_ABS ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		if( wA0 >= 0xC000 )
+			X = ROMBANK2[ wA0 & 0x3fff ];
+		else if( wA0 >= 0x8000 )
+			X = ROMBANK0[ wA0 & 0x3fff ];
+		else if( wA0 < 0x2000 )
+			X = RAM[ wA0 ];
+		else
+			X = K6502_ReadIO( wA0 );
+		TEST( X );
+		CLK( 4 );
+
+        break;
+
+      case 0xB0: // BCS
+        BRA( F & FLAG_C );
+        break;
+
+      case 0xB1: // LDA (Zpg),Y
+        //LDA( A_IY ); CLK( 5 );
+        
+		//加速
+		ReadPC( wA0 );
+		ReadZpW( wA0 );
+		wA1 = wA0 + Y;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		if( wA1 >= 0xC000 )
+			A = ROMBANK2[ wA1 & 0x3fff ];
+		else if( wA1 >= 0x8000 )
+			A = ROMBANK0[ wA1 & 0x3fff ];
+		else if( wA1 < 0x2000 )
+			A = RAM[ wA1 ];
+		else
+			A = K6502_ReadIO( wA1 );
+		TEST( A );
+		CLK( 5 );
+
+        break;
+
+      case 0xB4: // LDY Zpg,X
+        //LDY( A_ZPX ); CLK( 4 );
+        
+		//加速
+        ReadPCX( wA0 );
+		Y = RAM[ wA0 ];
+		TEST( Y );
+		CLK( 4 );
+
+        break;
+
+      case 0xB5: // LDA Zpg,X
+        //LDA( A_ZPX ); CLK( 4 );
+        
+		//加速
+        ReadPCX( wA0 );
+		A = RAM[ wA0 ];
+		TEST( A );
+		CLK( 4 );
+
+        break;
+
+      case 0xB6: // LDX Zpg,Y
+        //LDX( A_ZPY ); CLK( 4 );
+        
+		//加速
+        ReadPCY( wA0 );
+		X = RAM[ wA0 ];
+		TEST( X );
+		CLK( 4 );
+
+        break;
+
+      case 0xB8: // CLV
+        RSTF( FLAG_V ); CLK( 2 );
+        break;
+
+      case 0xB9: // LDA Abs,Y
+        //LDA( A_ABSY ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+        wA1 = wA0 + Y;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		if( wA1 >= 0xC000 )
+			A = ROMBANK2[ wA1 & 0x3fff ];
+		else if( wA1 >= 0x8000 )
+			A = ROMBANK0[ wA1 & 0x3fff ];
+		else if( wA1 < 0x2000 )
+			A = RAM[ wA1 ];
+		else
+			A = K6502_ReadIO( wA1 );
+		TEST( A );
+		CLK( 4 );
+
+        break;
+
+      case 0xBA: // TSX
+        X = SP; TEST( X ); CLK( 2 );
+        break;
+
+      case 0xBC: // LDY Abs,X
+        //LDY( A_ABSX ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		wA1 = wA0 + X;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		if( wA1 >= 0xC000 )
+			Y = ROMBANK2[ wA1 & 0x3fff ];
+		else if( wA1 >= 0x8000 )
+			Y = ROMBANK0[ wA1 & 0x3fff ];
+		else if( wA1 < 0x2000 )
+			Y = RAM[ wA1 ];
+		else
+			Y = K6502_ReadIO( wA1 );
+		TEST( Y );
+		CLK( 4 );
+
+        break;
+
+      case 0xBD: // LDA Abs,X
+        //LDA( A_ABSX ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		wA1 = wA0 + X;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		if( wA1 >= 0xC000 )
+			A = ROMBANK2[ wA1 & 0x3fff ];
+		else if( wA1 >= 0x8000 )
+			A = ROMBANK0[ wA1 & 0x3fff ];
+		else if( wA1 < 0x2000 )
+			A = RAM[ wA1 ];
+		else
+			A = K6502_ReadIO( wA1 );
+		TEST( A );
+		CLK( 4 );
+
+        break;
+
+      case 0xBE: // LDX Abs,Y
+        //LDX( A_ABSY ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+        wA1 = wA0 + Y;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		if( wA1 >= 0xC000 )
+			X = ROMBANK2[ wA1 & 0x3fff ];
+		else if( wA1 >= 0x8000 )
+			X = ROMBANK0[ wA1 & 0x3fff ];
+		else if( wA1 < 0x2000 )
+			X = RAM[ wA1 ];
+		else
+			X = K6502_ReadIO( wA1 );
+		TEST( X );
+		CLK( 4 );
+
+        break;
+
+      case 0xC0: // CPY #Oper
+        //CPY( A_IMM ); CLK( 2 );
+        
+		//加速
+		if( PC >= 0xC000 )
+			wD0 = Y - ROMBANK2[ PC++ & 0x3fff ];
+		else if( PC >= 0x8000 )
+			wD0 = Y - ROMBANK0[ PC++ & 0x3fff ];
+		else
+			wD0 = Y - RAM[ PC++ ];
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
+		CLK( 2 );
+
+        break;
+
+      case 0xC1: // CMP (Zpg,X)
+        //CMP( A_IX ); CLK( 6 );
+        
+		//加速
+		ReadPCX( wA0 );
+		ReadZpW( wA0 );
+		if( wA0 >= 0xC000 )
+			wD0 = A - ROMBANK2[ wA0 & 0x3fff ];
+		else if( wA0 >= 0x8000 )
+			wD0 = A - ROMBANK0[ wA0 & 0x3fff ];
+		else if( wA0 < 0x2000 )
+			wD0 = A - RAM[ wA0 ];
+		else
+			wD0 = A - K6502_ReadIO( wA0 );
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
+		CLK( 6 );
+
+        break;
+
+      case 0xC4: // CPY Zpg
+        //CPY( A_ZP ); CLK( 3 );
+        
+		//加速
+		ReadPC( wA0 );
+		wD0 = Y - RAM[ wA0 ];
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
+		CLK( 3 );
+
+        break;
+
+      case 0xC5: // CMP Zpg
+        //CMP( A_ZP ); CLK( 3 );
+        
+		//加速
+		ReadPC( wA0 );
+		wD0 = A - RAM[ wA0 ];
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
+		CLK( 3 );
+
+        break;
+
+      case 0xC6: // DEC Zpg
+        //DEC( AA_ZP ); CLK( 5 );
+        
+		//加速
+		ReadPC( wA0 );
+		ReadZp( wA0 );
+		--byD0;
+		WriteZp( wA0, byD0 );
+		TEST( byD0 );
+		CLK( 5 );
+
+        break;
+
+      case 0xC8: // INY
+        ++Y; TEST( Y ); CLK( 2 );
+        break;
+
+      case 0xC9: // CMP #Oper
+        //CMP( A_IMM ); CLK( 2 );
+
+		//加速
+		if( PC >= 0xC000 )
+			wD0 = A - ROMBANK2[ PC++ & 0x3fff ];
+		else if( PC >= 0x8000 )
+			wD0 = A - ROMBANK0[ PC++ & 0x3fff ];
+		else
+			wD0 = A - RAM[ PC++ ];
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
+		CLK( 2 );
+
+        break;
+
+      case 0xCA: // DEX
+        --X; TEST( X ); CLK( 2 );
+        break;
+
+      case 0xCC: // CPY Abs
+        //CPY( A_ABS ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		if( wA0 >= 0xC000 )
+			wD0 = Y - ROMBANK2[ wA0 & 0x3fff ];
+		else if( wA0 >= 0x8000 )
+			wD0 = Y - ROMBANK0[ wA0 & 0x3fff ];
+		else if( wA0 < 0x2000 )
+			wD0 = Y - RAM[ wA0 ];
+		else
+			wD0 = Y - K6502_ReadIO( wA0 );
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
+		CLK( 4 );
+
+        break;
+
+      case 0xCD: // CMP Abs
+        //CMP( A_ABS ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		if( wA0 >= 0xC000 )
+			wD0 = A - ROMBANK2[ wA0 & 0x3fff ];
+		else if( wA0 >= 0x8000 )
+			wD0 = A - ROMBANK0[ wA0 & 0x3fff ];
+		else if( wA0 < 0x2000 )
+			wD0 = A - RAM[ wA0 ];
+		else
+			wD0 = A - K6502_ReadIO( wA0 );
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
+		CLK( 4 );
+
+        break;
+
+      case 0xCE: // DEC Abs
+        //DEC( AA_ABS ); CLK( 6 );
+        
+		//加速
+		ReadPCW( wA0 );
+		DEC6502RAM;
+		TEST( byD0 );
+		CLK( 6 );
+
+        break;
+
+      case 0xD0: // BNE
+        BRA( !( F & FLAG_Z ) );
+        break;
+
+      case 0xD1: // CMP (Zpg),Y
+        //CMP( A_IY ); CLK( 5 );
+        
+		//加速
+		ReadPC( wA0 );
+		ReadZpW( wA0 );
+		wA1 = wA0 + Y;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		if( wA1 >= 0xC000 )
+			wD0 = A - ROMBANK2[ wA1 & 0x3fff ];
+		else if( wA1 >= 0x8000 )
+			wD0 = A - ROMBANK0[ wA1 & 0x3fff ];
+		else if( wA1 < 0x2000 )
+			wD0 = A - RAM[ wA1 ];
+		else
+			wD0 = A - K6502_ReadIO( wA1 );
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
+		CLK( 5 );
+
+        break;
+
+      case 0xD5: // CMP Zpg,X
+        //CMP( A_ZPX ); CLK( 4 );
+        
+		//加速
+        ReadPCX( wA0 );
+		wD0 = A - RAM[ wA0 ];
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
+		CLK( 4 );
+
+        break;
+
+      case 0xD6: // DEC Zpg,X
+        //DEC( AA_ZPX ); CLK( 6 );
+        
+		//加速
+        ReadPCX( wA0 );
+		ReadZp( wA0 );
+		--byD0;
+		WriteZp( wA0, byD0 );
+		TEST( byD0 );
+		CLK( 6 );
+
+        break;
+
+      case 0xD8: // CLD
+        RSTF( FLAG_D ); CLK( 2 );
+        break;
+
+      case 0xD9: // CMP Abs,Y
+        //CMP( A_ABSY ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+        wA1 = wA0 + Y;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		if( wA1 >= 0xC000 )
+			wD0 = A - ROMBANK2[ wA1 & 0x3fff ];
+		else if( wA1 >= 0x8000 )
+			wD0 = A - ROMBANK0[ wA1 & 0x3fff ];
+		else if( wA1 < 0x2000 )
+			wD0 = A - RAM[ wA1 ];
+		else
+			wD0 = A - K6502_ReadIO( wA1 );
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
+		CLK( 4 );
+
+        break;
+
+      case 0xDD: // CMP Abs,X
+        //CMP( A_ABSX ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		wA1 = wA0 + X;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		if( wA1 >= 0xC000 )
+			wD0 = A - ROMBANK2[ wA1 & 0x3fff ];
+		else if( wA1 >= 0x8000 )
+			wD0 = A - ROMBANK0[ wA1 & 0x3fff ];
+		else if( wA1 < 0x2000 )
+			wD0 = A - RAM[ wA1 ];
+		else
+			wD0 = A - K6502_ReadIO( wA1 );
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
+		CLK( 4 );
+
+        break;
+
+      case 0xDE: // DEC Abs,X
+        //DEC( AA_ABSX ); CLK( 7 );
+        
+		//加速
+		ReadPCW( wA0 );
+		wA0 += X;
+		DEC6502RAM;
+		TEST( byD0 );
+		CLK( 7 );
+
+        break;
+
+      case 0xE0: // CPX #Oper
+        //CPX( A_IMM ); CLK( 2 );
+        
+		//加速
+		if( PC >= 0xC000 )
+			wD0 = X - ROMBANK2[ PC++ & 0x3fff ];
+		else if( PC >= 0x8000 )
+			wD0 = X - ROMBANK0[ PC++ & 0x3fff ];
+		else
+			wD0 = X - RAM[ PC++ ];
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
+		CLK( 2 );
+
+        break;
+
+      case 0xE1: // SBC (Zpg,X)
+        //SBC( A_IX ); CLK( 6 );
+        
+		//加速
+		ReadPCX( wA0 );
+		ReadZpW( wA0 );
+		Read6502RAM( wA0 );
+		wD0 = A - byD0 - ( ~F & FLAG_C );
+		byD1 = (BYTE)wD0;
+		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ byD1 ] | ( ( ( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 < 0x100 ) );
+		A = byD1;
+		CLK( 6 );
+		
+		break;
+
+      case 0xE4: // CPX Zpg
+        //CPX( A_ZP ); CLK( 3 );
+        
+		//加速
+		ReadPC( wA0 );
+		wD0 = X - RAM[ wA0 ];
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
+		CLK( 3 );
+
+        break;
+
+      case 0xE5: // SBC Zpg
+        //SBC( A_ZP ); CLK( 3 );
+        
+		//加速
+		ReadPC( wA0 );
+		ReadZp( wA0 );
+		wD0 = A - byD0 - ( ~F & FLAG_C );
+		byD1 = (BYTE)wD0;
+		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ byD1 ] | ( ( ( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 < 0x100 ) );
+		A = byD1;
+		CLK( 3 );
+
+        break;
+
+      case 0xE6: // INC Zpg
+        //INC( AA_ZP ); CLK( 5 );
+        
+		//加速
+		ReadPC( wA0 );
+		ReadZp( wA0 );
+		++byD0;
+		WriteZp( wA0, byD0 );
+		TEST( byD0 );
+		CLK( 5 );
+
+        break;
+
+      case 0xE8: // INX
+        ++X; TEST( X ); CLK( 2 );
+        break;
+
+      case 0xE9: // SBC #Oper
+        //SBC( A_IMM ); CLK( 2 );
+
+		//加速
+		ReadPC( byD0 );
+        wD0 = A - byD0 - ( ~F & FLAG_C );
+		byD1 = (BYTE)wD0;
+		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ byD1 ] | ( ( ( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 < 0x100 ) );
+		A = byD1;
+		CLK( 2 );
+
+        break;
+
+      case 0xEA: // NOP
+        CLK( 2 );
+        break;
+
+      case 0xEC: // CPX Abs
+        //CPX( A_ABS ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		if( wA0 >= 0xC000 )
+			wD0 = X - ROMBANK2[ wA0 & 0x3fff ];
+		else if( wA0 >= 0x8000 )
+			wD0 = X - ROMBANK0[ wA0 & 0x3fff ];
+		else if( wA0 < 0x2000 )
+			wD0 = X - RAM[ wA0 ];
+		else
+			wD0 = X - K6502_ReadIO( wA0 );
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
+		CLK( 4 );
+        break;
+
+      case 0xED: // SBC Abs
+        //SBC( A_ABS ); CLK( 4 );
+        
+		//加速
+		ReadPCW( wA0 );
+		Read6502RAM( wA0 );
+		wD0 = A - byD0 - ( ~F & FLAG_C );
+		byD1 = (BYTE)wD0;
+		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ byD1 ] | ( ( ( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 < 0x100 ) );
+		A = byD1;
+		CLK( 4 );
+
+        break;
+
+      case 0xEE: // INC Abs
+        //INC( AA_ABS ); CLK( 6 );
+        
+		//加速
+		ReadPCW( wA0 );
+		INC6502RAM;
+		TEST( byD0 );
+		CLK( 6 );
+
+        break;
+
+      case 0xF0: // BEQ
+        BRA( F & FLAG_Z );
+        break;
+
+      case 0xF1: // SBC (Zpg),Y
+        //SBC( A_IY ); CLK( 5 );
+        
+		//加速
+		ReadPC( wA0 );
+		ReadZpW( wA0 );
+		wA1 = wA0 + Y;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		Read6502RAM( wA1 );
+		wD0 = A - byD0 - ( ~F & FLAG_C );
+		byD1 = (BYTE)wD0;
+		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ byD1 ] | ( ( ( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 < 0x100 ) );
+		A = byD1;
+		CLK( 5 );
+
+        break;
+
+      case 0xF5: // SBC Zpg,X
+        //SBC( A_ZPX ); CLK( 4 );
+        
+		//加速
+        ReadPCX( wA0 );
+		ReadZp( wA0 );
+		wD0 = A - byD0 - ( ~F & FLAG_C );
+		byD1 = (BYTE)wD0;
+		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
+		SETF( g_byTestTable[ byD1 ] | ( ( ( A ^ byD0 ) & ( A ^ byD1 ) & 0x80 ) ? FLAG_V : 0 ) | ( wD0 < 0x100 ) );
+		A = byD1;
+		CLK( 4 );
+
+        break;
+
+      case 0xF6: // INC Zpg,X
+        //INC( AA_ZPX ); CLK( 6 );
+        
+		//加速
+        ReadPCX( wA0 );
+		ReadZp( wA0 );
+		++byD0;
+		WriteZp( wA0, byD0 );
+		TEST( byD0 );
+		CLK( 6 );
+
+        break;
+
+      case 0xF8: // SED
+        SETF( FLAG_D ); CLK( 2 );
+        break;
+
+      case 0xF9: // SBC Abs,Y
         //SBC( A_ABSY ); CLK( 4 );
         
 		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-		byD0 = K6502_Read( wA1 );
+		ReadPCW( wA0 );
+        wA1 = wA0 + Y;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		Read6502RAM( wA1 );
 		wD0 = A - byD0 - ( ~F & FLAG_C );
 		byD1 = (BYTE)wD0;
 		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
@@ -1540,10 +3142,10 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         //SBC( A_ABSX ); CLK( 4 );
         
 		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
-		wA1 = wA0 + X; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-		byD0 = K6502_Read( wA1 );
+		ReadPCW( wA0 );
+		wA1 = wA0 + X;
+		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+		Read6502RAM( wA1 );
 		wD0 = A - byD0 - ( ~F & FLAG_C );
 		byD1 = (BYTE)wD0;
 		RSTF( FLAG_N | FLAG_V | FLAG_Z | FLAG_C );
@@ -1557,10 +3159,10 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
         //INC( AA_ABSX ); CLK( 7 );
         
 		//加速
-	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
-		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
+		ReadPCW( wA0 );
 		wA0 += X;
-		byD0 = K6502_Read( wA0 ); ++byD0; K6502_Write( wA0, byD0 ); TEST( byD0 );
+		INC6502RAM;
+		TEST( byD0 );
 		CLK( 7 );
 
         break;
@@ -1630,14 +3232,14 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
   g_wPassedClocks -= wClocks;
 }
 
-// Addressing Op.
-// Data
-// Absolute,X
-static inline BYTE K6502_ReadAbsX(){ WORD wA0, wA1; wA0 = AA_ABS; wA1 = wA0 + X; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) ); return K6502_Read( wA1 ); };
-// Absolute,Y
-static inline BYTE K6502_ReadAbsY(){ WORD wA0, wA1; wA0 = AA_ABS; wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) ); return K6502_Read( wA1 ); };
-// (Indirect),Y
-static inline BYTE K6502_ReadIY(){ WORD wA0, wA1; wA0 = K6502_ReadZpW( K6502_Read( PC++ ) ); wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) ); return K6502_Read( wA1 ); };
+//// Addressing Op.
+//// Data
+//// Absolute,X
+//static inline BYTE K6502_ReadAbsX(){ WORD wA0, wA1; wA0 = AA_ABS; wA1 = wA0 + X; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) ); return K6502_Read( wA1 ); };
+//// Absolute,Y
+//static inline BYTE K6502_ReadAbsY(){ WORD wA0, wA1; wA0 = AA_ABS; wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) ); return K6502_Read( wA1 ); };
+//// (Indirect),Y
+//static inline BYTE K6502_ReadIY(){ WORD wA0, wA1; wA0 = K6502_ReadZpW( K6502_ReadPC( PC++ ) ); wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) ); return K6502_Read( wA1 ); };
 
 /*===================================================================*/
 /*                                                                   */

@@ -958,6 +958,10 @@ void InfoNES_LoadFrame()
   // Set screen data
   memcpy( pScreenMem, WorkFrame, NES_DISP_WIDTH * NES_DISP_HEIGHT * 2 );
 
+////nesterJ
+//  for( int i = 0; i < 240; i++ )
+//    memcpy( pScreenMem + NES_DISP_WIDTH * i * 2, WorkFrame + NES_BACKBUF_WIDTH * i + 8 , NES_DISP_WIDTH * 2 );
+
   // Screen update
   HDC hDC = GetDC( hWndMain );
 

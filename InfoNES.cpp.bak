@@ -69,7 +69,7 @@ BYTE *ROMBANK3;
 
 //加速
 //readfunc ReadPC[0x8000];
-BYTE **ReadPC[0x8000];
+//BYTE **ReadPC[0x8000];
 //BYTE PAGE[0x8000];
 
 /*-------------------------------------------------------------------*/
@@ -184,11 +184,11 @@ WORD PalTable[ 32 ];
 BYTE PPU_MirrorTable[][ 4 ] =
 {
   { NAME_TABLE0, NAME_TABLE0, NAME_TABLE1, NAME_TABLE1 },
-  { NAME_TABLE0, NAME_TABLE1, NAME_TABLE0, NAME_TABLE1 },
+  { NAME_TABLE0, NAME_TABLE1, NAME_TABLE0, NAME_TABLE1 }/*,
   { NAME_TABLE1, NAME_TABLE1, NAME_TABLE1, NAME_TABLE1 },
   { NAME_TABLE0, NAME_TABLE0, NAME_TABLE0, NAME_TABLE0 },
   { NAME_TABLE0, NAME_TABLE1, NAME_TABLE2, NAME_TABLE3 },
-  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE0, NAME_TABLE1 }
+  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE0, NAME_TABLE1 }*///容量
 };
 
 /*-------------------------------------------------------------------*/
@@ -218,19 +218,19 @@ void (*MapperInit)();
 /* Write to Mapper */
 void (*MapperWrite)( WORD wAddr, BYTE byData );
 /* Write to SRAM */
-void (*MapperSram)( WORD wAddr, BYTE byData );
+//加速 void (*MapperSram)( WORD wAddr, BYTE byData );
 /* Write to Apu */
-void (*MapperApu)( WORD wAddr, BYTE byData );
+//加速 void (*MapperApu)( WORD wAddr, BYTE byData );
 /* Read from Apu */
-BYTE (*MapperReadApu)( WORD wAddr );
+//加速 BYTE (*MapperReadApu)( WORD wAddr );
 /* Callback at VSync */
-void (*MapperVSync)();
+//加速 void (*MapperVSync)();
 /* Callback at HSync */
 void (*MapperHSync)();
 /* Callback at PPU read/write */
 //加速 void (*MapperPPU)( WORD wAddr );
 /* Callback at Rendering Screen 1:BG, 0:Sprite */
-void (*MapperRenderScreen)( BYTE byMode );
+//减容 void (*MapperRenderScreen)( BYTE byMode );
 
 /*-------------------------------------------------------------------*/
 /*  ROM information                                                  */
@@ -464,14 +464,14 @@ for ( WORD i = 0x4000; i < 0x6000; i++ )
 for ( WORD i = 0x6000; i < 0x8000; i++ )
     ReadPC[ i ] = ROMBANK3_Read;*/
 
-for ( WORD i = 0x0000; i < 0x2000; i++ )
-    ReadPC[ i ] = &ROMBANK0;
-for ( WORD i = 0x2000; i < 0x4000; i++ )
-    ReadPC[ i ] = &ROMBANK1;
-for ( WORD i = 0x4000; i < 0x6000; i++ )
-    ReadPC[ i ] = &ROMBANK2;
-for ( WORD i = 0x6000; i < 0x8000; i++ )
-    ReadPC[ i ] = &ROMBANK3;
+//for ( WORD i = 0x0000; i < 0x2000; i++ )
+//    ReadPC[ i ] = &ROMBANK0;
+//for ( WORD i = 0x2000; i < 0x4000; i++ )
+//    ReadPC[ i ] = &ROMBANK1;
+//for ( WORD i = 0x4000; i < 0x6000; i++ )
+//    ReadPC[ i ] = &ROMBANK2;
+//for ( WORD i = 0x6000; i < 0x8000; i++ )
+//    ReadPC[ i ] = &ROMBANK3;
 
 /*memcpy( PAGE, ROMBANK0, 0x2000 );
 memcpy( PAGE + 0x2000, ROMBANK1, 0x2000 );
@@ -648,7 +648,7 @@ void InfoNES_Cycle()
 
       // NMI is required if there is necessity
       if ( ( PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
-        NMI_REQ;
+        NMI_REQ;//经过部分游戏测试，这一段代码好像没有必要。
 
       // Execute instructions
       K6502_Step( STEP_PER_SCANLINE - nStep );
@@ -657,7 +657,13 @@ void InfoNES_Cycle()
     {
       // Execute instructions
       K6502_Step( STEP_PER_SCANLINE );
-    }
+      
+      //加速
+//      if ( FrameCnt == 0 || FrameCnt == FrameSkip )
+//      	K6502_Step( 90 );
+//      else
+//      	K6502_Step( 40 );    
+	}
 
     // Frame IRQ in H-Sync
     FrameStep += STEP_PER_SCANLINE;
@@ -665,11 +671,12 @@ void InfoNES_Cycle()
     {
       FrameStep %= STEP_PER_FRAME;
       IRQ_REQ;
-      APU_Reg[ 0x4015 ] |= 0x40;
+      APU_Reg[ 0x15 ] |= 0x40;
     }
 
     // A mapper function in H-Sync
-    MapperHSync();
+    //Map4
+	//MapperHSync();
     
     // A function in H-Sync
     if ( InfoNES_HSync() == -1 )
@@ -677,6 +684,113 @@ void InfoNES_Cycle()
 
     // HSYNC Wait
     InfoNES_Wait();
+
+	 // //加速
+  //  int nStep;
+  //    
+  //  //SCAN_TOP_OFF_SCREEN:
+  //    // Reset a PPU status
+  //    PPU_R2 = 0;
+
+  //    // Set up a character data
+  //    if ( NesHeader.byVRomSize == 0 && FrameCnt == 0 )
+  //      InfoNES_SetupChr();
+
+  //    // Get position of sprite #0
+  //    InfoNES_GetSprHitY();
+
+  //  // Set a flag if a scanning line is a hit in the sprite #0
+  //  if ( SpriteJustHit < SCAN_UNKNOWN_START )
+  //  {
+  //    // # of Steps to execute before sprite #0 hit
+  //    nStep = SpriteJustHit * STEP_PER_SCANLINE + SPRRAM[ SPR_X ] * STEP_PER_SCANLINE / NES_DISP_WIDTH;
+
+  //    // Execute instructions
+  //    K6502_Step( nStep );
+
+  //    // Set a sprite hit flag
+  //    if ( ( PPU_R1 & R1_SHOW_SP ) && ( PPU_R1 & R1_SHOW_SCR ) )
+  //      PPU_R2 |= R2_HIT_SP;
+
+  //    // NMI is required if there is necessity
+  //    if ( ( PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
+  //      NMI_REQ;//经过部分游戏测试，这一段代码好像没有必要。
+
+  //    // Execute instructions
+  //    K6502_Step( STEP_PER_SCANLINE * SCAN_UNKNOWN_START - nStep );
+  //  }
+  //  else
+  //  {
+  //    // Execute instructions
+  //    K6502_Step( STEP_PER_SCANLINE * SCAN_UNKNOWN_START );
+  //  }
+
+  ///*-------------------------------------------------------------------*/
+  ///*  Refresh screen                                                   */
+  ///*-------------------------------------------------------------------*/
+  //if ( FrameCnt == 0 )
+  //{
+  //      // Render 240 scanlines
+  //  for( PPU_Scanline = 0; PPU_Scanline < 240; PPU_Scanline++ )
+  //  	  InfoNES_DrawLine();
+  //      
+  //      // Transfer the contents of work frame on the screen
+  //      InfoNES_LoadFrame();
+  //}
+
+  ///*-------------------------------------------------------------------*/
+  ///*  Set new scroll values                                            */
+  ///*-------------------------------------------------------------------*/
+  //PPU_Scr_V      = PPU_Scr_V_Next;
+  //PPU_Scr_V_Byte = PPU_Scr_V_Byte_Next;
+  //PPU_Scr_V_Bit  = PPU_Scr_V_Bit_Next;
+
+  //PPU_Scr_H      = PPU_Scr_H_Next;
+  //PPU_Scr_H_Byte = PPU_Scr_H_Byte_Next;
+  //PPU_Scr_H_Bit  = PPU_Scr_H_Bit_Next;
+
+  //  // SCAN_VBLANK_START:
+  //    // FrameCnt + 1
+  //    FrameCnt = ( FrameCnt >= FrameSkip ) ? 0 : FrameCnt + 1;
+
+  //    // Set a V-Blank flag
+  //    PPU_R2 = R2_IN_VBLANK;
+
+  //    // Reset latch flag
+  //    PPU_Latch_Flag = 0;
+
+  //    // pAPU Sound function in V-Sync
+  //    if ( !APU_Mute )
+  //      InfoNES_pAPUVsync();
+
+  //    // A mapper function in V-Sync
+  //    MapperVSync();
+
+  //    // Get the condition of the joypad
+  //    InfoNES_PadState( &PAD1_Latch, &PAD2_Latch, &PAD_System );
+  //    
+  //    // NMI on V-Blank
+  //    if ( PPU_R0 & R0_NMI_VB )
+  //      NMI_REQ;
+
+  //    // Exit an emulation if a QUIT button is pushed
+  //    if ( PAD_PUSH( PAD_System, PAD_SYS_QUIT ) )
+  //      return;  // Exit an emulation      
+
+  //    // Execute instructions
+  //    K6502_Step( STEP_PER_SCANLINE * 22 );
+
+  //  // Frame IRQ in V-Sync
+  //  if ( FrameIRQ_Enable )
+  //  {
+  //    IRQ_REQ;
+  //    APU_Reg[ 0x15 ] |= 0x40;
+  //  }
+
+  //  // HSYNC Wait
+  //  for( PPU_Scanline = 0; PPU_Scanline < 262; PPU_Scanline++ )
+		//InfoNES_Wait();
+
   }
 }
 
@@ -766,7 +880,7 @@ int InfoNES_HSync()
         InfoNES_pAPUVsync();
 
       // A mapper function in V-Sync
-      MapperVSync();
+//加速       MapperVSync();
 
       // Get the condition of the joypad
       InfoNES_PadState( &PAD1_Latch, &PAD2_Latch, &PAD_System );
@@ -821,7 +935,7 @@ void InfoNES_DrawLine()
   /*-------------------------------------------------------------------*/
 
   /* MMC5 VROM switch */
-  MapperRenderScreen( 1 );
+//减容   MapperRenderScreen( 1 );
 
   // Pointer to the render position
   pPoint = &WorkFrame[ PPU_Scanline * NES_DISP_WIDTH ];
@@ -976,7 +1090,7 @@ void InfoNES_DrawLine()
   /*-------------------------------------------------------------------*/
 
   /* MMC5 VROM switch */
-  MapperRenderScreen( 0 );
+//减容   MapperRenderScreen( 0 );
 
   if ( PPU_R1 & R1_SHOW_SP )
   {

@@ -76,11 +76,11 @@ extern struct MapperTable_tag MapperTable[];
 
 void Map0_Init();
 void Map0_Write( WORD wAddr, BYTE byData );
-void Map0_Sram( WORD wAddr, BYTE byData );
-void Map0_Apu( WORD wAddr, BYTE byData );
-BYTE Map0_ReadApu( WORD wAddr );
-void Map0_VSync();
-void Map0_HSync();
+//加速 void Map0_Sram( WORD wAddr, BYTE byData );
+//加速 void Map0_Apu( WORD wAddr, BYTE byData );
+//加速 BYTE Map0_ReadApu( WORD wAddr );
+//加速 void Map0_VSync();
+//加速 void Map0_HSync();
 void Map0_PPU( WORD wAddr );
 //减容 void Map0_RenderScreen( BYTE byMode );
 

@@ -34,7 +34,7 @@ extern BYTE SRAM[];
 extern BYTE *ROM;
 
 /* SRAM BANK ( 8Kb ) */
-extern BYTE *SRAMBANK;
+//减容 extern BYTE *SRAMBANK;
 
 /* ROM BANK ( 8Kb * 4 ) */
 extern BYTE *ROMBANK0;
@@ -45,7 +45,7 @@ extern BYTE *ROMBANK3;
 //加速
 //typedef BYTE ( *readfunc )( WORD wAddr );
 //extern readfunc ReadPC[];
-extern BYTE **ReadPC[];
+//extern BYTE **ReadPC[];
 //extern BYTE PAGE[];
 
 /*-------------------------------------------------------------------*/
@@ -87,6 +87,9 @@ extern BYTE PPU_R1;
 extern BYTE PPU_R2;
 extern BYTE PPU_R3;
 extern BYTE PPU_R7;
+
+//FCEU
+extern BYTE PPUGenLatch;
 
 extern BYTE PPU_Scr_V;
 extern BYTE PPU_Scr_V_Next;
@@ -244,19 +247,19 @@ extern void (*MapperInit)();
 /* Write to Mapper */
 extern void (*MapperWrite)( WORD wAddr, BYTE byData );
 /* Write to SRAM */
-extern void (*MapperSram)( WORD wAddr, BYTE byData );
+//加速 extern void (*MapperSram)( WORD wAddr, BYTE byData );
 /* Write to APU */
-extern void (*MapperApu)( WORD wAddr, BYTE byData );
+//加速 extern void (*MapperApu)( WORD wAddr, BYTE byData );
 /* Read from Apu */
-extern BYTE (*MapperReadApu)( WORD wAddr );
+//加速 extern BYTE (*MapperReadApu)( WORD wAddr );
 /* Callback at VSync */
-extern void (*MapperVSync)();
+//加速 extern void (*MapperVSync)();
 /* Callback at HSync */
 extern void (*MapperHSync)();
 /* Callback at PPU read/write */
 //加速extern void (*MapperPPU)( WORD wAddr );
 /* Callback at Rendering Screen 1:BG, 0:Sprite */
-extern void (*MapperRenderScreen)( BYTE byMode );
+//减容 extern void (*MapperRenderScreen)( BYTE byMode );
 
 /*-------------------------------------------------------------------*/
 /*  ROM information                                                  */

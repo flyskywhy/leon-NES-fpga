@@ -18,19 +18,19 @@ void Map3_Init()
   MapperWrite = Map3_Write;
 
   /* Write to SRAM */
-  MapperSram = Map0_Sram;
+//加速   MapperSram = Map0_Sram;
 
   /* Write to APU */
-  MapperApu = Map0_Apu;
+//加速   MapperApu = Map0_Apu;
 
   /* Read from APU */
-  MapperReadApu = Map0_ReadApu;
+//加速  MapperReadApu = Map0_ReadApu;
 
   /* Callback at VSync */
-  MapperVSync = Map0_VSync;
+//加速   MapperVSync = Map0_VSync;
 
   /* Callback at HSync */
-  MapperHSync = Map0_HSync;
+//加速   MapperHSync = Map0_HSync;
 
   /* Callback at PPU */
 //加速  MapperPPU = Map0_PPU;
@@ -39,7 +39,7 @@ void Map3_Init()
 //减容   MapperRenderScreen = Map0_RenderScreen;
 
   /* Set SRAM Banks */
-  SRAMBANK = SRAM;
+//减容   SRAMBANK = SRAM;
 
   /* Set ROM Banks */
   if ( ( NesHeader.byRomSize << 1 ) > 2 )

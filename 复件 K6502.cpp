@@ -537,7 +537,14 @@ void K6502_Step( WORD wClocks )
 
 //¼ÓËÙ
 //byCode = ReadPC[ PC - 0x8000 ]( PC ); PC++;
-byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
+
+	  //if( PC > 0x7000 )
+	  //{
+		  byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
+	  //}
+	  //else
+		 // byCode = RAM[ PC++ ];
+
 //byCode = *( PAGE + PC++ - 0x8000);
 
     // Execute an instruction.
