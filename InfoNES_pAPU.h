@@ -165,7 +165,7 @@ void InfoNES_pAPUVsync(void);
 /* these values subject to change without notice.                    */
 /*-------------------------------------------------------------------*/
 extern int ApuQuality;
-#define pAPU_QUALITY 3
+#define pAPU_QUALITY 2
 
 /*-------------------------------------------------------------------*/
 /*  Rectangle Wave #1 resources                                      */

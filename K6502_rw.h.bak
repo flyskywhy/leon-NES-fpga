@@ -18,9 +18,6 @@
 #include "InfoNES_System.h"
 #include "InfoNES_pAPU.h"
 
-//加速
-//#include <string.h>
-
 /*===================================================================*/
 /*                                                                   */
 /*            K6502_ReadZp() : Reading from the zero page            */
@@ -169,7 +166,7 @@ static inline BYTE K6502_Read( WORD wAddr )
       }
 
     case 0x8000:  /* ROM BANK 0 */
-      return ROMBANK0[ wAddr & 0x1fff ];
+      return *(ROMBANK0+(wAddr & 0x1fff ));
 
     case 0xa000:  /* ROM BANK 1 */
       return ROMBANK1[ wAddr & 0x1fff ];
@@ -186,10 +183,10 @@ static inline BYTE K6502_Read( WORD wAddr )
 }
 
 //加速
-//static inline BYTE ROMBANK0_Read ( WORD wAddr ) { return *(ROMBANK0 + ( wAddr & 0x1fff ) ); }
-//static inline BYTE ROMBANK1_Read ( WORD wAddr ) { return *(ROMBANK1 + ( wAddr & 0x1fff ) ); }
-//static inline BYTE ROMBANK2_Read ( WORD wAddr ) { return *(ROMBANK2 + ( wAddr & 0x1fff ) ); }
-//static inline BYTE ROMBANK3_Read ( WORD wAddr ) { return *(ROMBANK3 + ( wAddr & 0x1fff ) ); }
+static inline BYTE ROMBANK0_Read ( WORD wAddr ) { return *(ROMBANK0 + ( wAddr & 0x1fff ) ); }
+static inline BYTE ROMBANK1_Read ( WORD wAddr ) { return *(ROMBANK1 + ( wAddr & 0x1fff ) ); }
+static inline BYTE ROMBANK2_Read ( WORD wAddr ) { return *(ROMBANK2 + ( wAddr & 0x1fff ) ); }
+static inline BYTE ROMBANK3_Read ( WORD wAddr ) { return *(ROMBANK3 + ( wAddr & 0x1fff ) ); }
 
 /*===================================================================*/
 /*                                                                   */
@@ -471,22 +468,7 @@ static inline void K6502_Write( WORD wAddr, BYTE byData )
     case 0xe000:  /* ROM BANK 3 */
       // Write to Mapper
       MapperWrite( wAddr, byData );
-
-//加速
-/*for ( WORD i = 0x0000; i < 0x2000; i++ )
-    ReadPC[ i ] = ROMBANK0 + (i & 0x1fff ) ;
-for ( WORD i = 0x2000; i < 0x4000; i++ )
-    ReadPC[ i ] = ROMBANK1 + (i - 0x2000 & 0x1fff ) ;
-for ( WORD i = 0x4000; i < 0x6000; i++ )
-    ReadPC[ i ] = ROMBANK2 + (i - 0x4000 & 0x1fff ) ;
-for ( WORD i = 0x6000; i < 0x8000; i++ )
-    ReadPC[ i ] = ROMBANK3 + (i - 0x6000 & 0x1fff ) ;*/
-
-/*memcpy( PAGE, ROMBANK0, 0x2000 );
-memcpy( PAGE + 0x2000, ROMBANK1, 0x2000 );
-memcpy( PAGE + 0x4000, ROMBANK2, 0x2000 );
-memcpy( PAGE + 0x6000, ROMBANK3, 0x2000 );*/
-      
+  
       break;
   }
 }

@@ -1001,14 +1001,14 @@ void InfoNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
   DWORD dwTemp;
 
   /* Joypad 1 */
-  *pdwPad1 =   ( GetAsyncKeyState( 'X' )        < 0 ) |
-             ( ( GetAsyncKeyState( 'Z' )        < 0 ) << 1 ) |
-             ( ( GetAsyncKeyState( 'A' )        < 0 ) << 2 ) |
-             ( ( GetAsyncKeyState( 'S' )        < 0 ) << 3 ) |
-             ( ( GetAsyncKeyState( VK_UP )      < 0 ) << 4 ) |
-             ( ( GetAsyncKeyState( VK_DOWN )    < 0 ) << 5 ) |
-             ( ( GetAsyncKeyState( VK_LEFT )    < 0 ) << 6 ) |
-             ( ( GetAsyncKeyState( VK_RIGHT )   < 0 ) << 7 );
+  *pdwPad1 =   ( GetAsyncKeyState( 'K' )        < 0 ) |
+             ( ( GetAsyncKeyState( 'J' )        < 0 ) << 1 ) |
+             ( ( GetAsyncKeyState( 'T' )        < 0 ) << 2 ) |
+             ( ( GetAsyncKeyState( 'Y' )        < 0 ) << 3 ) |
+             ( ( GetAsyncKeyState( 'E' )      < 0 ) << 4 ) |
+             ( ( GetAsyncKeyState( 'D' )    < 0 ) << 5 ) |
+             ( ( GetAsyncKeyState( 'S' )    < 0 ) << 6 ) |
+             ( ( GetAsyncKeyState( 'F' )   < 0 ) << 7 );
 
   *pdwPad1 = *pdwPad1 | ( *pdwPad1 << 8 );
 

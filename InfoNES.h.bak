@@ -45,7 +45,7 @@ extern BYTE *ROMBANK3;
 //º”ÀŸ
 //typedef BYTE ( *readfunc )( WORD wAddr );
 //extern readfunc ReadPC[];
-extern BYTE **ReadPC[];
+//extern BYTE *ReadPC[];
 //extern BYTE PAGE[];
 
 /*-------------------------------------------------------------------*/

@@ -67,10 +67,10 @@ static inline BYTE K6502_ReadAbsY();
 static inline BYTE K6502_ReadIY();
 
 //º”ÀŸ
-//static inline BYTE ROMBANK0_Read ( WORD wAddr );
-//static inline BYTE ROMBANK1_Read ( WORD wAddr );
-//static inline BYTE ROMBANK2_Read ( WORD wAddr );
-//static inline BYTE ROMBANK3_Read ( WORD wAddr );
+static inline BYTE ROMBANK0_Read( WORD wAddr );
+static inline BYTE ROMBANK1_Read( WORD wAddr );
+static inline BYTE ROMBANK2_Read( WORD wAddr );
+static inline BYTE ROMBANK3_Read( WORD wAddr );
 
 static inline void K6502_Write( WORD wAddr, BYTE byData );
 static inline void K6502_WriteW( WORD wAddr, WORD wData );
