@@ -47,10 +47,10 @@ void Map4_Init()
   MapperHSync = Map4_HSync;
 
   /* Callback at PPU */
-  MapperPPU = Map0_PPU;
+//º”ÀŸ  MapperPPU = Map0_PPU;
 
   /* Callback at Rendering Screen ( 1:BG, 0:Sprite ) */
-  MapperRenderScreen = Map0_RenderScreen;
+//ºı»›   MapperRenderScreen = Map0_RenderScreen;
 
   /* Set SRAM Banks */
   SRAMBANK = SRAM;

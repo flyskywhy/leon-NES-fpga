@@ -260,7 +260,7 @@ static inline void K6502_Write( WORD wAddr, BYTE byData )
 
         case 5:   /* 0x2005 */
           // Set Scroll Register
-          if ( PPU_Latch_Flag )
+          if ( PPU_Latch_Flag )//2005第二次写入
           {
             // V-Scroll Register
             PPU_Scr_V_Next = ( byData > 239 ) ? 0 : byData;
@@ -271,7 +271,7 @@ static inline void K6502_Write( WORD wAddr, BYTE byData )
 			      PPU_Temp = ( PPU_Temp & 0xFC1F ) | ( ( ( (WORD)byData ) & 0xF8 ) << 2);
 			      PPU_Temp = ( PPU_Temp & 0x8FFF ) | ( ( ( (WORD)byData ) & 0x07 ) << 12);
           }
-          else
+          else//2005 第一次写入
           {
             // H-Scroll Register
             PPU_Scr_H_Next = byData;

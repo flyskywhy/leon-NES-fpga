@@ -184,11 +184,11 @@ WORD PalTable[ 32 ];
 BYTE PPU_MirrorTable[][ 4 ] =
 {
   { NAME_TABLE0, NAME_TABLE0, NAME_TABLE1, NAME_TABLE1 },
-  { NAME_TABLE0, NAME_TABLE1, NAME_TABLE0, NAME_TABLE1 },
+  { NAME_TABLE0, NAME_TABLE1, NAME_TABLE0, NAME_TABLE1 }/*,
   { NAME_TABLE1, NAME_TABLE1, NAME_TABLE1, NAME_TABLE1 },
   { NAME_TABLE0, NAME_TABLE0, NAME_TABLE0, NAME_TABLE0 },
   { NAME_TABLE0, NAME_TABLE1, NAME_TABLE2, NAME_TABLE3 },
-  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE0, NAME_TABLE1 }
+  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE0, NAME_TABLE1 }*///容量
 };
 
 /*-------------------------------------------------------------------*/
@@ -228,9 +228,9 @@ void (*MapperVSync)();
 /* Callback at HSync */
 void (*MapperHSync)();
 /* Callback at PPU read/write */
-void (*MapperPPU)( WORD wAddr );
+//加速 void (*MapperPPU)( WORD wAddr );
 /* Callback at Rendering Screen 1:BG, 0:Sprite */
-void (*MapperRenderScreen)( BYTE byMode );
+//减容 void (*MapperRenderScreen)( BYTE byMode );
 
 /*-------------------------------------------------------------------*/
 /*  ROM information                                                  */
@@ -657,7 +657,13 @@ void InfoNES_Cycle()
     {
       // Execute instructions
       K6502_Step( STEP_PER_SCANLINE );
-    }
+      
+      //加速
+//      if ( FrameCnt == 0 || FrameCnt == FrameSkip )
+//      	K6502_Step( 90 );
+//      else
+//      	K6502_Step( 40 );    
+	}
 
     // Frame IRQ in H-Sync
     FrameStep += STEP_PER_SCANLINE;
@@ -821,7 +827,7 @@ void InfoNES_DrawLine()
   /*-------------------------------------------------------------------*/
 
   /* MMC5 VROM switch */
-  MapperRenderScreen( 1 );
+//减容   MapperRenderScreen( 1 );
 
   // Pointer to the render position
   pPoint = &WorkFrame[ PPU_Scanline * NES_DISP_WIDTH ];
@@ -872,7 +878,7 @@ void InfoNES_DrawLine()
     }
 
     // Callback at PPU read/write
-    MapperPPU( PATTBL( pbyChrData ) );
+//加速     MapperPPU( PATTBL( pbyChrData ) );
 
     ++nX;
     ++pbyNameTable;
@@ -897,7 +903,7 @@ void InfoNES_DrawLine()
       pPoint += 8;
 
       // Callback at PPU read/write
-      MapperPPU( PATTBL( pbyChrData ) );
+//加速       MapperPPU( PATTBL( pbyChrData ) );
 
       ++pbyNameTable;
     }
@@ -928,7 +934,7 @@ void InfoNES_DrawLine()
       pPoint += 8;
 
       // Callback at PPU read/write
-      MapperPPU( PATTBL( pbyChrData ) );
+//加速       MapperPPU( PATTBL( pbyChrData ) );
 
       ++pbyNameTable;
     }
@@ -945,7 +951,7 @@ void InfoNES_DrawLine()
     }
 
     // Callback at PPU read/write
-    MapperPPU( PATTBL( pbyChrData ) );
+//加速     MapperPPU( PATTBL( pbyChrData ) );
 
     /*-------------------------------------------------------------------*/
     /*  Backgroud Clipping                                               */
@@ -976,7 +982,7 @@ void InfoNES_DrawLine()
   /*-------------------------------------------------------------------*/
 
   /* MMC5 VROM switch */
-  MapperRenderScreen( 0 );
+//减容   MapperRenderScreen( 0 );
 
   if ( PPU_R1 & R1_SHOW_SP )
   {

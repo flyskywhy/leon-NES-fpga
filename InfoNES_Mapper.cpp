@@ -20,7 +20,7 @@
 /*-------------------------------------------------------------------*/
 
 /* Disk System RAM */
-BYTE DRAM[ DRAM_SIZE ];
+//ºı»› BYTE DRAM[ DRAM_SIZE ];
 
 /*-------------------------------------------------------------------*/
 /*  Table of Mapper initialize function                              */
@@ -33,14 +33,14 @@ struct MapperTable_tag MapperTable[] =
   {   2, Map2_Init   },
   {   3, Map3_Init   },
   {   4, Map4_Init   },
-  {   5, Map5_Init   },
-  {   6, Map6_Init   },
+/*  {   5, Map5_Init   },
+  {   6, Map6_Init   },*///ºı»›
   {   7, Map7_Init   },
-  {   8, Map8_Init   },
+/*  {   8, Map8_Init   },
   {   9, Map9_Init   },
-  {  10, Map10_Init  },
+  {  10, Map10_Init  },*///ºı»›
   {  11, Map11_Init  },
-  {  13, Map13_Init  },
+/*  {  13, Map13_Init  },
   {  15, Map15_Init  },
   {  16, Map16_Init  },
   {  17, Map17_Init  },
@@ -164,7 +164,7 @@ struct MapperTable_tag MapperTable[] =
   { 249, Map249_Init },
   { 251, Map251_Init },
   { 252, Map252_Init },
-  { 255, Map255_Init },
+  { 255, Map255_Init },*///ºı»› 
   { -1, NULL }
 };
 
@@ -177,14 +177,14 @@ struct MapperTable_tag MapperTable[] =
 #include "mapper/InfoNES_Mapper_002.cpp"
 #include "mapper/InfoNES_Mapper_003.cpp"
 #include "mapper/InfoNES_Mapper_004.cpp"
-#include "mapper/InfoNES_Mapper_005.cpp"
-#include "mapper/InfoNES_Mapper_006.cpp"
+/*#include "mapper/InfoNES_Mapper_005.cpp"
+#include "mapper/InfoNES_Mapper_006.cpp"*///ºı»› 
 #include "mapper/InfoNES_Mapper_007.cpp"
-#include "mapper/InfoNES_Mapper_008.cpp"
+/*#include "mapper/InfoNES_Mapper_008.cpp"
 #include "mapper/InfoNES_Mapper_009.cpp"
-#include "mapper/InfoNES_Mapper_010.cpp"
+#include "mapper/InfoNES_Mapper_010.cpp"*///ºı»›
 #include "mapper/InfoNES_Mapper_011.cpp"
-#include "mapper/InfoNES_Mapper_013.cpp"
+/*#include "mapper/InfoNES_Mapper_013.cpp"
 #include "mapper/InfoNES_Mapper_015.cpp"
 #include "mapper/InfoNES_Mapper_016.cpp"
 #include "mapper/InfoNES_Mapper_017.cpp"
@@ -308,6 +308,6 @@ struct MapperTable_tag MapperTable[] =
 #include "mapper/InfoNES_Mapper_249.cpp"
 #include "mapper/InfoNES_Mapper_251.cpp"
 #include "mapper/InfoNES_Mapper_252.cpp"
-#include "mapper/InfoNES_Mapper_255.cpp"
+#include "mapper/InfoNES_Mapper_255.cpp"*///ºı»› 
 
 /* End of InfoNES_Mapper.cpp */

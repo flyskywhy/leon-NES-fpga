@@ -254,9 +254,9 @@ extern void (*MapperVSync)();
 /* Callback at HSync */
 extern void (*MapperHSync)();
 /* Callback at PPU read/write */
-extern void (*MapperPPU)( WORD wAddr );
+//º”ÀŸextern void (*MapperPPU)( WORD wAddr );
 /* Callback at Rendering Screen 1:BG, 0:Sprite */
-extern void (*MapperRenderScreen)( BYTE byMode );
+//ºı»› extern void (*MapperRenderScreen)( BYTE byMode );
 
 /*-------------------------------------------------------------------*/
 /*  ROM information                                                  */

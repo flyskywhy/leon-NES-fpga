@@ -31,10 +31,10 @@ void Map0_Init()
   MapperHSync = Map0_HSync;
 
   /* Callback at PPU */
-  MapperPPU = Map0_PPU;
+//加速  MapperPPU = Map0_PPU;
 
   /* Callback at Rendering Screen ( 1:BG, 0:Sprite ) */
-  MapperRenderScreen = Map0_RenderScreen;
+//减容   MapperRenderScreen = Map0_RenderScreen;
 
   /* Set SRAM Banks */
   SRAMBANK = SRAM;
@@ -152,21 +152,21 @@ void Map0_HSync()
 /*-------------------------------------------------------------------*/
 /*  Mapper 0 PPU Function                                            */
 /*-------------------------------------------------------------------*/
-void Map0_PPU( WORD wAddr )
-{
+//加速 void Map0_PPU( WORD wAddr )
+//加速 {
 /*
  *  Dummy Callback at PPU
  *
  */
-}
+//加速 }
 
 /*-------------------------------------------------------------------*/
 /*  Mapper 0 Rendering Screen Function                               */
 /*-------------------------------------------------------------------*/
-void Map0_RenderScreen( BYTE byMode )
-{
+//减容 void Map0_RenderScreen( BYTE byMode )
+//减容 {
 /*
  *  Dummy Callback at Rendering Screen
  *
  */
-}
+//减容 }

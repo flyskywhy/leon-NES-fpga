@@ -81,7 +81,7 @@ B7_PMC		EQU	0x0	;normal(1data)
 ;B6_CAN		EQU	0x2	;10bit
 ;BDRAMTYPE="SDRAM"		;MT=11(SDRAM)
 B6_MT		EQU	0x3	;SDRAM
-B6_Trcd		EQU	0x0	;2clk
+B6_Trcd		EQU	0x0	;1clk
 B6_SCAN		EQU	0x0	;8bit
 
 ;Bank 7 parameter

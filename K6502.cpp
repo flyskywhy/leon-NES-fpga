@@ -753,7 +753,7 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
 	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
 		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
         wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-        A &= K6502_Read( wA0 ); TEST( A );
+        A &= K6502_Read( wA1 ); TEST( A );
         CLK( 4 );
 
         break;
@@ -765,7 +765,7 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
 	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
 		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
         wA1 = wA0 + X; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-        A &= K6502_Read( wA0 ); TEST( A );
+        A &= K6502_Read( wA1 ); TEST( A );
         CLK( 4 );
 
         break;
@@ -886,7 +886,7 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
 	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
 		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
         wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-        A ^= K6502_Read( wA0 ); TEST( A );
+        A ^= K6502_Read( wA1 ); TEST( A );
         CLK( 4 );
 
         break;
@@ -898,7 +898,7 @@ byCode = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
 	    wA0 = *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ); PC++;
 		wA0 |= (WORD)( *( *ReadPC[ PC - 0x8000 ] + ( PC & 0x1fff) ) ) << 8; PC++;
         wA1 = wA0 + X; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
-        A ^= K6502_Read( wA0 ); TEST( A );
+        A ^= K6502_Read( wA1 ); TEST( A );
         CLK( 4 );
 
         break;

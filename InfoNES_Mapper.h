@@ -19,14 +19,14 @@
 /*  Constants                                                        */
 /*-------------------------------------------------------------------*/
 
-#define DRAM_SIZE    0xA000
+//ºı»› #define DRAM_SIZE    0xA000
 
 /*-------------------------------------------------------------------*/
 /*  Mapper resources                                                 */
 /*-------------------------------------------------------------------*/
 
 /* Disk System RAM */
-extern BYTE DRAM[];
+//ºı»› extern BYTE DRAM[];
 
 /*-------------------------------------------------------------------*/
 /*  Macros                                                           */
@@ -41,22 +41,22 @@ extern BYTE DRAM[];
 /* The address of 1Kbytes unit of the CRAM */
 #define CRAMPAGE(a)   &PPURAM[ 0x0000 + ((a)&0x1F) * 0x400 ]
 /* The address of 1Kbytes unit of the VRAM */
-#define VRAMPAGE(a)    &PPURAM[ 0x2000 + (a) * 0x400 ]
+//ºı»› #define VRAMPAGE(a)    &PPURAM[ 0x2000 + (a) * 0x400 ] //÷ª”√”⁄Mapper5∫Õ19
 /* Translate the pointer to ChrBuf into the address of Pattern Table */ 
-#define PATTBL(a)      ( ( (a) - ChrBuf ) >> 2 )
+//º”ÀŸ #define PATTBL(a)      ( ( (a) - ChrBuf ) >> 2 )
 
 /*-------------------------------------------------------------------*/
 /*  Macros ( Mapper specific )                                       */
 /*-------------------------------------------------------------------*/
 
 /* The address of 8Kbytes unit of the Map5 ROM */
-#define Map5_ROMPAGE(a)     &Map5_Wram[ ( (a) & 0x07 ) * 0x2000 ]
+//ºı»› #define Map5_ROMPAGE(a)     &Map5_Wram[ ( (a) & 0x07 ) * 0x2000 ]
 /* The address of 1Kbytes unit of the Map6 Chr RAM */
-#define Map6_VROMPAGE(a)    &Map6_Chr_Ram[ (a) * 0x400 ]
+//ºı»› #define Map6_VROMPAGE(a)    &Map6_Chr_Ram[ (a) * 0x400 ]
 /* The address of 1Kbytes unit of the Map19 Chr RAM */
-#define Map19_VROMPAGE(a)   &Map19_Chr_Ram[ (a) * 0x400 ]
+//ºı»› #define Map19_VROMPAGE(a)   &Map19_Chr_Ram[ (a) * 0x400 ]
 /* The address of 1Kbytes unit of the Map85 Chr RAM */
-#define Map85_VROMPAGE(a)   &Map85_Chr_Ram[ (a) * 0x400 ]
+//ºı»› #define Map85_VROMPAGE(a)   &Map85_Chr_Ram[ (a) * 0x400 ]
 
 /*-------------------------------------------------------------------*/
 /*  Table of Mapper initialize function                              */
@@ -82,7 +82,7 @@ BYTE Map0_ReadApu( WORD wAddr );
 void Map0_VSync();
 void Map0_HSync();
 void Map0_PPU( WORD wAddr );
-void Map0_RenderScreen( BYTE byMode );
+//ºı»› void Map0_RenderScreen( BYTE byMode );
 
 void Map1_Init();
 void Map1_Write( WORD wAddr, BYTE byData );
@@ -100,7 +100,7 @@ void Map4_HSync();
 void Map4_Set_CPU_Banks();
 void Map4_Set_PPU_Banks();
 
-void Map5_Init();
+/*void Map5_Init();
 void Map5_Write( WORD wAddr, BYTE byData );
 void Map5_Apu( WORD wAddr, BYTE byData );
 BYTE Map5_ReadApu( WORD wAddr );
@@ -111,12 +111,12 @@ void Map5_Sync_Prg_Banks( void );
 void Map6_Init();
 void Map6_Write( WORD wAddr, BYTE byData );
 void Map6_Apu( WORD wAddr, BYTE byData );
-void Map6_HSync();
+void Map6_HSync();*///ºı»›
 
 void Map7_Init();
 void Map7_Write( WORD wAddr, BYTE byData );
 
-void Map8_Init();
+/*void Map8_Init();
 void Map8_Write( WORD wAddr, BYTE byData );
 
 void Map9_Init();
@@ -125,12 +125,12 @@ void Map9_PPU( WORD wAddr );
 
 void Map10_Init();
 void Map10_Write( WORD wAddr, BYTE byData );
-void Map10_PPU( WORD wAddr );
+void Map10_PPU( WORD wAddr );*///ºı»›
 
 void Map11_Init();
 void Map11_Write( WORD wAddr, BYTE byData );
 
-void Map13_Init();
+/*void Map13_Init();
 void Map13_Write( WORD wAddr, BYTE byData );
 
 void Map15_Init();
@@ -630,6 +630,6 @@ void Map252_HSync();
 void Map255_Init();
 void Map255_Write( WORD wAddr, BYTE byData );
 void Map255_Apu( WORD wAddr, BYTE byData );
-BYTE Map255_ReadApu( WORD wAddr );
+BYTE Map255_ReadApu( WORD wAddr );*///ºı»›
 
 #endif /* !InfoNES_MAPPER_H_INCLUDED */
