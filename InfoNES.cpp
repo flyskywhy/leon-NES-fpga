@@ -56,6 +56,9 @@ unsigned int Frame = 0;
 void do_frame();
 #endif /* AFS */
 
+#ifdef LEON
+#include <string.h>
+#endif
 
 //#ifdef LEON
 //clock_t time1, time2, time3;
@@ -73,6 +76,269 @@ void do_frame();
 //加速
 //#include <string.h>
 //#include "K6502_rw.h"
+
+
+//#ifdef splitIO
+//
+//void ppu_write( WORD wAddr, BYTE byData )
+//{
+//	ASSERT((wAddr >= 0x2000) && (wAddr < 0x2008));
+//	switch ( wAddr )// & 0x7 )
+//	{
+//	case 0x2000:    /* 0x2000 */
+//		PPU_R0 = byData;
+//		PPU_Increment = ( PPU_R0 & R0_INC_ADDR ) ? 32 : 1;
+//		ARX = ( ARX & 0xFF ) | (int)( byData & 1 ) << 8;
+//		ARY = ( ARY & 0xFF ) | (int)( byData & 2 ) << 7;
+//		NES_ChrGen = PPUBANK[ ( PPU_R0 & R0_BG_ADDR ) >> 2];
+//		NES_SprGen = PPUBANK[ ( PPU_R0 & R0_SP_ADDR ) >> 1];
+//		PPU_SP_Height = ( PPU_R0 & R0_SP_SIZE ) ? 16 : 8;
+//		break;
+//
+//	case 0x2001:   /* 0x2001 */
+//		PPU_R1 = byData;
+//		break;
+//
+//	case 0x2002:   /* 0x2002 */
+//		break;
+//
+//	case 0x2003:   /* 0x2003 */
+//		// Sprite RAM Address
+//		PPU_R3 = byData;
+//		break;
+//
+//	case 0x2004:   /* 0x2004 */
+//		// Write data to Sprite RAM
+//		SPRRAM[ PPU_R3++ ] = byData;
+//		break;
+//
+//	case 0x2005:   /* 0x2005 */
+//		// Set Scroll Register
+//		if ( PPU_Latch_Flag )//2005第二次写入
+//			ARY = ( ARY & 0x0100 ) | byData;	// t:0000001111100000=d:11111000
+//		else//2005第一次写入
+//			ARX = ( ARX & 0x0100 ) | byData;	// t:0000000000011111=d:11111000
+//		PPU_Latch_Flag ^= 1;
+//		break;
+//
+//	case 0x2006:   /* 0x2006 */
+//		if ( PPU_Latch_Flag )//2006第二次写入
+//		{
+//			ARY = ( ARY & 0x01C7 ) | ( byData & 0xE0 ) >> 2;
+//			ARX = ( ARX & 0x0107 ) | ( byData & 0x1F ) << 3;
+//			NSCROLLX = ARX;
+//			NSCROLLY = ARY;
+//			PPU_Addr = ( NSCROLLY & 0x0003 ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLX & 0x00F8 ) >> 3;
+//		}
+//		else//2006第一次写入
+//		{
+//			ARY = ( ARY & 0x0038 ) | ( byData & 0x8 ) << 5 | ( byData & 0x3 ) << 6 | ( byData & 0x30 ) >> 4;
+//			ARX = ( ARX & 0x00FF ) | ( byData & 0x4 ) << 6;
+//		}
+//		PPU_Latch_Flag ^= 1;
+//		break;
+//
+//	case 0x2007:   /* 0x2007 */
+//		//PPU_Addr = ( NSCROLLY & 0x0003 ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLX & 0x00F8 ) >> 3;
+//		if( PPU_Addr >= 0x2000/*NSCROLLY & 0x0002*/ )	//2000-3FFF
+//		{
+//			if( PPU_Addr >= 0x3F00/*NSCROLLY & 0x0040*/)	//3F00-3FFF
+//			{
+//				byData &= 0x3F;
+//
+//				if(0x0000 == (PPU_Addr & 0x000F)) // is it THE 0 entry?
+//				{
+//#ifdef LEON
+//					PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
+//#else
+//					PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = byData;
+//					PalTable[ 0x00 ] = PalTable[ 0x10 ] = NesPalette[ byData ] | 0x8000;
+//#endif
+//				}
+//				else if(0x0000 == (PPU_Addr & 0x0010))
+//				{
+//					// background palette
+//#ifdef LEON
+//					PPURAM[ PPU_Addr ] = PalTable[ PPU_Addr & 0x000F ] = byData;
+//#else
+//					PPURAM[ PPU_Addr ] = byData;
+//					PalTable[ PPU_Addr & 0x000F ] = NesPalette[ byData ];
+//#endif
+//				}
+//				else
+//				{
+//					// sprite palette
+//#ifdef LEON
+//					PPURAM[ PPU_Addr/* & 0x000F*/ ] = PalTable[ PPU_Addr & 0x001F ] = byData; 
+//#else
+//					PPURAM[ PPU_Addr/* & 0x000F*/ ] = byData;
+//					PalTable[ PPU_Addr & 0x001F ] = NesPalette[ byData ]; 
+//#endif
+//				}
+//				PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] = PalTable[ 0x10 ] = 
+//					PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ]  = PalTable[ 0x00 ];
+//				PPU_Addr += PPU_Increment;
+//				//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+//				//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+//				break;
+//			}
+//			else						//2000-3EFF
+//				//PPUBANK[ ( ( NSCROLLY & 0x100 ) >> 7 ) + ( ( NSCROLLX & 0x100 ) >> 8 ) + 8 ][ addr & 0x3ff ] = byData;
+//				PPUBANK[ ( PPU_Addr & 0x2FFF ) >> 10 ][ PPU_Addr & 0x3ff ] = byData;
+//		}
+//		else if( byVramWriteEnable )	//0000-1FFF
+//			PPUBANK[ PPU_Addr >> 10 ][ PPU_Addr & 0x3ff ] = byData;
+//
+//		PPU_Addr += PPU_Increment;
+//		//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+//		//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+//		break;
+//	}
+//}
+//
+//#endif /* splitIO */
+
+
+
+#ifdef killif
+
+readfunc PPU_read_tbl[ 8 ];
+writefunc PPU_write_tbl[ 8 ];
+
+static inline BYTE empty_PPU_R( void )
+{
+	return 0;
+}
+static inline BYTE _2002R( void )	//$2002
+{
+	BYTE byRet = PPU_R2;
+	PPU_R2 &= 0x7F;//加速~R2_IN_VBLANK;	// Reset a V-Blank flag
+	PPU_Latch_Flag = 0;					// Reset address latch
+	return byRet;
+}
+static inline BYTE _2007R( void )	//$2007
+{
+			PPU_Addr = ( NSCROLLY & 0x0003 ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLX & 0x00F8 ) >> 3;
+			//int addr = PPU_Addr & 0x3fff;
+			BYTE byRet = PPU_R7;
+			PPU_R7 = PPUBANK[ PPU_Addr >> 10 ][ PPU_Addr & 0x3ff ];
+			PPU_Addr += PPU_Increment;
+			//PPU_R7 = PPUBANK[ addr >> 10 ][ addr & 0x3ff ];
+			NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+			NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+			return byRet;
+}
+
+static inline void _2000W( BYTE byData )
+{
+	PPU_R0 = byData;
+	PPU_Increment = ( PPU_R0 & R0_INC_ADDR ) ? 32 : 1;
+	ARX = ( ARX & 0xFF ) | (int)( byData & 1 ) << 8;
+	ARY = ( ARY & 0xFF ) | (int)( byData & 2 ) << 7;
+	NES_ChrGen = PPUBANK[ ( PPU_R0 & R0_BG_ADDR ) >> 2];
+	NES_SprGen = PPUBANK[ ( PPU_R0 & R0_SP_ADDR ) >> 1];
+	PPU_SP_Height = ( PPU_R0 & R0_SP_SIZE ) ? 16 : 8;
+}
+static inline void _2001W( BYTE byData )
+{
+	PPU_R1 = byData;
+}
+static inline void _2002W( BYTE byData )
+{
+}
+static inline void _2003W( BYTE byData )
+{
+	PPU_R3 = byData;				// Sprite RAM Address
+}
+static inline void _2004W( BYTE byData )
+{
+	SPRRAM[ PPU_R3++ ] = byData;	// Write data to Sprite RAM
+}
+static inline void _2005W( BYTE byData )
+{
+	//PPU_R5 = byData;
+	if ( PPU_Latch_Flag )	//2005第二次写入
+		ARY = ( ARY & 0x0100 ) | byData;	// t:0000001111100000=d:11111000
+	else					//2005第一次写入
+		ARX = ( ARX & 0x0100 ) | byData;	// t:0000000000011111=d:11111000
+	PPU_Latch_Flag ^= 1;
+}
+static inline void _2006W( BYTE byData )
+{
+	//PPU_R6 = byData;
+	if ( PPU_Latch_Flag )	//2006第二次写入
+	{
+		ARY = ( ARY & 0x01C7 ) | ( byData & 0xE0 ) >> 2;
+		ARX = ( ARX & 0x0107 ) | ( byData & 0x1F ) << 3;
+		NSCROLLX = ARX;
+		NSCROLLY = ARY;
+		PPU_Addr = ( NSCROLLY & 0x0003 ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLX & 0x00F8 ) >> 3;
+	}
+	else					//2006第一次写入
+	{
+		ARY = ( ARY & 0x0038 ) | ( byData & 0x8 ) << 5 | ( byData & 0x3 ) << 6 | ( byData & 0x30 ) >> 4;
+		ARX = ( ARX & 0x00FF ) | ( byData & 0x4 ) << 6;
+	}
+	PPU_Latch_Flag ^= 1;
+}
+static inline void _2007W( BYTE byData )
+{
+	//PPU_R7 = byData;
+	//PPU_Addr = ( NSCROLLY & 0x0003 ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLX & 0x00F8 ) >> 3;
+	if( PPU_Addr >= 0x2000/*NSCROLLY & 0x0002*/ )	//2000-3FFF
+	{
+		if( PPU_Addr >= 0x3F00/*NSCROLLY & 0x0040*/)	//3F00-3FFF
+		{
+			byData &= 0x3F;
+			if(0x0000 == (PPU_Addr & 0x000F))		// is it THE 0 entry?
+			{
+#ifdef LEON
+				PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
+#else
+				PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = byData;
+				PalTable[ 0x00 ] = PalTable[ 0x10 ] = NesPalette[ byData ] | 0x8000;
+#endif
+			}
+			else if(0x0000 == (PPU_Addr & 0x0010))	// background palette
+			{
+#ifdef LEON
+				PPURAM[ PPU_Addr ] = PalTable[ PPU_Addr & 0x000F ] = byData;
+#else
+				PPURAM[ PPU_Addr ] = byData;
+				PalTable[ PPU_Addr & 0x000F ] = NesPalette[ byData ];
+#endif
+			}
+			else									// sprite palette
+			{
+#ifdef LEON
+				PPURAM[ PPU_Addr/* & 0x000F*/ ] = PalTable[ PPU_Addr & 0x001F ] = byData; 
+#else
+				PPURAM[ PPU_Addr/* & 0x000F*/ ] = byData;
+				PalTable[ PPU_Addr & 0x001F ] = NesPalette[ byData ]; 
+#endif
+			}
+			PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] = PalTable[ 0x10 ] = 
+				PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ]  = PalTable[ 0x00 ];
+			PPU_Addr += PPU_Increment;
+			//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+			//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+			return;
+		}
+		else						//2000-3EFF
+			//PPUBANK[ ( ( NSCROLLY & 0x100 ) >> 7 ) + ( ( NSCROLLX & 0x100 ) >> 8 ) + 8 ][ addr & 0x3ff ] = byData;
+			PPUBANK[ ( PPU_Addr & 0x2FFF ) >> 10 ][ PPU_Addr & 0x3ff ] = byData;
+	}
+	else if( byVramWriteEnable )	//0000-1FFF
+		PPUBANK[ PPU_Addr >> 10 ][ PPU_Addr & 0x3ff ] = byData;
+	PPU_Addr += PPU_Increment;
+	//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+	//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+}
+
+
+#endif
+
+
 
 /*-------------------------------------------------------------------*/
 /*  NES resources                                                    */
@@ -597,13 +863,6 @@ int InfoNES_Reset()
   // Set up a mapper initialization function
   MapperTable[ nIdx ].pMapperInit();
 
-#if PocketNES == 1
-  memmap_tbl[ 4 ] = ROMBANK0 - 0x8000;		//这里- 0x8000是为了在encodePC中不用再做& 0x1FFF的运算了，下同
-  memmap_tbl[ 5 ] = ROMBANK1 - 0xA000;
-  memmap_tbl[ 6 ] = ROMBANK2 - 0xC000;
-  memmap_tbl[ 7 ] = ROMBANK3 - 0xE000;
-#endif
-
 //加速
 /*for ( WORD i = 0x0000; i < 0x2000; i++ )
     ReadPC[ i ] = ROMBANK0_Read;
@@ -649,6 +908,27 @@ void InfoNES_SetupPPU()
  *  Initialize PPU
  *
  */
+
+#ifdef killif
+	PPU_read_tbl[ 0 ] = empty_PPU_R;	//$2000
+	PPU_read_tbl[ 1 ] = empty_PPU_R;	//$2001
+	PPU_read_tbl[ 2 ] = _2002R;			//$2002
+	PPU_read_tbl[ 3 ] = empty_PPU_R;	//$2003
+	PPU_read_tbl[ 4 ] = empty_PPU_R;	//$2004
+	PPU_read_tbl[ 5 ] = empty_PPU_R;	//$2005
+	PPU_read_tbl[ 6 ] = empty_PPU_R;	//$2006
+	PPU_read_tbl[ 7 ] = _2007R;			//$2007
+
+	PPU_write_tbl[ 0 ] = _2000W;	//$2000
+	PPU_write_tbl[ 1 ] = _2001W;	//$2001
+	PPU_write_tbl[ 2 ] = _2002W;	//$2002
+	PPU_write_tbl[ 3 ] = _2003W;	//$2003
+	PPU_write_tbl[ 4 ] = _2004W;	//$2004
+	PPU_write_tbl[ 5 ] = _2005W;	//$2005
+	PPU_write_tbl[ 6 ] = _2006W;	//$2006
+	PPU_write_tbl[ 7 ] = _2007W;	//$2007
+#endif /* killif */
+
   int nPage;
 
   // Clear PPU and Sprite Memory
@@ -798,7 +1078,12 @@ inline void NES_CompareSprites( register int DY )
 	register BYTE *T, *R;
 	register int D0, D1, J, Y , SprNum;
 
+//#ifdef LEON
+//	memset( Sprites, 0, 256 );									//初始化Sprites[64]
+//#else
 	InfoNES_MemorySet( Sprites, 0, 256 );						//初始化Sprites[64]
+//#endif
+
 	SprNum = 0;													//初始化SprNum，它将用来表示在一条扫描线上遇到了多少个sprite
 	for( J = 0, T = SPRRAM; J < 64; J++, T += 4 )				//在SPRRAM[256]中按0到63的顺序比较sprite
 	{
@@ -839,73 +1124,73 @@ void emulate_frame( bool draw )
 //time1 = clock();
 //#endif
 
-	if ( retval )																//如果在非跳桢期间
+	if ( retval )												//如果在非跳桢期间
 	{
-		if ( ( PPU_R1 & R1_SHOW_SCR ) || ( PPU_R1 & R1_SHOW_SP ) )							//在一桢新的画面开始时，如果背景或Sprite允许显示，则重载计数器NSCROLLX和NSCROLLY
+		if ( ( PPU_R1 & R1_SHOW_SCR ) || ( PPU_R1 & R1_SHOW_SP ) )	//在一桢新的画面开始时，如果背景或Sprite允许显示，则重载计数器NSCROLLX和NSCROLLY
 		{
 			NSCROLLX = ARX;
 			NSCROLLY = ARY;
-			for( PPU_Scanline = 0; PPU_Scanline < 8; PPU_Scanline++ )		//显示在屏幕上的0-7共8条扫描线
+			for( PPU_Scanline = 0; PPU_Scanline < 8; PPU_Scanline++ )	//显示在屏幕上的0-7共8条扫描线
 			{
-				NSCROLLY++;																		//NSCROLLY计数器+1
-				NCURLINE = NSCROLLY & 0xFF;														//使NSCROLLY脱去位8的V，相当于VT->FV计数器，即NCURLINE等于当前扫描线在当前NT中的Y坐标
-				if( NCURLINE == 0xF0 || NCURLINE == 0x00 )										//如果VT等于30，说明该垂直切换NT了；或者如果VT等于32，说明这是一个“负的卷轴值”，这不会垂直切换NT，这时需要将之前由于进位而切换的NT再切换回来
-					NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;										//切换垂直方向的NT，同时VT->FV计数器清零
+				NSCROLLY++;													//NSCROLLY计数器+1
+				NCURLINE = NSCROLLY & 0xFF;									//使NSCROLLY脱去位8的V，相当于VT->FV计数器，即NCURLINE等于当前扫描线在当前NT中的Y坐标
+				if( NCURLINE == 0xF0 || NCURLINE == 0x00 )					//如果VT等于30，说明该垂直切换NT了；或者如果VT等于32，说明这是一个“负的卷轴值”，这不会垂直切换NT，这时需要将之前由于进位而切换的NT再切换回来
+					NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;					//切换垂直方向的NT，同时VT->FV计数器清零
 			}
-			for( ; PPU_Scanline < 232; PPU_Scanline++ )											//显示在屏幕上的8-231共224条扫描线
+			for( ; PPU_Scanline < 232; PPU_Scanline++ )					//显示在屏幕上的8-231共224条扫描线
 			{
 				//加速
-				//if( PPU_Scanline < 140 || PPU_Scanline > 201)		//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
-				K6502_Step( STEP_PER_SCANLINE );													//执行1条扫描线
+				//if( PPU_Scanline < 140 || PPU_Scanline > 201)	//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
+				K6502_Step( STEP_PER_SCANLINE );							//执行1条扫描线
 				NSCROLLX = ARX;
-				buf = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8;						//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+				buf = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8;	//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
 
 				if( PPU_R1 & R1_SHOW_SP ) NES_CompareSprites( PPU_Scanline );
-				if( InfoNES_DrawLine( PPU_Scanline, NSCROLLY ) )								//绘制1条扫描线到图形缓冲区数组
-					PPU_R2 |= R2_HIT_SP;															//设置Sprite 0点击标记
+				if( InfoNES_DrawLine( PPU_Scanline, NSCROLLY ) )			//绘制1条扫描线到图形缓冲区数组
+					PPU_R2 |= R2_HIT_SP;										//设置Sprite 0点击标记
 				FirstSprite = -1;											//初始化FirstSprite
 
-				NSCROLLY++;																		//NSCROLLY计数器+1
-				NCURLINE = NSCROLLY & 0xFF;														//使NSCROLLY脱去位8的V，相当于VT->FV计数器，即NCURLINE等于当前扫描线在当前NT中的Y坐标
-				if( NCURLINE == 0xF0 || NCURLINE == 0x00 )										//如果VT等于30，说明该垂直切换NT了；或者如果VT等于32，说明这是一个“负的卷轴值”，这不会垂直切换NT，这时需要将之前由于进位而切换的NT再切换回来
-					NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;										//切换垂直方向的NT，同时VT->FV计数器清零
+				NSCROLLY++;													//NSCROLLY计数器+1
+				NCURLINE = NSCROLLY & 0xFF;									//使NSCROLLY脱去位8的V，相当于VT->FV计数器，即NCURLINE等于当前扫描线在当前NT中的Y坐标
+				if( NCURLINE == 0xF0 || NCURLINE == 0x00 )					//如果VT等于30，说明该垂直切换NT了；或者如果VT等于32，说明这是一个“负的卷轴值”，这不会垂直切换NT，这时需要将之前由于进位而切换的NT再切换回来
+					NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;					//切换垂直方向的NT，同时VT->FV计数器清零
 			}
 		}
 		else
 		{
-			K6502_Step( 25088 );																//只执行224条扫描线而不绘制扫描线，当然也不刷新屏幕，112 * 224 = 25088
-			InfoNES_MemorySet( WorkFrame, 0, sizeof( WorkFrame ) );						//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+			K6502_Step( 25088 );										//只执行224条扫描线而不绘制扫描线，当然也不刷新屏幕，112 * 224 = 25088
+			InfoNES_MemorySet( WorkFrame, 0, sizeof( WorkFrame ) );		//清空屏幕也就是黑屏，不过这种情况比较少见，可以考虑去除
 			FirstSprite = -1;											//初始化FirstSprite
 		}
 	}
-	else																				//如果在跳桢期间
-		//K6502_Step( STEP_PER_SCANLINE * NES_DISP_HEIGHT );								//只执行240条扫描线而不绘制扫描线，当然也不刷新屏幕
-		K6502_Step( 25088 );																//只执行224条扫描线而不绘制扫描线，当然也不刷新屏幕，112 * 224 = 25088
+	else														//如果在跳桢期间
+		//K6502_Step( STEP_PER_SCANLINE * NES_DISP_HEIGHT );		//只执行240条扫描线而不绘制扫描线，当然也不刷新屏幕
+		K6502_Step( 25088 );										//只执行224条扫描线而不绘制扫描线，当然也不刷新屏幕，112 * 224 = 25088
 
 //#ifdef LEON
 //time2 = clock();
 //#endif
 
-	K6502_Step( STEP_PER_SCANLINE );													//执行第240条扫描线
+	K6502_Step( STEP_PER_SCANLINE );							//执行第240条扫描线
 
 	//PPU_Scanline = 241;
-	PPU_R2 |= R2_IN_VBLANK;																//在VBlank开始时设置R2_IN_VBLANK标记
-	K6502_Step( 1 );																	//在R2_IN_VBLANK标记和NMI之间执行一条指令
-	if ( PPU_R0 & R0_NMI_VB )															//如果R0_NMI_VB标记被设置
-		K6502_NMI();																		//执行NMI中断
-	K6502_Step( 2240 );																	//执行20条扫描线，112 * 20 = 2240
+	PPU_R2 |= R2_IN_VBLANK;										//在VBlank开始时设置R2_IN_VBLANK标记
+	K6502_Step( 1 );											//在R2_IN_VBLANK标记和NMI之间执行一条指令
+	if ( PPU_R0 & R0_NMI_VB )									//如果R0_NMI_VB标记被设置
+		K6502_NMI();												//执行NMI中断
+	K6502_Step( 2240 );											//执行20条扫描线，112 * 20 = 2240
 	//加速
-	//K6502_Step( STEP_PER_SCANLINE * 11 );							//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
+	//K6502_Step( STEP_PER_SCANLINE * 11 );						//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
 
-	PPU_R2 &= 0x3F;//= 0;																//在VBlank结束时复位R2_IN_VBLANK和R2_HIT_SP标记，InfoNES采用的是全部复位
-	K6502_Step( STEP_PER_SCANLINE );													//执行最后1条扫描线
+	PPU_R2 &= 0x3F;//= 0;										//在VBlank结束时复位R2_IN_VBLANK和R2_HIT_SP标记，InfoNES采用的是全部复位
+	K6502_Step( STEP_PER_SCANLINE );							//执行最后1条扫描线
 
 //#ifdef LEON
 //time3 = clock();
 //#endif
 
-	if ( !APU_Mute )																	//如果没有将模拟器设为静音状态则输出声音
-		InfoNES_pAPUVsync();
+				//if ( !APU_Mute )								//如果没有将模拟器设为静音状态则输出声音
+	InfoNES_pAPUVsync();
 }
 
 #ifdef THROTTLE_SPEED	//限速，在LEON中用不着，加速还来不及呢:)
@@ -932,7 +1217,7 @@ void do_frame()
 	cur_time = clock();	//获取当前的时间
 
 #ifdef PrintfFrameClock	//输出每桢的CLOCK数
-	//printf("FrameClock: %d;	Frame: %d\n", cur_time - temp, Frame++ );
+	printf("FrameClock: %d;	Frame: %d\n", cur_time - temp, Frame++ );
 	temp = cur_time;
 
 	////printf("NonVBlank: %d;	VBlank: %d;	Ratio: %d;	Frame: %d\n", time2 - time1, time3 - time2, ( time2 - time1 ) / ( time3 - time2 ), Frame++ );
@@ -948,6 +1233,7 @@ void do_frame()
 
 	if( frames_since_last > 1 )													//如果真实世界中已经经过的时间包含的桢数大于1帧的话，则说明需要跳过一些桢才能使模拟器的速度正常
 	{
+		frames_since_last &= 0xF;													//将最高跳桢数限制为14
 		for( int i = 1; i < frames_since_last; i++ )
 		{
 			last_frame_time += FRAME_PERIOD;
@@ -1107,7 +1393,7 @@ void InfoNES_Cycle()
 		else
 		{
 		K6502_Step( 25088 );																//只执行224条扫描线而不绘制扫描线，当然也不刷新屏幕，112 * 224 = 25088
-				InfoNES_MemorySet( WorkFrame, 0, sizeof( WorkFrame ) );						//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+				InfoNES_MemorySet( WorkFrame, 0, sizeof( WorkFrame ) );
 				FirstSprite = -1;											//初始化FirstSprite
 			InfoNES_LoadFrame();																//将图形缓冲区数组里的内容刷新到屏幕上
 		}

@@ -15,8 +15,30 @@
 
 #include "InfoNES_Types.h"
 
-#define PocketNES 1
-#define INES
+#define PocketNES 1			//以查找数组的方式获取指令
+
+//#define HACK				//将各种可能只从RAM中读取的代码简化为只从RAM中读取
+
+#define splitIO				//通过简化6502种得IO读写函数来提高速度
+
+//#define killif			//以查找函数指针数组的方式代替6502代码中的条件分支语句 //速度反而变慢，所以不用
+#ifdef killif
+
+#ifndef readfunc
+typedef /*static inline*/ BYTE ( *readfunc )( void );
+#endif
+
+#ifndef writefunc
+typedef /*static inline*/ void ( *writefunc )( BYTE byData );
+#endif
+
+extern readfunc PPU_read_tbl[ 8 ];
+extern writefunc PPU_write_tbl[ 8 ];
+//extern BYTE PPU_R( WORD wAddr );
+//extern void PPU_W( WORD wAddr, BYTE byData );
+#endif /* killif */
+
+#define INES				//使用ines模拟器的PPU代码思想
 //#define LEON				//这里基本上不用，由LEON平台中的makefile来定义
 
 #ifndef LEON
@@ -27,7 +49,7 @@
 
 #ifdef LEON
 //#define PrintfFrameSkip																//是否输出打印出跳桢数
-//#define PrintfFrameClock	//这三者在LEON平台中只能同时取一，在Win32平台则都不取		//是否输出打印出每桢的CLOCK数
+#define PrintfFrameClock	//这三者在LEON平台中只能同时取一，在Win32平台则都不取		//是否输出打印出每桢的CLOCK数
 //#define PrintfFrameGraph																//是否输出打印出每桢的部分画面
 #endif
 
@@ -42,6 +64,14 @@
 #endif
 
 #endif /* AFS */
+
+
+#define ASSERT(expr) \
+	if(!(expr)) \
+{ \
+	InfoNES_MessageBox( "0x%x", wAddr ); \
+}
+
 
 /*-------------------------------------------------------------------*/
 /*  NES resources                                                    */
@@ -508,6 +538,9 @@ int InfoNES_DrawLine(int DY,int SY);
 #else
 void InfoNES_DrawLine2();
 #endif /*INES*/
+
+
+//extern void ppu_write( WORD address, BYTE value);
 
 
 /* Get a position of scanline hits sprite #0 */

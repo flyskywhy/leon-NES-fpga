@@ -13,6 +13,7 @@
 /*-------------------------------------------------------------------*/
 /*  Include files                                                    */
 /*-------------------------------------------------------------------*/
+#ifndef killif
 
 #include "InfoNES.h"
 #include "InfoNES_System.h"
@@ -20,6 +21,9 @@
 
 //加速
 //#include <string.h>
+
+
+
 
 /*===================================================================*/
 /*                                                                   */
@@ -71,11 +75,9 @@ static inline BYTE K6502_ReadIO( WORD wAddr )
 		{
 #ifdef INES
 			PPU_Addr = ( NSCROLLY & 0x0003 ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLX & 0x00F8 ) >> 3;
-			//int addr = PPU_Addr & 0x3fff;
 			byRet = PPU_R7;
 			PPU_R7 = PPUBANK[ PPU_Addr >> 10 ][ PPU_Addr & 0x3ff ];
 			PPU_Addr += PPU_Increment;
-			//PPU_R7 = PPUBANK[ addr >> 10 ][ addr & 0x3ff ];
 			NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
 			NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
 #else
@@ -196,14 +198,12 @@ static inline BYTE K6502_ReadIO( WORD wAddr )
 						   address is returned. */
 }
 
-#define ASSERT(expr) \
-	if(!(expr)) \
-{ \
-	InfoNES_MessageBox( "0x%x", wAddr ); \
-}
-
 static inline void K6502_WritePPU( WORD wAddr, BYTE byData )
 {
+//#ifdef splitIO
+//	ppu_write( wAddr, byData );
+//#else
+
 	ASSERT((wAddr >= 0x2000) && (wAddr < 0x2008));
 	switch ( wAddr )// & 0x7 )
 	{
@@ -542,7 +542,7 @@ static inline void K6502_WritePPU( WORD wAddr, BYTE byData )
 			//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
 			//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
 
-#else
+#else /* INES */
 
 			////FCEU
 			//PPUGenLatch = byData;
@@ -660,10 +660,83 @@ static inline void K6502_WritePPU( WORD wAddr, BYTE byData )
 		}
 		break;
 	}
+
+//#endif /* splitIO */
 }
 
 static inline void K6502_WriteAPU( WORD wAddr, BYTE byData )
 {
+#ifdef splitIO
+	apu_write( wAddr, byData );	//如果用这个的话，体积可以减小528字节，速度也更快一点
+
+	//apudata_t d;
+
+	//switch (wAddr)
+	//{
+	//case 0x4015:
+	//	/* bodge for timestamp queue */
+	//	apu->dmc.enabled = (byData & 0x10) ? TRUE : FALSE;
+
+	//case 0x4000: case 0x4001: case 0x4002: case 0x4003:
+	//case 0x4004: case 0x4005: case 0x4006: case 0x4007:
+	//case 0x4008: case 0x4009: case 0x400A: case 0x400B:
+	//case 0x400C: case 0x400D: case 0x400E: case 0x400F:
+	//case 0x4010: case 0x4011: case 0x4012: case 0x4013:
+	//	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	//	d.address = wAddr;			//记录下对APU的哪一个寄存器进行了写入
+	//	d.value = byData;				//记录下写入的值
+	//	apu_enqueue(&d);				//将以上信息记录到队列中
+	//	break;
+
+	//case 0x4014:  /* 0x4014 */
+	//	// Sprite DMA
+	//	switch ( byData >> 5 )
+	//	{
+	//	case 0x0:  /* RAM */
+	//		InfoNES_MemoryCopy( SPRRAM, &RAM[ ( (WORD)byData << 8 ) & 0x7ff ], SPRRAM_SIZE );
+	//		break;
+
+	//	case 0x3:  /* SRAM */
+	//		InfoNES_MemoryCopy( SPRRAM, &SRAM[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
+	//		break;
+
+	//	case 0x4:  /* ROM BANK 0 */
+	//		InfoNES_MemoryCopy( SPRRAM, &ROMBANK0[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
+	//		break;
+
+	//	case 0x5:  /* ROM BANK 1 */
+	//		InfoNES_MemoryCopy( SPRRAM, &ROMBANK1[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
+	//		break;
+
+	//	case 0x6:  /* ROM BANK 2 */
+	//		InfoNES_MemoryCopy( SPRRAM, &ROMBANK2[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
+	//		break;
+
+	//	case 0x7:  /* ROM BANK 3 */
+	//		InfoNES_MemoryCopy( SPRRAM, &ROMBANK3[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
+	//		break;
+	//	}
+	//	break;
+
+	//case 0x4016:  /* 0x4016 */
+	//	// Reset joypad
+	//	if ( !( APU_Reg[ 0x16 ] & 1 ) && ( byData & 1 ) )
+	//	{
+	//		PAD1_Bit = 0;
+	//		PAD2_Bit = 0;
+	//	}
+	//	APU_Reg[ 0x16 ] = byData;
+	//	break;
+
+	//case 0x4017:  /* 0x4017 */
+	//	break;
+
+	//default:
+	//	break;
+	//}
+
+#else /*splitIO */
+
 	switch ( wAddr )
 	{
 	case 0x4000:
@@ -766,7 +839,9 @@ static inline void K6502_WriteAPU( WORD wAddr, BYTE byData )
 		APU_Reg[ wAddr & 0x1f ] = byData;
 		break;
 	}
+#endif /* splitIO */
 }
+
 //
 ///*===================================================================*/
 ///*                                                                   */
@@ -1624,5 +1699,8 @@ static inline void K6502_WriteAPU( WORD wAddr, BYTE byData )
 //    return K6502_Read( wAddr ) | (WORD)K6502_Read( wAddr + 1 ) << 8;
 //  }
 //}
+
+#endif /* killif */
+
 
 #endif /* !K6502_RW_H_INCLUDED */

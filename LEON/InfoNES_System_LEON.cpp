@@ -29,7 +29,11 @@
 #include "../InfoNES_pAPU.h"
 
 //LEON
+#ifdef PrintfFrameGraph
+#include "../gamefile/mario.h"
+#else
 #include "../gamefile/contra.h"
+#endif /* PrintfFrameGraph */
 DWORD FrameCount = 0;
 
 #define TRUE 1

@@ -9,6 +9,12 @@
 #ifndef InfoNES_PAPU_H_INCLUDED
 #define InfoNES_PAPU_H_INCLUDED
 
+#ifdef killif
+extern readfunc APU_read_tbl[ 32 ];
+extern writefunc APU_write_tbl[ 32 ];
+//extern BYTE APU_R( WORD wAddr );
+//extern void APU_W( WORD wAddr, BYTE byData );
+#endif
 
 //nester
 #define pAPU_QUALITY 1	//模拟器发出的声音质量，1为11025，2为22050，3为44100
@@ -207,6 +213,12 @@ extern void apu_reset(void);
 
 extern uint8 apu_read(uint32 address);
 extern void apu_write(uint32 address, uint8 value);
+
+
+//extern void apu_enqueue(apudata_t *d);
+///* pointer to active APU */
+//extern apu_t *apu;
+
 
 extern void InfoNES_pAPUInit(void);
 extern void InfoNES_pAPUVsync(void);

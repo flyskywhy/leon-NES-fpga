@@ -16,6 +16,90 @@
 //加速
 #include "InfoNES.h"
 
+#ifdef splitIO
+#include "InfoNES_pAPU.h"
+#endif
+
+#ifdef killif
+#include "InfoNES_pAPU.h"
+
+#ifndef read6502
+typedef /*static inline*/ BYTE ( *read6502 )( WORD wAddr );
+#endif
+
+#ifndef write6502
+typedef /*static inline*/ void ( *write6502 )( WORD wAddr, BYTE byData );
+#endif
+
+read6502 readmem_tbl[ 8 ];
+write6502 writemem_tbl[ 8 ];
+
+static inline BYTE PPU_R( WORD wAddr )
+{
+	return ( *PPU_read_tbl[ wAddr & 0x7 ] )( );
+}
+static inline void PPU_W( WORD wAddr, BYTE byData )
+{
+	return ( *PPU_write_tbl[ wAddr & 0x7 ] )( byData );
+}
+
+static inline BYTE APU_R( WORD wAddr )
+{
+	return ( *APU_read_tbl[ wAddr & 0x1F ] )( );
+}
+static inline void APU_W( WORD wAddr, BYTE byData )
+{
+	( *APU_write_tbl[ wAddr & 0x1F ] )( byData );
+}
+
+static inline BYTE ram_R( WORD wAddr )
+{
+	return RAM[ wAddr ];
+	//return RAM[ wAddr & 0x07FF ];
+}
+
+static inline BYTE rom_R80( WORD wAddr )
+{
+	return memmap_tbl[ 4 ][ wAddr ];
+}
+static inline BYTE rom_RA0( WORD wAddr )
+{
+	return memmap_tbl[ 5 ][ wAddr ];
+}
+static inline BYTE rom_RC0( WORD wAddr )
+{
+	return memmap_tbl[ 6 ][ wAddr ];
+}
+static inline BYTE rom_RE0( WORD wAddr )
+{
+	return memmap_tbl[ 7 ][ wAddr ];
+}
+
+
+static inline void ram_W( WORD wAddr, BYTE byData )
+{
+	RAM[ wAddr ] = byData;
+	//RAM[ wAddr & 0x07FF ] = byData;
+}
+
+static inline void rom_W80( WORD wAddr, BYTE byData )
+{
+	MapperWrite( wAddr, byData );
+}
+static inline void rom_WA0( WORD wAddr, BYTE byData )
+{
+	MapperWrite( wAddr, byData );
+}
+static inline void rom_WC0( WORD wAddr, BYTE byData )
+{
+	MapperWrite( wAddr, byData );
+}
+static inline void rom_WE0( WORD wAddr, BYTE byData )
+{
+	MapperWrite( wAddr, byData );
+}
+#endif /* killif */
+
 
 /*-------------------------------------------------------------------*/
 /*  Operation Macros                                                 */
@@ -229,6 +313,10 @@
 #define WriteZp(a, b)  RAM[ a ] = b
 
 //从6502RAM中读取操作数。
+#ifdef killif
+#define Read6502RAM(a)  byD0 = ( *readmem_tbl[ a >> 13 ] )( a )
+//#define Read6502RAM(a)  byD0 = ( *(readmem_tbl + ( a >> 13 ) ) )( a )
+#else
 #define Read6502RAM(a)  \
 	if( a >= 0xC000 ) \
 		byD0 = ROMBANK2[ a & 0x3fff ]; \
@@ -238,8 +326,12 @@
 		byD0 = RAM[ a ]; \
 	else \
 		byD0 = K6502_ReadIO( a )
+#endif
 
 //向6502RAM中写入操作数。
+#ifdef killif
+#define Write6502RAM(a, b)  ( *writemem_tbl[ a >> 13 ] )( a, b )
+#else
 #define Write6502RAM(a, b)  \
 		if( a < 0x2000 ) \
 			WriteZp( a, b ); \
@@ -249,6 +341,7 @@
 			K6502_WriteAPU( a, b ); \
 		else \
 			MapperWrite( a, b )
+#endif
 
 // Flag Op.
 #define SETF(a)  F |= (a)
@@ -267,6 +360,9 @@
 #define ROLA    byD0 = F & FLAG_C; RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_ROLTable[ byD0 ][ A ].byFlag ); A = g_ROLTable[ byD0 ][ A ].byValue 
 #define RORA    byD0 = F & FLAG_C; RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_RORTable[ byD0 ][ A ].byFlag ); A = g_RORTable[ byD0 ][ A ].byValue 
 //作用于ASL LSR ROL ROR四类对6502RAM进行位操作的指令
+#if 1
+#define Bit6502RAM(a)  byD0 = RAM[ wA0 ]; WriteZp( wA0, a )				//稍微不能确定，需测遍所有的游戏
+#else
 #define Bit6502RAM(a)  \
 		if( wA0 < 0x2000 ) \
 			{ byD0 = RAM[ wA0 ]; WriteZp( wA0, a ); } \
@@ -278,9 +374,13 @@
 			{ byD0 = ROMBANK0[ wA0 & 0x3fff ]; MapperWrite( wA0, a ); } \
 		else \
 			{ byD0 = ROMBANK2[ wA0 & 0x3fff ]; MapperWrite( wA0, a ); }
+#endif
 
 // Math Op. (A D flag isn't being supported.)
 //作用于对6502RAM进行减一操作的DEC指令
+#if 1
+#define DEC6502RAM  byD0 = RAM[ wA0 ] - 1; WriteZp( wA0, byD0 )			//应该能确定
+#else
 #define DEC6502RAM  \
 		if( wA0 < 0x2000 ) \
 			{ byD0 = RAM[ wA0 ]; --byD0; WriteZp( wA0, byD0 ); } \
@@ -292,7 +392,11 @@
 			{ byD0 = ROMBANK0[ wA0 & 0x3fff ]; --byD0; MapperWrite( wA0, byD0 ); } \
 		else \
 			{ byD0 = ROMBANK2[ wA0 & 0x3fff ]; --byD0; MapperWrite( wA0, byD0 ); }
+#endif
 //作用于对6502RAM进行加一操作的INC命令
+#if 1
+#define INC6502RAM  byD0 = RAM[ wA0 ] + 1; WriteZp( wA0, byD0 )			//应该能确定
+#else
 #define INC6502RAM  \
 		if( wA0 < 0x2000 ) \
 			{ byD0 = RAM[ wA0 ]; ++byD0; WriteZp( wA0, byD0 ); } \
@@ -304,6 +408,7 @@
 			{ byD0 = ROMBANK0[ wA0 & 0x3fff ]; ++byD0; MapperWrite( wA0, byD0 ); } \
 		else \
 			{ byD0 = ROMBANK2[ wA0 & 0x3fff ]; ++byD0; MapperWrite( wA0, byD0 ); }
+#endif
 
 // Jump Op.
 #if PocketNES == 1
@@ -543,6 +648,35 @@ void K6502_Reset()
   // Reset Registers
 
 #if PocketNES == 1
+
+#ifdef killif
+	readmem_tbl[ 0 ] = ram_R;	//$0000
+	readmem_tbl[ 1 ] = PPU_R;	//$2000
+	readmem_tbl[ 2 ] = APU_R;	//$4000
+	//readmem_tbl[ 3 ] = sram_R;	//$6000
+	readmem_tbl[ 4 ] = rom_R80;	//$8000
+	readmem_tbl[ 5 ] = rom_RA0;	//$A000
+	readmem_tbl[ 6 ] = rom_RC0;	//$C000
+	readmem_tbl[ 7 ] = rom_RE0;	//$E000
+
+	writemem_tbl[ 0 ] = ram_W;		//$0000
+	writemem_tbl[ 1 ] = PPU_W;		//$2000
+	writemem_tbl[ 2 ] = APU_W;		//$4000
+	//writemem_tbl[ 3 ] = sram_W;	//$6000
+	writemem_tbl[ 4 ] = rom_W80;	//$8000
+	writemem_tbl[ 5 ] = rom_WA0;	//$A000
+	writemem_tbl[ 6 ] = rom_WC0;	//$C000
+	writemem_tbl[ 7 ] = rom_WE0;	//$E000
+#endif /* killif */
+
+	//memmap_tbl[ 0 ] = RAM;
+	//memmap_tbl[ 1 ] = ( BYTE *)K6502_ReadIO;
+	//memmap_tbl[ 2 ] = ( BYTE *)K6502_ReadIO;
+	//memmap_tbl[ 3 ] = ( BYTE *)K6502_ReadIO;
+	memmap_tbl[ 4 ] = ROMBANK0 - 0x8000;		//这里- 0x8000是为了在encodePC中不用再做& 0x1FFF的运算了，下同
+	memmap_tbl[ 5 ] = ROMBANK1 - 0xA000;
+	memmap_tbl[ 6 ] = ROMBANK2 - 0xC000;
+	memmap_tbl[ 7 ] = ROMBANK3 - 0xE000;
 	nes_pc = (BYTE*)(ROMBANK3[ 0x1FFC ] | ROMBANK3[ 0x1FFD ] << 8);//加速K6502_ReadW( VECTOR_RESET );
 	encodePC;
 #else
@@ -626,9 +760,9 @@ void K6502_Step( WORD wClocks )
   BYTE byCode;
   signed char BRAdisp;
 
-#if PocketNES == 1
-  BYTE *BRAtemp;
-#endif
+//#if PocketNES == 1
+//  BYTE *BRAtemp;
+//#endif
 
   register WORD wA0;
   WORD wA1;
@@ -1384,6 +1518,9 @@ void K6502_Step( WORD wClocks )
 		//加速
 		ReadPCX( wA0 );
 		ReadZpW( wA0 );
+#ifdef killif
+		A |= ( *readmem_tbl[ wA0 >> 13 ] )( wA0 );
+#else
 		if( wA0 >= 0xC000 )
 			A |= ROMBANK2[ wA0 & 0x3fff ];
 		else if( wA0 >= 0x8000 )
@@ -1392,6 +1529,7 @@ void K6502_Step( WORD wClocks )
 			A |= RAM[ wA0 ];
 		else
 			A |= K6502_ReadIO( wA0 );
+#endif
 		TEST( A );
 		CLK( 6 );
 
@@ -1471,6 +1609,9 @@ void K6502_Step( WORD wClocks )
         
 		//加速
 		ReadPCW( wA0 );
+#ifdef killif
+		A |= ( *readmem_tbl[ wA0 >> 13 ] )( wA0 );
+#else
 		if( wA0 >= 0xC000 )
 			A |= ROMBANK2[ wA0 & 0x3fff ];
 		else if( wA0 >= 0x8000 )
@@ -1479,6 +1620,7 @@ void K6502_Step( WORD wClocks )
 			A |= RAM[ wA0 ];
 		else
 			A |= K6502_ReadIO( wA0 );
+#endif
 		TEST( A );
 		CLK( 4 );
 
@@ -1508,6 +1650,9 @@ void K6502_Step( WORD wClocks )
 		ReadZpW( wA0 );
 		wA1 = wA0 + Y;
 		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+#ifdef killif
+		A |= ( *readmem_tbl[ wA1 >> 13 ] )( wA1 );
+#else
 		if( wA1 >= 0xC000 )
 			A |= ROMBANK2[ wA1 & 0x3fff ];
 		else if( wA1 >= 0x8000 )
@@ -1516,6 +1661,7 @@ void K6502_Step( WORD wClocks )
 			A |= RAM[ wA1 ];
 		else
 			A |= K6502_ReadIO( wA1 );
+#endif
 		TEST( A );
 		CLK( 5 );
 
@@ -1556,6 +1702,9 @@ void K6502_Step( WORD wClocks )
 		ReadPCW( wA0 );
         wA1 = wA0 + Y;
 		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+#ifdef killif
+		A |= ( *readmem_tbl[ wA1 >> 13 ] )( wA1 );
+#else
 		if( wA1 >= 0xC000 )
 			A |= ROMBANK2[ wA1 & 0x3fff ];
 		else if( wA1 >= 0x8000 )
@@ -1564,6 +1713,7 @@ void K6502_Step( WORD wClocks )
 			A |= RAM[ wA1 ];
 		else
 			A |= K6502_ReadIO( wA1 );
+#endif
 		TEST( A );
         CLK( 4 );
 
@@ -1576,6 +1726,9 @@ void K6502_Step( WORD wClocks )
 		ReadPCW( wA0 );
 		wA1 = wA0 + X;
 		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+#ifdef killif
+		A |= ( *readmem_tbl[ wA1 >> 13 ] )( wA1 );
+#else
 		if( wA1 >= 0xC000 )
 			A |= ROMBANK2[ wA1 & 0x3fff ];
 		else if( wA1 >= 0x8000 )
@@ -1584,6 +1737,7 @@ void K6502_Step( WORD wClocks )
 			A |= RAM[ wA1 ];
 		else
 			A |= K6502_ReadIO( wA1 );
+#endif
 		TEST( A );
         CLK( 4 );
 
@@ -1642,6 +1796,9 @@ void K6502_Step( WORD wClocks )
 		//加速
 		ReadPCX( wA0 );
 		ReadZpW( wA0 );
+#ifdef killif
+		A &= ( *readmem_tbl[ wA0 >> 13 ] )( wA0 );
+#else
 		if( wA0 >= 0xC000 )
 			A &= ROMBANK2[ wA0 & 0x3fff ];
 		else if( wA0 >= 0x8000 )
@@ -1650,6 +1807,7 @@ void K6502_Step( WORD wClocks )
 			A &= RAM[ wA0 ];
 		else
 			A &= K6502_ReadIO( wA0 );
+#endif
 		TEST( A );
 		CLK( 6 );
 
@@ -1724,6 +1882,9 @@ void K6502_Step( WORD wClocks )
         
 		//加速
 		ReadPCW( wA0 );
+#ifdef killif
+		byD0 = ( *readmem_tbl[ wA0 >> 13 ] )( wA0 );
+#else
 		if( wA0 >= 0xC000 )
 			byD0 = ROMBANK2[ wA0 & 0x3fff ];
 		else if( wA0 >= 0x8000 )
@@ -1732,6 +1893,7 @@ void K6502_Step( WORD wClocks )
 			byD0 = RAM[ wA0 ];
 		else
 			byD0 = K6502_ReadIO( wA0 );
+#endif
         RSTF( FLAG_N | FLAG_V | FLAG_Z );
 		SETF( ( byD0 & ( FLAG_N | FLAG_V ) ) | ( ( byD0 & A ) ? 0 : FLAG_Z ) );
 		CLK( 4 );
@@ -1743,6 +1905,9 @@ void K6502_Step( WORD wClocks )
         
 		//加速
 		ReadPCW( wA0 );
+#ifdef killif
+		A &= ( *readmem_tbl[ wA0 >> 13 ] )( wA0 );
+#else
 		if( wA0 >= 0xC000 )
 			A &= ROMBANK2[ wA0 & 0x3fff ];
 		else if( wA0 >= 0x8000 )
@@ -1751,6 +1916,7 @@ void K6502_Step( WORD wClocks )
 			A &= RAM[ wA0 ];
 		else
 			A &= K6502_ReadIO( wA0 );
+#endif
 		TEST( A );
 		CLK( 4 );
 
@@ -1781,6 +1947,9 @@ void K6502_Step( WORD wClocks )
 		ReadZpW( wA0 );
 		wA1 = wA0 + Y;
 		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+#ifdef killif
+		A &= ( *readmem_tbl[ wA1 >> 13 ] )( wA1 );
+#else
 		if( wA1 >= 0xC000 )
 			A &= ROMBANK2[ wA1 & 0x3fff ];
 		else if( wA1 >= 0x8000 )
@@ -1789,6 +1958,7 @@ void K6502_Step( WORD wClocks )
 			A &= RAM[ wA1 ];
 		else
 			A &= K6502_ReadIO( wA1 );
+#endif
 		TEST( A );
 		CLK( 5 );
 
@@ -1830,6 +2000,9 @@ void K6502_Step( WORD wClocks )
 		ReadPCW( wA0 );
         wA1 = wA0 + Y;
 		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+#ifdef killif
+		A &= ( *readmem_tbl[ wA1 >> 13 ] )( wA1 );
+#else
 		if( wA1 >= 0xC000 )
 			A &= ROMBANK2[ wA1 & 0x3fff ];
 		else if( wA1 >= 0x8000 )
@@ -1838,6 +2011,7 @@ void K6502_Step( WORD wClocks )
 			A &= RAM[ wA1 ];
 		else
 			A &= K6502_ReadIO( wA1 );
+#endif
 		TEST( A );
         CLK( 4 );
 
@@ -1850,6 +2024,9 @@ void K6502_Step( WORD wClocks )
 		ReadPCW( wA0 );
 		wA1 = wA0 + X;
 		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+#ifdef killif
+		A &= ( *readmem_tbl[ wA1 >> 13 ] )( wA1 );
+#else
 		if( wA1 >= 0xC000 )
 			A &= ROMBANK2[ wA1 & 0x3fff ];
 		else if( wA1 >= 0x8000 )
@@ -1858,6 +2035,7 @@ void K6502_Step( WORD wClocks )
 			A &= RAM[ wA1 ];
 		else
 			A &= K6502_ReadIO( wA1 );
+#endif
 		TEST( A );
         CLK( 4 );
 
@@ -1895,6 +2073,9 @@ void K6502_Step( WORD wClocks )
 		//加速
 		ReadPCX( wA0 );
 		ReadZpW( wA0 );
+#ifdef killif
+		A ^= ( *readmem_tbl[ wA0 >> 13 ] )( wA0 );
+#else
 		if( wA0 >= 0xC000 )
 			A ^= ROMBANK2[ wA0 & 0x3fff ];
 		else if( wA0 >= 0x8000 )
@@ -1903,6 +2084,7 @@ void K6502_Step( WORD wClocks )
 			A ^= RAM[ wA0 ];
 		else
 			A ^= K6502_ReadIO( wA0 );
+#endif
 		TEST( A );
 		CLK( 6 );
 
@@ -1993,6 +2175,9 @@ void K6502_Step( WORD wClocks )
         
 		//加速
 		ReadPCW( wA0 );
+#ifdef killif
+		A ^= ( *readmem_tbl[ wA0 >> 13 ] )( wA0 );
+#else
 		if( wA0 >= 0xC000 )
 			A ^= ROMBANK2[ wA0 & 0x3fff ];
 		else if( wA0 >= 0x8000 )
@@ -2001,6 +2186,7 @@ void K6502_Step( WORD wClocks )
 			A ^= RAM[ wA0 ];
 		else
 			A ^= K6502_ReadIO( wA0 );
+#endif
 		TEST( A );
 		CLK( 4 );
 
@@ -2030,6 +2216,9 @@ void K6502_Step( WORD wClocks )
 		ReadZpW( wA0 );
 		wA1 = wA0 + Y;
 		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+#ifdef killif
+		A ^= ( *readmem_tbl[ wA1 >> 13 ] )( wA1 );
+#else
 		if( wA1 >= 0xC000 )
 			A ^= ROMBANK2[ wA1 & 0x3fff ];
 		else if( wA1 >= 0x8000 )
@@ -2038,6 +2227,7 @@ void K6502_Step( WORD wClocks )
 			A ^= RAM[ wA1 ];
 		else
 			A ^= K6502_ReadIO( wA1 );
+#endif
 		TEST( A );
 		CLK( 5 );
 
@@ -2096,6 +2286,9 @@ void K6502_Step( WORD wClocks )
 		ReadPCW( wA0 );
         wA1 = wA0 + Y;
 		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+#ifdef killif
+		A ^= ( *readmem_tbl[ wA1 >> 13 ] )( wA1 );
+#else
 		if( wA1 >= 0xC000 )
 			A ^= ROMBANK2[ wA1 & 0x3fff ];
 		else if( wA1 >= 0x8000 )
@@ -2104,6 +2297,7 @@ void K6502_Step( WORD wClocks )
 			A ^= RAM[ wA1 ];
 		else
 			A ^= K6502_ReadIO( wA1 );
+#endif
 		TEST( A );
         CLK( 4 );
 
@@ -2117,6 +2311,9 @@ void K6502_Step( WORD wClocks )
 		ReadPCW( wA0 );
 		wA1 = wA0 + X;
 		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+#ifdef killif
+		A ^= ( *readmem_tbl[ wA1 >> 13 ] )( wA1 );
+#else
 		if( wA1 >= 0xC000 )
 			A ^= ROMBANK2[ wA1 & 0x3fff ];
 		else if( wA1 >= 0x8000 )
@@ -2125,6 +2322,7 @@ void K6502_Step( WORD wClocks )
 			A ^= RAM[ wA1 ];
 		else
 			A ^= K6502_ReadIO( wA1 );
+#endif
 		TEST( A );
         CLK( 4 );
 
@@ -2229,12 +2427,21 @@ void K6502_Step( WORD wClocks )
 #if PocketNES == 1
 		  wA0 = *nes_pc++;
 		  wA0 |= *nes_pc << 8;
+
+#ifdef killif
+		  wA1 = wA0 >> 13;
+		  nes_pc = (BYTE *)( ( *readmem_tbl[ wA1 ] )( wA0 ) | (WORD)( ( *readmem_tbl[ wA1 ] )( wA0 + 1 ) ) << 8 );
+#else
+		  //wA1 = wA0 >> 13;
+		  //nes_pc = (BYTE *)( memmap_tbl[ wA1 ][ wA0 ] | (WORD)( memmap_tbl[ wA1 ][ wA0 + 1 ] ) << 8 );
 		  if( wA0 >= 0xC000 )
 			  nes_pc = (BYTE *)( ROMBANK2[ wA0 & 0x3fff ] | (WORD)ROMBANK2[ ( wA0 + 1 ) & 0x3fff ] << 8 );
 		  else if( wA0 >= 0x8000 )
 			  nes_pc = (BYTE *)( ROMBANK0[ wA0 & 0x3fff ] | (WORD)ROMBANK0[ ( wA0 + 1 ) & 0x3fff ] << 8 );
 		  else
 			  nes_pc = (BYTE *)( RAM[ wA0 ] | (WORD)RAM[ wA0 + 1 ] << 8 );
+#endif
+
 		  encodePC;
 #else
 		if( PC >= 0xC000 )
@@ -2582,6 +2789,9 @@ void K6502_Step( WORD wClocks )
 		//加速
 		ReadPCX( wA0 );
 		ReadZpW( wA0 );
+#ifdef killif
+		A = ( *readmem_tbl[ wA0 >> 13 ] )( wA0 );
+#else
 		if( wA0 >= 0xC000 )
 			A = ROMBANK2[ wA0 & 0x3fff ];
 		else if( wA0 >= 0x8000 )
@@ -2590,6 +2800,7 @@ void K6502_Step( WORD wClocks )
 			A = RAM[ wA0 ];
 		else
 			A = K6502_ReadIO( wA0 );
+#endif
 		TEST( A );
 		CLK( 6 );
 
@@ -2679,6 +2890,9 @@ void K6502_Step( WORD wClocks )
         
 		//加速
 		ReadPCW( wA0 );
+#ifdef killif
+		Y = ( *readmem_tbl[ wA0 >> 13 ] )( wA0 );
+#else
 		if( wA0 >= 0xC000 )
 			Y = ROMBANK2[ wA0 & 0x3fff ];
 		else if( wA0 >= 0x8000 )
@@ -2687,6 +2901,7 @@ void K6502_Step( WORD wClocks )
 			Y = RAM[ wA0 ];
 		else
 			Y = K6502_ReadIO( wA0 );
+#endif
 		TEST( Y );
 		CLK( 4 );
 
@@ -2697,6 +2912,9 @@ void K6502_Step( WORD wClocks )
         
 		//加速
 		ReadPCW( wA0 );
+#ifdef killif
+		A = ( *readmem_tbl[ wA0 >> 13 ] )( wA0 );
+#else
 		if( wA0 >= 0xC000 )
 			A = ROMBANK2[ wA0 & 0x3fff ];
 		else if( wA0 >= 0x8000 )
@@ -2705,6 +2923,7 @@ void K6502_Step( WORD wClocks )
 			A = RAM[ wA0 ];
 		else
 			A = K6502_ReadIO( wA0 );
+#endif
 		TEST( A );
 		CLK( 4 );
 
@@ -2715,6 +2934,9 @@ void K6502_Step( WORD wClocks )
         
 		//加速
 		ReadPCW( wA0 );
+#ifdef killif
+		X = ( *readmem_tbl[ wA0 >> 13 ] )( wA0 );
+#else
 		if( wA0 >= 0xC000 )
 			X = ROMBANK2[ wA0 & 0x3fff ];
 		else if( wA0 >= 0x8000 )
@@ -2723,6 +2945,7 @@ void K6502_Step( WORD wClocks )
 			X = RAM[ wA0 ];
 		else
 			X = K6502_ReadIO( wA0 );
+#endif
 		TEST( X );
 		CLK( 4 );
 
@@ -2740,6 +2963,9 @@ void K6502_Step( WORD wClocks )
 		ReadZpW( wA0 );
 		wA1 = wA0 + Y;
 		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+#ifdef killif
+		A = ( *readmem_tbl[ wA1 >> 13 ] )( wA1 );
+#else
 		if( wA1 >= 0xC000 )
 			A = ROMBANK2[ wA1 & 0x3fff ];
 		else if( wA1 >= 0x8000 )
@@ -2748,6 +2974,7 @@ void K6502_Step( WORD wClocks )
 			A = RAM[ wA1 ];
 		else
 			A = K6502_ReadIO( wA1 );
+#endif
 		TEST( A );
 		CLK( 5 );
 
@@ -2797,6 +3024,9 @@ void K6502_Step( WORD wClocks )
 		ReadPCW( wA0 );
         wA1 = wA0 + Y;
 		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+#ifdef killif
+		A = ( *readmem_tbl[ wA1 >> 13 ] )( wA1 );
+#else
 		if( wA1 >= 0xC000 )
 			A = ROMBANK2[ wA1 & 0x3fff ];
 		else if( wA1 >= 0x8000 )
@@ -2805,6 +3035,7 @@ void K6502_Step( WORD wClocks )
 			A = RAM[ wA1 ];
 		else
 			A = K6502_ReadIO( wA1 );
+#endif
 		TEST( A );
 		CLK( 4 );
 
@@ -2821,6 +3052,9 @@ void K6502_Step( WORD wClocks )
 		ReadPCW( wA0 );
 		wA1 = wA0 + X;
 		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+#ifdef killif
+		Y = ( *readmem_tbl[ wA1 >> 13 ] )( wA1 );
+#else
 		if( wA1 >= 0xC000 )
 			Y = ROMBANK2[ wA1 & 0x3fff ];
 		else if( wA1 >= 0x8000 )
@@ -2829,6 +3063,7 @@ void K6502_Step( WORD wClocks )
 			Y = RAM[ wA1 ];
 		else
 			Y = K6502_ReadIO( wA1 );
+#endif
 		TEST( Y );
 		CLK( 4 );
 
@@ -2841,6 +3076,9 @@ void K6502_Step( WORD wClocks )
 		ReadPCW( wA0 );
 		wA1 = wA0 + X;
 		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+#ifdef killif
+		A = ( *readmem_tbl[ wA1 >> 13 ] )( wA1 );
+#else
 		if( wA1 >= 0xC000 )
 			A = ROMBANK2[ wA1 & 0x3fff ];
 		else if( wA1 >= 0x8000 )
@@ -2849,6 +3087,7 @@ void K6502_Step( WORD wClocks )
 			A = RAM[ wA1 ];
 		else
 			A = K6502_ReadIO( wA1 );
+#endif
 		TEST( A );
 		CLK( 4 );
 
@@ -2861,6 +3100,9 @@ void K6502_Step( WORD wClocks )
 		ReadPCW( wA0 );
         wA1 = wA0 + Y;
 		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+#ifdef killif
+		X = ( *readmem_tbl[ wA1 >> 13 ] )( wA1 );
+#else
 		if( wA1 >= 0xC000 )
 			X = ROMBANK2[ wA1 & 0x3fff ];
 		else if( wA1 >= 0x8000 )
@@ -2869,6 +3111,7 @@ void K6502_Step( WORD wClocks )
 			X = RAM[ wA1 ];
 		else
 			X = K6502_ReadIO( wA1 );
+#endif
 		TEST( X );
 		CLK( 4 );
 
@@ -2900,6 +3143,9 @@ void K6502_Step( WORD wClocks )
 		//加速
 		ReadPCX( wA0 );
 		ReadZpW( wA0 );
+#ifdef killif
+		wD0 = A - ( *readmem_tbl[ wA0 >> 13 ] )( wA0 );
+#else
 		if( wA0 >= 0xC000 )
 			wD0 = A - ROMBANK2[ wA0 & 0x3fff ];
 		else if( wA0 >= 0x8000 )
@@ -2908,6 +3154,7 @@ void K6502_Step( WORD wClocks )
 			wD0 = A - RAM[ wA0 ];
 		else
 			wD0 = A - K6502_ReadIO( wA0 );
+#endif
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
 		CLK( 6 );
@@ -2984,6 +3231,9 @@ void K6502_Step( WORD wClocks )
         
 		//加速
 		ReadPCW( wA0 );
+#ifdef killif
+		wD0 = Y - ( *readmem_tbl[ wA0 >> 13 ] )( wA0 );
+#else
 		if( wA0 >= 0xC000 )
 			wD0 = Y - ROMBANK2[ wA0 & 0x3fff ];
 		else if( wA0 >= 0x8000 )
@@ -2992,6 +3242,7 @@ void K6502_Step( WORD wClocks )
 			wD0 = Y - RAM[ wA0 ];
 		else
 			wD0 = Y - K6502_ReadIO( wA0 );
+#endif
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
 		CLK( 4 );
@@ -3003,6 +3254,9 @@ void K6502_Step( WORD wClocks )
         
 		//加速
 		ReadPCW( wA0 );
+#ifdef killif
+		wD0 = A - ( *readmem_tbl[ wA0 >> 13 ] )( wA0 );
+#else
 		if( wA0 >= 0xC000 )
 			wD0 = A - ROMBANK2[ wA0 & 0x3fff ];
 		else if( wA0 >= 0x8000 )
@@ -3011,6 +3265,7 @@ void K6502_Step( WORD wClocks )
 			wD0 = A - RAM[ wA0 ];
 		else
 			wD0 = A - K6502_ReadIO( wA0 );
+#endif
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
 		CLK( 4 );
@@ -3040,6 +3295,9 @@ void K6502_Step( WORD wClocks )
 		ReadZpW( wA0 );
 		wA1 = wA0 + Y;
 		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+#ifdef killif
+		wD0 = A - ( *readmem_tbl[ wA1 >> 13 ] )( wA1 );
+#else
 		if( wA1 >= 0xC000 )
 			wD0 = A - ROMBANK2[ wA1 & 0x3fff ];
 		else if( wA1 >= 0x8000 )
@@ -3048,6 +3306,7 @@ void K6502_Step( WORD wClocks )
 			wD0 = A - RAM[ wA1 ];
 		else
 			wD0 = A - K6502_ReadIO( wA1 );
+#endif
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
 		CLK( 5 );
@@ -3090,6 +3349,9 @@ void K6502_Step( WORD wClocks )
 		ReadPCW( wA0 );
         wA1 = wA0 + Y;
 		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+#ifdef killif
+		wD0 = A - ( *readmem_tbl[ wA1 >> 13 ] )( wA1 );
+#else
 		if( wA1 >= 0xC000 )
 			wD0 = A - ROMBANK2[ wA1 & 0x3fff ];
 		else if( wA1 >= 0x8000 )
@@ -3098,6 +3360,7 @@ void K6502_Step( WORD wClocks )
 			wD0 = A - RAM[ wA1 ];
 		else
 			wD0 = A - K6502_ReadIO( wA1 );
+#endif
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
 		CLK( 4 );
@@ -3111,6 +3374,9 @@ void K6502_Step( WORD wClocks )
 		ReadPCW( wA0 );
 		wA1 = wA0 + X;
 		CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) );
+#ifdef killif
+		wD0 = A - ( *readmem_tbl[ wA1 >> 13 ] )( wA1 );
+#else
 		if( wA1 >= 0xC000 )
 			wD0 = A - ROMBANK2[ wA1 & 0x3fff ];
 		else if( wA1 >= 0x8000 )
@@ -3119,6 +3385,7 @@ void K6502_Step( WORD wClocks )
 			wD0 = A - RAM[ wA1 ];
 		else
 			wD0 = A - K6502_ReadIO( wA1 );
+#endif
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
 		CLK( 4 );
@@ -3240,6 +3507,9 @@ void K6502_Step( WORD wClocks )
         
 		//加速
 		ReadPCW( wA0 );
+#ifdef killif
+		wD0 = X - ( *readmem_tbl[ wA0 >> 13 ] )( wA0 );
+#else
 		if( wA0 >= 0xC000 )
 			wD0 = X - ROMBANK2[ wA0 & 0x3fff ];
 		else if( wA0 >= 0x8000 )
@@ -3248,6 +3518,7 @@ void K6502_Step( WORD wClocks )
 			wD0 = X - RAM[ wA0 ];
 		else
 			wD0 = X - K6502_ReadIO( wA0 );
+#endif
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		SETF( g_byTestTable[ wD0 & 0xff ] | ( wD0 < 0x100 ? FLAG_C : 0 ) );
 		CLK( 4 );

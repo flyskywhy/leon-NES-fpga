@@ -71,9 +71,14 @@ void K6502_NMI();
 
 //º”ÀŸ
 //static inline BYTE K6502_ReadPC( WORD wAddr );
+#ifndef killif
+
 static inline BYTE K6502_ReadIO( WORD wAddr );
 static inline void K6502_WritePPU( WORD wAddr, BYTE byData );
 static inline void K6502_WriteAPU( WORD wAddr, BYTE byData );
+
+#endif /* killif */
+
 
 //static inline BYTE ROMBANK0_Read ( WORD wAddr );
 //static inline BYTE ROMBANK1_Read ( WORD wAddr );

@@ -10,10 +10,19 @@
 /*  Include files                                                    */
 /*-------------------------------------------------------------------*/
 #include "K6502.h"
+
+#ifdef splitIO
+#include "InfoNES.h"
+#endif
+
+#ifdef killif
+#include "InfoNES.h"
+#else
 #include "K6502_rw.h"
+#endif
+
 #include "InfoNES_System.h"
 #include "InfoNES_pAPU.h"
-
 
 //nester
 //#include <string.h>
@@ -585,8 +594,30 @@ static void apu_regwrite(uint32 address, uint8 value)
 	}
 }
 
-/* Read from $4000-$4017 */
-uint8 apu_read(uint32 address)
+//#ifdef splitIO
+//uint8 apu_read( uint32 address )	// Read from $4015
+//{
+//	uint8 value = 0;
+//	/* Return 1 in 0-5 bit pos if a channel is playing */
+//	if (apu->rectangle[0].enabled && apu->rectangle[0].vbl_length)
+//		value |= 0x01;
+//	if (apu->rectangle[1].enabled && apu->rectangle[1].vbl_length)
+//		value |= 0x02;
+//	if (apu->triangle.enabled && apu->triangle.vbl_length)
+//		value |= 0x04;
+//	if (apu->noise.enabled && apu->noise.vbl_length)
+//		value |= 0x08;
+//
+//	/* bodge for timestamp queue */
+//	if (apu->dmc.enabled)
+//		value |= 0x10;
+//
+//	if (apu->dmc.irq_occurred)
+//		value |= 0x80;
+//	return value;
+//}
+//#else
+uint8 apu_read(uint32 address)	//Read from $4000-$4017
 {
 	uint8 value;
 
@@ -620,20 +651,22 @@ uint8 apu_read(uint32 address)
 
 	return value;
 }
+//#endif /* splitIO */
+
 
 /*
 ** Simple queue routines	//这里的队列记录了6502在每一桢期间对APU寄存器的写入信息，用于在每一桢调用发声函数InfoNES_pAPUVsync()时根据这些信息计算出一串采样数据送入声音硬件的缓存中进行播放
 */
 #define  APU_QEMPTY()   (apu->q_head == apu->q_tail)
 
-static void apu_enqueue(apudata_t *d)						//用于模拟执行6502时向APU的写入函数中
+/*static*/ void apu_enqueue(apudata_t *d)						//用于模拟执行6502时向APU的写入函数中
 {
 	apu->queue[apu->q_head] = *d;							//将6502对APU寄存器的写入信息记录到队列中
 
 	apu->q_head = (apu->q_head + 1) & APUQUEUE_MASK;		//设定好下一个信息在队列中的位置，在队列中的位置以0 - 4095循环增加，也可以认为是每一桢中所记录的信息队列（当然尺寸比4096小）的“队列头”
 }
 
-static apudata_t *apu_dequeue(void)							//用于发声函数逐个从信息队列中取得对APU寄存器的写入信息
+/*static*/ apudata_t *apu_dequeue(void)							//用于发声函数逐个从信息队列中取得对APU寄存器的写入信息
 {
 	int loc;
 
@@ -664,10 +697,99 @@ void apu_write(uint32 address, uint8 value)
 		apu_enqueue(&d);				//将以上信息记录到队列中
 		break;
 
+#ifdef splitIO
+	case 0x4014:  /* 0x4014 */
+		// Sprite DMA
+#ifdef LEON
+
+//#ifndef HACK
+//		memcpy( SPRRAM, &RAM[ ( (WORD)value << 8 ) & 0x7ff ], SPRRAM_SIZE );
+//#else /* HACK */
+		//memcpy( SPRRAM, &memmap_tbl[ value >> 5 ][ (WORD)value << 8 & 0x1FFF ], SPRRAM_SIZE );
+		switch ( value >> 5 )
+		{
+		case 0x0:  /* RAM */
+			memcpy( SPRRAM, &RAM[ ( (WORD)value << 8 ) & 0x7ff ], SPRRAM_SIZE );
+			break;
+
+		case 0x3:  /* SRAM */
+			memcpy( SPRRAM, &SRAM[ ( (WORD)value << 8 ) & 0x1fff ], SPRRAM_SIZE );
+			break;
+
+		case 0x4:  /* ROM BANK 0 */
+			memcpy( SPRRAM, &ROMBANK0[ ( (WORD)value << 8 ) & 0x1fff ], SPRRAM_SIZE );
+			break;
+
+		case 0x5:  /* ROM BANK 1 */
+			memcpy( SPRRAM, &ROMBANK1[ ( (WORD)value << 8 ) & 0x1fff ], SPRRAM_SIZE );
+			break;
+
+		case 0x6:  /* ROM BANK 2 */
+			memcpy( SPRRAM, &ROMBANK2[ ( (WORD)value << 8 ) & 0x1fff ], SPRRAM_SIZE );
+			break;
+
+		case 0x7:  /* ROM BANK 3 */
+			memcpy( SPRRAM, &ROMBANK3[ ( (WORD)value << 8 ) & 0x1fff ], SPRRAM_SIZE );
+			break;
+		}
+//#endif /* HACK */
+
+#else /* LEON */
+
+//#ifdef HACK
+//		InfoNES_MemoryCopy( SPRRAM, &RAM[ ( (WORD)value << 8 ) & 0x7ff ], SPRRAM_SIZE );
+//#else /* HACK */
+		//InfoNES_MemoryCopy( SPRRAM, &memmap_tbl[ value >> 5 ][ (WORD)value << 8 & 0x1FFF ], SPRRAM_SIZE );
+		switch ( value >> 5 )
+		{
+		case 0x0:  /* RAM */
+			InfoNES_MemoryCopy( SPRRAM, &RAM[ ( (WORD)value << 8 ) & 0x7ff ], SPRRAM_SIZE );
+			break;
+
+		case 0x3:  /* SRAM */
+			InfoNES_MemoryCopy( SPRRAM, &SRAM[ ( (WORD)value << 8 ) & 0x1fff ], SPRRAM_SIZE );
+			break;
+
+		case 0x4:  /* ROM BANK 0 */
+			InfoNES_MemoryCopy( SPRRAM, &ROMBANK0[ ( (WORD)value << 8 ) & 0x1fff ], SPRRAM_SIZE );
+			break;
+
+		case 0x5:  /* ROM BANK 1 */
+			InfoNES_MemoryCopy( SPRRAM, &ROMBANK1[ ( (WORD)value << 8 ) & 0x1fff ], SPRRAM_SIZE );
+			break;
+
+		case 0x6:  /* ROM BANK 2 */
+			InfoNES_MemoryCopy( SPRRAM, &ROMBANK2[ ( (WORD)value << 8 ) & 0x1fff ], SPRRAM_SIZE );
+			break;
+
+		case 0x7:  /* ROM BANK 3 */
+			InfoNES_MemoryCopy( SPRRAM, &ROMBANK3[ ( (WORD)value << 8 ) & 0x1fff ], SPRRAM_SIZE );
+			break;
+		}
+//#endif /* HACK */
+
+#endif /* LEON */
+		break;
+
+	case 0x4016:  /* 0x4016 */
+		// Reset joypad
+		if ( !( APU_Reg[ 0x16 ] & 1 ) && ( value & 1 ) )
+		{
+			PAD1_Bit = 0;
+			PAD2_Bit = 0;
+		}
+		APU_Reg[ 0x16 ] = value;
+		break;
+
+	case 0x4017:  /* 0x4017 */
+		break;
+#endif /*splitIO */
+
 	default:
 		break;
 	}
 }
+
 
 void InfoNES_pAPUVsync(void)
 {
@@ -719,8 +841,316 @@ void InfoNES_pAPUVsync(void)
 		wave_buffers, wave_buffers);
 }
 
+
+#ifdef killif
+
+readfunc APU_read_tbl[ 32 ];
+writefunc APU_write_tbl[ 32 ];
+static inline BYTE empty_APU_R( void )	//$4000-4014
+{
+	return 0;
+}
+static inline BYTE _4015R( void )	//$4015
+{
+	BYTE byRet = 0;
+	/* Return 1 in 0-5 bit pos if a channel is playing */
+	if (apu->rectangle[0].enabled && apu->rectangle[0].vbl_length)
+		byRet |= 0x01;
+	if (apu->rectangle[1].enabled && apu->rectangle[1].vbl_length)
+		byRet |= 0x02;
+	if (apu->triangle.enabled && apu->triangle.vbl_length)
+		byRet |= 0x04;
+	if (apu->noise.enabled && apu->noise.vbl_length)
+		byRet |= 0x08;
+	/* bodge for timestamp queue */
+	if (apu->dmc.enabled)
+		byRet |= 0x10;
+	if (apu->dmc.irq_occurred)
+		byRet |= 0x80;
+	return byRet;
+}
+static inline BYTE joy0_R( void )	//$4016
+{
+	BYTE byRet = (BYTE)( ( PAD1_Latch >> PAD1_Bit ) & 1 ) | 0x40;
+	PAD1_Bit = ( PAD1_Bit == 23 ) ? 0 : ( PAD1_Bit + 1 );
+	return byRet;
+}
+static inline BYTE joy1_R( void )	//$4017
+{
+	BYTE byRet = (BYTE)( ( PAD2_Latch >> PAD2_Bit ) & 1 ) | 0x40;
+	PAD2_Bit = ( PAD2_Bit == 23 ) ? 0 : ( PAD2_Bit + 1 );
+	return byRet;
+}
+
+static inline void _4000W( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x4000;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _4001W( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x4001;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _4002W( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x4002;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _4003W( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x4003;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _4004W( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x4004;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _4005W( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x4005;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _4006W( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x4006;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _4007W( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x4007;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _4008W( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x4008;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _4009W( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x4009;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _400AW( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x400A;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _400BW( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x400B;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _400CW( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x400C;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _400DW( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x400D;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _400EW( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x400E;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _400FW( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x400F;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _4010W( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x4010;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _4011W( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x4011;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _4012W( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x4012;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _4013W( BYTE byData )
+{
+	apudata_t d;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x4013;				//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _4015W( BYTE byData )
+{
+	apudata_t d;
+	/* bodge for timestamp queue */
+	apu->dmc.enabled = ( byData & 0x10 ) ? TRUE : FALSE;
+	d.timestamp = total_cycles;		//记录下对APU寄存器写入时6502已经走过的时钟周期数
+	d.address = 0x4015;			//记录下对APU的哪一个寄存器进行了写入
+	d.value = byData;				//记录下写入的值
+	apu_enqueue(&d);				//将以上信息记录到队列中
+}
+static inline void _4014W( BYTE byData )		// Sprite DMA
+{
+	switch ( byData >> 5 )
+	{
+	case 0x0:  /* RAM */
+		InfoNES_MemoryCopy( SPRRAM, &RAM[ ( (WORD)byData << 8 ) & 0x7ff ], SPRRAM_SIZE );
+		break;
+
+	case 0x3:  /* SRAM */
+		InfoNES_MemoryCopy( SPRRAM, &SRAM[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
+		break;
+
+	case 0x4:  /* ROM BANK 0 */
+		InfoNES_MemoryCopy( SPRRAM, &ROMBANK0[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
+		break;
+
+	case 0x5:  /* ROM BANK 1 */
+		InfoNES_MemoryCopy( SPRRAM, &ROMBANK1[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
+		break;
+
+	case 0x6:  /* ROM BANK 2 */
+		InfoNES_MemoryCopy( SPRRAM, &ROMBANK2[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
+		break;
+
+	case 0x7:  /* ROM BANK 3 */
+		InfoNES_MemoryCopy( SPRRAM, &ROMBANK3[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
+		break;
+	}
+}
+static inline void joy0_W( BYTE byData )
+{
+
+	if ( !( APU_Reg[ 0x16 ] & 1 ) && ( byData & 1 ) )	// Reset joypad
+	{
+		PAD1_Bit = 0;
+		PAD2_Bit = 0;
+	}
+	APU_Reg[ 0x16 ] = byData;
+}
+static inline void joy1_W( BYTE byData )
+{
+}
+#endif /* killif */
+
+
 void apu_reset(void)
 {
+#ifdef killif
+	APU_read_tbl[ 0x0 ] = empty_APU_R;			//$4000
+	APU_read_tbl[ 0x1 ] = empty_APU_R;			//$4001
+	APU_read_tbl[ 0x2 ] = empty_APU_R;			//$4002
+	APU_read_tbl[ 0x3 ] = empty_APU_R;			//$4003
+	APU_read_tbl[ 0x4 ] = empty_APU_R;			//$4004
+	APU_read_tbl[ 0x5 ] = empty_APU_R;			//$4005
+	APU_read_tbl[ 0x6 ] = empty_APU_R;			//$4006
+	APU_read_tbl[ 0x7 ] = empty_APU_R;			//$4007
+	APU_read_tbl[ 0x8 ] = empty_APU_R;			//$4008
+	APU_read_tbl[ 0x9 ] = empty_APU_R;			//$4009
+	APU_read_tbl[ 0xA ] = empty_APU_R;			//$400A
+	APU_read_tbl[ 0xB ] = empty_APU_R;			//$400B
+	APU_read_tbl[ 0xC ] = empty_APU_R;			//$400C
+	APU_read_tbl[ 0xD ] = empty_APU_R;			//$400D
+	APU_read_tbl[ 0xE ] = empty_APU_R;			//$400E
+	APU_read_tbl[ 0xF ] = empty_APU_R;			//$400F
+	APU_read_tbl[ 0x10 ] = empty_APU_R;			//$4010
+	APU_read_tbl[ 0x11 ] = empty_APU_R;			//$4011
+	APU_read_tbl[ 0x12 ] = empty_APU_R;			//$4012
+	APU_read_tbl[ 0x13 ] = empty_APU_R;			//$4013
+	APU_read_tbl[ 0x14 ] = empty_APU_R;			//$4014
+	APU_read_tbl[ 0x15 ] = _4015R;				//$4015
+	APU_read_tbl[ 0x16 ] = joy0_R;				//$4016
+	APU_read_tbl[ 0x17 ] = joy1_R;				//$4017
+
+	APU_write_tbl[ 0x0 ] = _4000W;			//$4000
+	APU_write_tbl[ 0x1 ] = _4001W;			//$4001
+	APU_write_tbl[ 0x2 ] = _4002W;			//$4002
+	APU_write_tbl[ 0x3 ] = _4003W;			//$4003
+	APU_write_tbl[ 0x4 ] = _4004W;			//$4004
+	APU_write_tbl[ 0x5 ] = _4005W;			//$4005
+	APU_write_tbl[ 0x6 ] = _4006W;			//$4006
+	APU_write_tbl[ 0x7 ] = _4007W;			//$4007
+	APU_write_tbl[ 0x8 ] = _4008W;			//$4008
+	APU_write_tbl[ 0x9 ] = _4009W;			//$4009
+	APU_write_tbl[ 0xA ] = _400AW;			//$400A
+	APU_write_tbl[ 0xB ] = _400BW;			//$400B
+	APU_write_tbl[ 0xC ] = _400CW;			//$400C
+	APU_write_tbl[ 0xD ] = _400DW;			//$400D
+	APU_write_tbl[ 0xE ] = _400EW;			//$400E
+	APU_write_tbl[ 0xF ] = _400FW;			//$400F
+	APU_write_tbl[ 0x10 ] = _4010W;			//$4010
+	APU_write_tbl[ 0x11 ] = _4011W;			//$4011
+	APU_write_tbl[ 0x12 ] = _4012W;			//$4012
+	APU_write_tbl[ 0x13 ] = _4013W;			//$4013
+	APU_write_tbl[ 0x14 ] = _4014W;			//$4014
+	APU_write_tbl[ 0x15 ] = _4015W;			//$4015
+	APU_write_tbl[ 0x16 ] = joy0_W;			//$4016
+	APU_write_tbl[ 0x17 ] = joy1_W;			//$4017
+#endif /* killif */
+
 	uint32 address;
 
 	apu->elapsed_cycles = 0;
