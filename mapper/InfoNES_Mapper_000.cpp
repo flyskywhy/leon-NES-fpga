@@ -69,7 +69,7 @@ void Map0_Init()
   }
 
   /* Set up wiring of the interrupt pin */
-  K6502_Set_Int_Wiring( 1, 1 ); 
+  //K6502_Set_Int_Wiring( 1, 1 ); 
 }
 
 /*-------------------------------------------------------------------*/

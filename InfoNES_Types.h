@@ -24,6 +24,13 @@ typedef unsigned short WORD;
 typedef unsigned char  BYTE;
 #endif /* !BYTE */
 
+#ifndef  TRUE
+#define  TRUE     1
+#endif
+#ifndef  FALSE
+#define  FALSE    0
+#endif
+
 /*-------------------------------------------------------------------*/
 /*  NULL definition                                                  */
 /*-------------------------------------------------------------------*/

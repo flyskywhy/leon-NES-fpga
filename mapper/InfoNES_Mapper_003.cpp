@@ -67,7 +67,7 @@ void Map3_Init()
 
   /* Set up wiring of the interrupt pin */
   /* "DragonQuest" doesn't run if IRQ isn't made to occur in CLI */
-  K6502_Set_Int_Wiring( 1, 1 ); 
+  //K6502_Set_Int_Wiring( 1, 1 ); 
 }
 
 /*-------------------------------------------------------------------*/

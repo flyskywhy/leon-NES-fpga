@@ -145,7 +145,9 @@
 
 //加速
 // Clock Op.
-#define CLK(a)   g_wPassedClocks += (a);
+//#define CLK(a)   g_wPassedClocks += (a);
+//APU
+#define CLK(a)   g_wPassedClocks += (a); total_cycles += (a);
 
 // Addressing Op.
 //从PRG或RAM中读取操作码或操作数，然后PC++。
@@ -341,6 +343,9 @@ BYTE NMI_Wiring;
 // The number of the clocks that it passed
 WORD g_wPassedClocks;
 
+//APU 6502运行以来所经过的时钟周期总数
+DWORD total_cycles;
+
 // A table for the test
 BYTE g_byTestTable[ 256 ];
 
@@ -502,6 +507,8 @@ void K6502_Reset()
 
   // Reset Passed Clocks
   g_wPassedClocks = 0;
+
+  total_cycles = 0;
 }
 
 /*===================================================================*/

@@ -90,7 +90,7 @@ void Map4_Init()
   Map4_IRQ_Present_Vbl = 0;
 
   /* Set up wiring of the interrupt pin */
-  K6502_Set_Int_Wiring( 1, 1 ); 
+  //K6502_Set_Int_Wiring( 1, 1 ); 
 }
 
 /*-------------------------------------------------------------------*/
@@ -258,9 +258,9 @@ void Map4_HSync()
 			Map4_IRQ_Present = 0xFF;
 		}
 	}
-	if( Map4_IRQ_Request  ) {
-		IRQ_REQ;
-	}
+	//if( Map4_IRQ_Request  ) {
+	//	IRQ_REQ;
+	//}
 }
 
 /*-------------------------------------------------------------------*/

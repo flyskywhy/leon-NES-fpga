@@ -103,22 +103,22 @@ BYTE PPU_R6;
 //FCEU
 BYTE PPUGenLatch;
 BYTE PPUSPL;
-
-/* Vertical scroll value */
-BYTE PPU_Scr_V;
-BYTE PPU_Scr_V_Next;
-BYTE PPU_Scr_V_Byte;
-BYTE PPU_Scr_V_Byte_Next;
-BYTE PPU_Scr_V_Bit;
-BYTE PPU_Scr_V_Bit_Next;
-
-/* Horizontal scroll value */
-BYTE PPU_Scr_H;
-BYTE PPU_Scr_H_Next;
-BYTE PPU_Scr_H_Byte;
-BYTE PPU_Scr_H_Byte_Next;
-BYTE PPU_Scr_H_Bit;
-BYTE PPU_Scr_H_Bit_Next;
+//
+///* Vertical scroll value */
+//BYTE PPU_Scr_V;
+//BYTE PPU_Scr_V_Next;
+//BYTE PPU_Scr_V_Byte;
+//BYTE PPU_Scr_V_Byte_Next;
+//BYTE PPU_Scr_V_Bit;
+//BYTE PPU_Scr_V_Bit_Next;
+//
+///* Horizontal scroll value */
+//BYTE PPU_Scr_H;
+//BYTE PPU_Scr_H_Next;
+//BYTE PPU_Scr_H_Byte;
+//BYTE PPU_Scr_H_Byte_Next;
+//BYTE PPU_Scr_H_Bit;
+//BYTE PPU_Scr_H_Bit_Next;
 
 /* PPU Address */
 WORD PPU_Addr;
@@ -141,14 +141,14 @@ BYTE PPU_ScanTable[ 263 ];
 /* Name Table Bank */
 BYTE PPU_NameTableBank;
 
-/* BG Base Address */
-BYTE *PPU_BG_Base;
+///* BG Base Address */
+//BYTE *PPU_BG_Base;
 
 //nesterJ
 WORD  bg_pattern_table_addr;
 
-/* Sprite Base Address */
-BYTE *PPU_SP_Base;
+///* Sprite Base Address */
+//BYTE *PPU_SP_Base;
 
 //nesterJ
 WORD  spr_pattern_table_addr;
@@ -156,8 +156,8 @@ WORD  spr_pattern_table_addr;
 /* Sprite Height */
 WORD PPU_SP_Height;
 
-/* Sprite #0 Scanline Hit Position */
-int SpriteJustHit;
+///* Sprite #0 Scanline Hit Position */
+//int SpriteJustHit;
 
 /* VRAM Write Enable ( 0: Disable, 1: Enable ) */
 BYTE byVramWriteEnable;
@@ -168,9 +168,9 @@ BYTE PPU_Latch_Flag;
 /* Up and Down Clipping Flag ( 0: non-clip, 1: clip ) */ 
 BYTE PPU_UpDown_Clip;
 
-/* Frame IRQ ( 0: Disabled, 1: Enabled )*/
-BYTE FrameIRQ_Enable;
-WORD FrameStep;
+///* Frame IRQ ( 0: Disabled, 1: Enabled )*/
+//BYTE FrameIRQ_Enable;
+//WORD FrameStep;
 
 /*-------------------------------------------------------------------*/
 /*  Display and Others resouces                                      */
@@ -233,11 +233,11 @@ WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//图形缓冲区数组，保存RG
   WORD tile_addr;
   BYTE tile_mask;
 
-/* Character Buffer */
-BYTE ChrBuf[ 256 * 2 * 8 * 8 ];
-
-/* Update flag for ChrBuf */
-BYTE ChrBufUpdate;
+///* Character Buffer */
+//BYTE ChrBuf[ 256 * 2 * 8 * 8 ];
+//
+///* Update flag for ChrBuf */
+//BYTE ChrBufUpdate;
 
 /* Palette Table */
 WORD PalTable[ 32 ];
@@ -470,8 +470,8 @@ int InfoNES_Reset()
   WorkFrameIdx = 0;
 #endif
 
-  // Reset update flag of ChrBuf
-  ChrBufUpdate = 0xff;
+  //// Reset update flag of ChrBuf
+  //ChrBufUpdate = 0xff;
 
   // Reset palette table
   InfoNES_MemorySet( PalTable, 0, sizeof PalTable );
@@ -583,12 +583,12 @@ void InfoNES_SetupPPU()
   // Reset up and down clipping flag
   PPU_UpDown_Clip = 0;
 
-  FrameStep = 0;
-  FrameIRQ_Enable = 0;
+  //FrameStep = 0;
+  //FrameIRQ_Enable = 0;
 
-  // Reset Scroll values
-  PPU_Scr_V = PPU_Scr_V_Next = PPU_Scr_V_Byte = PPU_Scr_V_Byte_Next = PPU_Scr_V_Bit = PPU_Scr_V_Bit_Next = 0;
-  PPU_Scr_H = PPU_Scr_H_Next = PPU_Scr_H_Byte = PPU_Scr_H_Byte_Next = PPU_Scr_H_Bit = PPU_Scr_H_Bit_Next = 0;
+  //// Reset Scroll values
+  //PPU_Scr_V = PPU_Scr_V_Next = PPU_Scr_V_Byte = PPU_Scr_V_Byte_Next = PPU_Scr_V_Bit = PPU_Scr_V_Bit_Next = 0;
+  //PPU_Scr_H = PPU_Scr_H_Next = PPU_Scr_H_Byte = PPU_Scr_H_Byte_Next = PPU_Scr_H_Bit = PPU_Scr_H_Bit_Next = 0;
 
   // Reset PPU address
   PPU_Addr = 0;
@@ -600,14 +600,14 @@ void InfoNES_SetupPPU()
   // Reset scanline
   PPU_Scanline = 0;
 
-  // Reset hit position of sprite #0 
-  SpriteJustHit = 0;
+  //// Reset hit position of sprite #0 
+  //SpriteJustHit = 0;
 
   // Reset information on PPU_R0
   PPU_Increment = 1;
   PPU_NameTableBank = NAME_TABLE0;
-  PPU_BG_Base = ChrBuf;
-  PPU_SP_Base = ChrBuf + 256 * 64;
+  //PPU_BG_Base = ChrBuf;
+  //PPU_SP_Base = ChrBuf + 256 * 64;
   PPU_SP_Height = 8;
   //nester
   bg_pattern_table_addr = 0;
@@ -783,7 +783,7 @@ void InfoNES_Cycle()
 		PPU_Scanline = 0;
 		for( ; PPU_Scanline < 8; PPU_Scanline++ )		//显示在屏幕上的0-7共8条扫描线
 		{
-			//K6502_Step( STEP_PER_SCANLINE );								//执行1条扫描线
+			K6502_Step( STEP_PER_SCANLINE );								//执行1条扫描线
 			if ( ( PPU_R1 & R1_SHOW_SCR ) || ( PPU_R1 & R1_SHOW_SP ) )
 			{
 				LOOPY_SCANLINE_START( PPU_Addr, PPU_Temp );
@@ -792,7 +792,10 @@ void InfoNES_Cycle()
 		}
 		for( ; PPU_Scanline < 232; PPU_Scanline++ )		//显示在屏幕上的8-231共224条扫描线
 		{
+			//加速
+			if( PPU_Scanline < 140 || PPU_Scanline > 201)		//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
 			K6502_Step( STEP_PER_SCANLINE );								//执行1条扫描线
+
 			buf = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8;			//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
 			InfoNES_DrawLine2();											//绘制1条扫描线到图形缓冲区数组
 		}
@@ -826,7 +829,11 @@ void InfoNES_Cycle()
 		K6502_NMI();													//执行NMI中断
 	//PPU_Latch_Flag = 0;											//nesterJ没有在VBlank开始时复位PPU_Latch_Flag标记
 	//MapperVSync();												//在VBlank期间的Mapper交换，但我们现在的几个Mapper格式用不着这种交换方式
+
 	K6502_Step( STEP_PER_SCANLINE * 21 );							//执行21条扫描线
+	//加速
+	//K6502_Step( STEP_PER_SCANLINE * 11 );							//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
+
 	PPU_R2 &= 0x3F;//= 0;											//在VBlank结束时复位R2_IN_VBLANK和R2_HIT_SP标记，InfoNES采用的是全部复位
 	K6502_Step( STEP_PER_SCANLINE );								//执行最后1条扫描线
 
@@ -1107,7 +1114,7 @@ void InfoNES_DrawLine2()
 				end_x = 8;
 				if((spr_x + 7) > 255)			//如果Sprite 0最右边像素的X坐标超过255则把超出部分修剪掉  clip right
 					end_x -= ((spr_x + 7) - 255);
-				//if( (spr_x < 8) && (PPU_R1 & R1_CLIP_SP))		//如果Sprite 0的X坐标小于8且设定了Sprite修剪状态的话则把小于8的部分修剪掉  clip left
+				//if( (spr_x < 8) && !(PPU_R1 & R1_CLIP_SP))		//如果Sprite 0的X坐标小于8且设定了Sprite修剪状态的话则把小于8的部分修剪掉  clip left
 				//{
 				//	if(0 == spr_x) continue;						//当然如果Sprite 0的X坐标等于0的话则不理会该Sprite，因为整个Sprite都需要被修剪掉
 				//	start_x += (8 - spr_x);
@@ -1237,7 +1244,7 @@ void InfoNES_DrawLine2()
 				}
 
 				//如果Sprite #的X坐标小于8且设定了Sprite修剪状态的话则把小于8的部分修剪掉  clip left
-				if( s && (spr_x < 8) && (PPU_R1 & R1_CLIP_SP))
+				if( s && (spr_x < 8) && !(PPU_R1 & R1_CLIP_SP))
 				{
 					if(0 == spr_x) continue;		//当然如果Sprite #的X坐标等于0的话则不理会该Sprite，因为整个Sprite都需要被修剪掉
 					start_x += (8 - spr_x);

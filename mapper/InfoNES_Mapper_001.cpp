@@ -116,7 +116,7 @@ void Map1_Init()
   Map1_set_ROM_banks();
 
   /* Set up wiring of the interrupt pin */
-  K6502_Set_Int_Wiring( 1, 1 );
+  //K6502_Set_Int_Wiring( 1, 1 );
 }
 
 void Map1_set_ROM_banks()

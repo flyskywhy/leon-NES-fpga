@@ -97,19 +97,19 @@ extern BYTE PPU_R6;
 extern BYTE PPUGenLatch;
 extern BYTE PPUSPL;
 
-extern BYTE PPU_Scr_V;
-extern BYTE PPU_Scr_V_Next;
-extern BYTE PPU_Scr_V_Byte;
-extern BYTE PPU_Scr_V_Byte_Next;
-extern BYTE PPU_Scr_V_Bit;
-extern BYTE PPU_Scr_V_Bit_Next;
-
-extern BYTE PPU_Scr_H;
-extern BYTE PPU_Scr_H_Next;
-extern BYTE PPU_Scr_H_Byte;
-extern BYTE PPU_Scr_H_Byte_Next;
-extern BYTE PPU_Scr_H_Bit;
-extern BYTE PPU_Scr_H_Bit_Next;
+//extern BYTE PPU_Scr_V;
+//extern BYTE PPU_Scr_V_Next;
+//extern BYTE PPU_Scr_V_Byte;
+//extern BYTE PPU_Scr_V_Byte_Next;
+//extern BYTE PPU_Scr_V_Bit;
+//extern BYTE PPU_Scr_V_Bit_Next;
+//
+//extern BYTE PPU_Scr_H;
+//extern BYTE PPU_Scr_H_Next;
+//extern BYTE PPU_Scr_H_Byte;
+//extern BYTE PPU_Scr_H_Byte_Next;
+//extern BYTE PPU_Scr_H_Bit;
+//extern BYTE PPU_Scr_H_Bit_Next;
 
 extern BYTE PPU_Latch_Flag;
 extern WORD PPU_Addr;
@@ -120,7 +120,6 @@ extern BYTE PPU_x;
 
 extern WORD PPU_Increment;
 
-extern BYTE PPU_Latch_Flag;
 extern BYTE PPU_UpDown_Clip;
 
 #define R0_NMI_VB      0x80
@@ -160,18 +159,18 @@ extern BYTE PPU_UpDown_Clip;
 #define STEP_PER_FRAME                29828
 
 /* Develop Scroll Registers */
-#define InfoNES_SetupScr() \
-{ \
-  /* V-Scroll Register */ \
-  PPU_Scr_V_Next = ( BYTE )( PPU_Addr & 0x001f ); \
-  PPU_Scr_V_Byte_Next = PPU_Scr_V_Next >> 3; \
-  PPU_Scr_V_Bit_Next = PPU_Scr_V_Next & 0x07; \
-  \
-  /* H-Scroll Register */ \
-  PPU_Scr_H_Next = ( BYTE )( ( PPU_Addr & 0x03e0 ) >> 5 ); \
-  PPU_Scr_H_Byte_Next = PPU_Scr_H_Next >> 3; \
-  PPU_Scr_H_Bit_Next = PPU_Scr_H_Next & 0x07; \
-}
+//#define InfoNES_SetupScr() \
+//{ \
+//  /* V-Scroll Register */ \
+//  PPU_Scr_V_Next = ( BYTE )( PPU_Addr & 0x001f ); \
+//  PPU_Scr_V_Byte_Next = PPU_Scr_V_Next >> 3; \
+//  PPU_Scr_V_Bit_Next = PPU_Scr_V_Next & 0x07; \
+//  \
+//  /* H-Scroll Register */ \
+//  PPU_Scr_H_Next = ( BYTE )( ( PPU_Addr & 0x03e0 ) >> 5 ); \
+//  PPU_Scr_H_Byte_Next = PPU_Scr_H_Next >> 3; \
+//  PPU_Scr_H_Bit_Next = PPU_Scr_H_Next & 0x07; \
+//}
 
 //nesterJ
 /*
@@ -240,14 +239,14 @@ extern BYTE PPU_ScanTable[];
 /* Name Table Bank */
 extern BYTE PPU_NameTableBank;
 
-/* BG Base Address */
-extern BYTE *PPU_BG_Base;
+///* BG Base Address */
+//extern BYTE *PPU_BG_Base;
 
 //nesterJ
 extern WORD  bg_pattern_table_addr;
 
-/* Sprite Base Address */
-extern BYTE *PPU_SP_Base;
+///* Sprite Base Address */
+//extern BYTE *PPU_SP_Base;
 
 //nesterJ
 extern WORD  spr_pattern_table_addr;
@@ -266,9 +265,9 @@ extern WORD PPU_SP_Height;
 /* VRAM Write Enable ( 0: Disable, 1: Enable ) */
 extern BYTE byVramWriteEnable;
 
-/* Frame IRQ ( 0: Disabled, 1: Enabled )*/
-extern BYTE FrameIRQ_Enable;
-extern WORD FrameStep;
+///* Frame IRQ ( 0: Disabled, 1: Enabled )*/
+//extern BYTE FrameIRQ_Enable;
+//extern WORD FrameStep;
 
 /*-------------------------------------------------------------------*/
 /*  Display and Others resouces                                      */
@@ -294,9 +293,9 @@ extern WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
 
 #endif
 
-extern BYTE ChrBuf[];
-
-extern BYTE ChrBufUpdate;
+//extern BYTE ChrBuf[];
+//
+//extern BYTE ChrBufUpdate;
 
 extern WORD PalTable[];
 

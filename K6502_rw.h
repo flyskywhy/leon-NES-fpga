@@ -154,19 +154,22 @@ static inline BYTE K6502_ReadIO( WORD wAddr )
 		//return PPUGenLatch;
 
     case 0x4015:   // APU control
-        byRet = APU_Reg[ 0x15 ];
-	if ( ApuC1Atl > 0 ) byRet |= (1<<0);
-	if ( ApuC2Atl > 0 ) byRet |= (1<<1);
-	if (  !ApuC3Holdnote ) {
-	  if ( ApuC3Atl > 0 ) byRet |= (1<<2);
-	} else {
-	  if ( ApuC3Llc > 0 ) byRet |= (1<<2);
-	}
-	if ( ApuC4Atl > 0 ) byRet |= (1<<3);
+ //       byRet = APU_Reg[ 0x15 ];
+	//if ( ApuC1Atl > 0 ) byRet |= (1<<0);
+	//if ( ApuC2Atl > 0 ) byRet |= (1<<1);
+	//if (  !ApuC3Holdnote ) {
+	//  if ( ApuC3Atl > 0 ) byRet |= (1<<2);
+	//} else {
+	//  if ( ApuC3Llc > 0 ) byRet |= (1<<2);
+	//}
+	//if ( ApuC4Atl > 0 ) byRet |= (1<<3);
 
-	// FrameIRQ
-        APU_Reg[ 0x15 ] &= ~0x40;
-        return byRet;
+	//// FrameIRQ
+ //       APU_Reg[ 0x15 ] &= ~0x40;
+        //return byRet;
+
+//APU
+		return apu_read( wAddr );
 
     case 0x4016:   // Set Joypad1 data
         byRet = (BYTE)( ( PAD1_Latch >> PAD1_Bit ) & 1 ) | 0x40;
@@ -470,7 +473,11 @@ static inline void K6502_WriteAPU( WORD wAddr, BYTE byData )
         case 0x4013:
           // Call Function corresponding to Sound Registers
           if ( !APU_Mute )
-            pAPUSoundRegs[ wAddr & 0x1f ]( wAddr, byData );
+            //pAPUSoundRegs[ wAddr & 0x1f ]( wAddr, byData );
+
+		//APU
+		apu_write( wAddr , byData );
+
 		  APU_Reg[ wAddr & 0x1f ] = byData;
           break;
 
@@ -506,7 +513,11 @@ static inline void K6502_WriteAPU( WORD wAddr, BYTE byData )
           break;
 
         case 0x4015:  /* 0x4015 */
-          InfoNES_pAPUWriteControl( wAddr, byData );
+          //InfoNES_pAPUWriteControl( wAddr, byData );
+
+		//APU
+		apu_write( wAddr , byData );
+
 		  APU_Reg[ wAddr & 0x1f ] = byData;
 #if 0
           /* Unknown */
