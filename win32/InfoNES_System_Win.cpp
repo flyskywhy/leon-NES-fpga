@@ -1032,7 +1032,17 @@ void InfoNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
   *pdwPad1 = *pdwPad1 | ( *pdwPad1 << 8 );
 
   /* Joypad 2 */
-  *pdwPad2 = 0;
+  //*pdwPad2 = 0;
+  *pdwPad2 =   ( GetAsyncKeyState( 'M' )        < 0 ) |
+             ( ( GetAsyncKeyState( 'N' )        < 0 ) << 1 ) |
+             ( ( GetAsyncKeyState( 'Z' )        < 0 ) << 2 ) |
+             ( ( GetAsyncKeyState( 'X' )        < 0 ) << 3 ) |
+             ( ( GetAsyncKeyState( 'G' )      < 0 ) << 4 ) |
+             ( ( GetAsyncKeyState( 'V' )    < 0 ) << 5 ) |
+             ( ( GetAsyncKeyState( 'C' )    < 0 ) << 6 ) |
+             ( ( GetAsyncKeyState( 'B' )   < 0 ) << 7 );
+
+  *pdwPad2 = *pdwPad2 | ( *pdwPad2 << 8 );
 
   /* Input for InfoNES */
   dwTemp = ( GetAsyncKeyState( VK_ESCAPE )  < 0 );

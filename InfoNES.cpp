@@ -41,6 +41,35 @@
 #include "InfoNES_pAPU.h"
 #include "K6502.h"
 
+#ifdef AFS
+#include "time.h"
+clock_t cur_time, last_frame_time;
+int frames_since_last;
+#ifdef PrintfFrameSkip
+#include <stdio.h>
+#endif /* PrintfFrameSkip */
+#ifdef PrintfFrameClock
+#include <stdio.h>
+unsigned int temp;
+unsigned int Frame = 0;
+#endif /* PrintfFrameClock */
+void do_frame();
+#endif /* AFS */
+
+
+//#ifdef LEON
+//clock_t time1, time2, time3;
+//#endif
+
+
+//#ifdef LEON
+//BYTE DUMY[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
+//#endif
+
+//#ifdef THROTTLE_SPEED	//限速，在LEON中用不着，加速还来不及呢:)
+//#include "winbase.h"
+//#endif
+
 //加速
 //#include <string.h>
 //#include "K6502_rw.h"
@@ -91,6 +120,10 @@ BYTE *PPUBANK[ 16 ];
 
 /* Sprite RAM */
 BYTE SPRRAM[ SPRRAM_SIZE ];
+#ifdef INES
+int Sprites[ 64 ];	//每个int的的低16位是当前扫描线上的Sprite的8个像素的调色板元素索引值，从左到右的像素排列方式是02461357，如果某sprite有水平翻转属性的话则是为75316420
+int FirstSprite;	//为负数（-1）则说明当前扫描线上没有sprite存在，为正数则范围为0-63
+#endif /*INES*/
 
 /* PPU Register */
 BYTE PPU_R0;
@@ -125,19 +158,36 @@ BYTE PPUSPL;
 //BYTE PPU_Scr_H_Bit_Next;
 
 /* PPU Address */
-WORD PPU_Addr;
 
 /* PPU Address */
+#ifdef INES
+  int PPU_Addr;
+  //int PPU_Temp;
+  int ARX;							//X卷轴锁存器
+  int ARY;							//Y卷轴锁存器
+  int NSCROLLX;			//应该是指H（1位）->HT（5位）->FH（3位）组成的X卷轴计数器（公有，指VGB也用它？）
+  int NSCROLLY;			//应该是指V（1位）->VT（5位）->FV（3位）组成的Y卷轴计数器（私有？）
+  BYTE *NES_ChrGen,*NES_SprGen;	//背景和sprite的PT在模拟器中的地址
+#else
+WORD PPU_Addr;
+
 WORD PPU_Temp;
 
 //nesterJ
 BYTE PPU_x;
 
+#endif /*INES*/
+
 /* The increase value of the PPU Address */
 WORD PPU_Increment;
 
 /* Current Scanline */
+#ifdef INES
+int PPU_Scanline;
+int NCURLINE;			//应该是扫描线在一个NT内部的Y坐标
+#else
 WORD PPU_Scanline;
+#endif /*INES*/
 
 /* Scanline Table */
 //BYTE PPU_ScanTable[ 263 ];
@@ -194,7 +244,7 @@ WORD FrameCnt;
 
 //nesterJ
 #ifdef LEON
-BYTE WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//图形缓冲区数组，保存RGB值
+BYTE WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//图形缓冲区数组，保存6位的颜色索引值
 #else
 WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//图形缓冲区数组，保存RGB值
 #endif
@@ -216,6 +266,18 @@ WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//图形缓冲区数组，保存RG
 #endif
 ////颜色
 //  BYTE *p;
+
+#ifdef INES
+
+#ifdef LEON
+  inline int NES_RefreshSprites( BYTE *P, BYTE *Z );
+#else
+  inline int NES_RefreshSprites( WORD *P, BYTE *Z );
+#endif /* LEON */ 
+
+#define NES_BLACK  63						//63即0x3F，在NES的64色调色板中索引的黑色
+
+#else
 
   BYTE col;					//代表每个像素4位的颜色索引值，可以索引16个颜色索引值
   BYTE c1,c2;				//代表每个像素从Pattern Table中获得的的低2位的颜色索引值
@@ -245,6 +307,8 @@ WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//图形缓冲区数组，保存RG
   BYTE spr_height;			//Sprite的高度
   WORD tile_addr;
   BYTE tile_mask;
+
+#endif /* INES */
 
 ///* Character Buffer */
 //BYTE ChrBuf[ 256 * 2 * 8 * 8 ];
@@ -279,7 +343,7 @@ BYTE APU_Reg[ 0x18 ];
 
 /* APU Mute ( 0:OFF, 1:ON ) */
 //音频int APU_Mute = 1;
-int APU_Mute = 1;
+int APU_Mute = 0;
 
 /* Pad data */
 DWORD PAD1_Latch;
@@ -616,10 +680,17 @@ void InfoNES_SetupPPU()
 
   // Reset PPU address
   PPU_Addr = 0;
+#ifdef INES
+  ARX = NSCROLLX = 0;
+  ARY = NSCROLLY = 0;
+  FirstSprite = -1;											//初始化FirstSprite
+#else
   PPU_Temp = 0;
 
 //nesterJ
   PPU_x = 0;
+
+#endif /*INES*/
 
   // Reset scanline
   PPU_Scanline = 0;
@@ -640,6 +711,10 @@ void InfoNES_SetupPPU()
   // Reset PPU banks
   for ( nPage = 0; nPage < 16; ++nPage )
     PPUBANK[ nPage ] = &PPURAM[ nPage * 0x400 ];
+#ifdef INES
+			  NES_ChrGen = PPUBANK[ ( PPU_R0 & R0_BG_ADDR ) >> 2];
+			  NES_SprGen = PPUBANK[ ( PPU_R0 & R0_SP_ADDR ) >> 1];
+#endif /* INES */
 
   /* Mirroring of Name Table */
   InfoNES_Mirroring( ROM_Mirroring );
@@ -690,6 +765,10 @@ void InfoNES_Main()
   // Initialize InfoNES
   InfoNES_Init();
 
+#ifdef AFS
+  last_frame_time = clock();
+#endif
+
   // Main loop
   while ( 1 )
   {
@@ -702,18 +781,223 @@ void InfoNES_Main()
     /*-------------------------------------------------------------------*/
     /*  Start a NES emulation                                            */
     /*-------------------------------------------------------------------*/
+#ifdef AFS
+    do_frame();
+#else
     InfoNES_Cycle();
+#endif
   }
 
   // Completion treatment
   InfoNES_Fin();
 }
 
+#ifdef INES
+inline void NES_CompareSprites( register int DY )
+{
+	register BYTE *T, *R;
+	register int D0, D1, J, Y , SprNum;
+
+	InfoNES_MemorySet( Sprites, 0, 256 );						//初始化Sprites[64]
+	SprNum = 0;													//初始化SprNum，它将用来表示在一条扫描线上遇到了多少个sprite
+	for( J = 0, T = SPRRAM; J < 64; J++, T += 4 )				//在SPRRAM[256]中按0到63的顺序比较sprite
+	{
+		Y = T[ SPR_Y ] + 1;											//获取Sprite #的Y坐标，加1是因为在SPRRAM中保存的Y坐标本身就是减1的
+		Y = PPU_Scanline - Y;										//获取待绘制的位于当前扫描线上的Sprite #中的8个像素相对于Sprite #自身的的Y坐标
+		if( Y < 0 || Y >= PPU_SP_Height ) continue;					//如果Sprite #不在当前的扫描线上则不理会该Sprite
+		FirstSprite = J;											//指明了当前遇到的sprite的最大序号（0-63），在NES_RefreshSprites()中就可以只从这个序号开始往sprite 0进行计算
+		if( T[ SPR_ATTR ] & SPR_ATTR_V_FLIP ) Y ^= 0xF;				//如果Sprite #有垂直翻转属性，则将Y改为相反值，这不会影响PPU_SP_Height为8的情况，因为只要取它的低3位就可以了
+		//这里R的获取方式详见“PPU硬件原理.doc”一文中4.1小节的最后一段
+		R = ( PPU_SP_Height == 16 ) ? PPUBANK[ ( T[ SPR_CHR ] & 0x1 ) << 2] + ( (int)( T[ SPR_CHR ] & 0xFE | Y >> 3 ) << 4 ) + ( Y & 0x7 ) : NES_SprGen + ( (int)( T[ SPR_CHR ] ) << 4 ) + ( Y & 0x7 );
+		D0 = *R;													//D0等于代表颜色索引值的0位8个像素的字节
+		if( T[ SPR_ATTR] & SPR_ATTR_H_FLIP )						//Sprite #是否有水平翻转属性？
+		{																//有，则把D0和D1合并成16位的Sprites[]后，按像素的排列方式是75316420
+			D1 = (int)*( R + 8 );
+			D1 = ( D1 & 0xAA ) | ( ( D1 & 0x55 ) << 9 ) | ( ( D0 & 0x55 ) << 8 ) | ( ( D0 & 0xAA ) >> 1 );
+			D1 = ( ( D1 & 0xCCCC ) >> 2 ) | ( ( D1 & 0x3333 ) << 2 );
+			Sprites[ J ] =  ( ( D1 & 0xF0F0 ) >> 4 ) | ( ( D1 & 0x0F0F ) << 4 );
+		}
+		else
+		{																//无，则把D0和D1合并成16位的Sprites[]后，按像素的排列方式是02461357
+			D1 = (int)*( R + 8 ) << 1;
+			Sprites[ J ] = ( D1 & 0xAAA ) | ( ( D1 & 0x555 ) << 7 ) | ( D0 & 0x55 ) | ( ( D0 & 0xAA ) << 7 );
+		}
+		SprNum++;
+		if( SprNum == 8) break;										//如果在同一条扫描线上已经遇到了8个Sprite，则不再比较剩余的sprite
+	}
+
+}
+#endif /* INES */
+
+
+#ifdef AFS
+void emulate_frame( bool draw )
+{
+	bool retval = draw;
+
+//#ifdef LEON
+//time1 = clock();
+//#endif
+
+	if ( retval )																//如果在非跳桢期间
+	{
+		if ( ( PPU_R1 & R1_SHOW_SCR ) || ( PPU_R1 & R1_SHOW_SP ) )							//在一桢新的画面开始时，如果背景或Sprite允许显示，则重载计数器NSCROLLX和NSCROLLY
+		{
+			NSCROLLX = ARX;
+			NSCROLLY = ARY;
+			for( PPU_Scanline = 0; PPU_Scanline < 8; PPU_Scanline++ )		//显示在屏幕上的0-7共8条扫描线
+			{
+				NSCROLLY++;																		//NSCROLLY计数器+1
+				NCURLINE = NSCROLLY & 0xFF;														//使NSCROLLY脱去位8的V，相当于VT->FV计数器，即NCURLINE等于当前扫描线在当前NT中的Y坐标
+				if( NCURLINE == 0xF0 || NCURLINE == 0x00 )										//如果VT等于30，说明该垂直切换NT了；或者如果VT等于32，说明这是一个“负的卷轴值”，这不会垂直切换NT，这时需要将之前由于进位而切换的NT再切换回来
+					NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;										//切换垂直方向的NT，同时VT->FV计数器清零
+			}
+			for( ; PPU_Scanline < 232; PPU_Scanline++ )											//显示在屏幕上的8-231共224条扫描线
+			{
+				//加速
+				//if( PPU_Scanline < 140 || PPU_Scanline > 201)		//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
+				K6502_Step( STEP_PER_SCANLINE );													//执行1条扫描线
+				NSCROLLX = ARX;
+				buf = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8;						//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+
+				if( PPU_R1 & R1_SHOW_SP ) NES_CompareSprites( PPU_Scanline );
+				if( InfoNES_DrawLine( PPU_Scanline, NSCROLLY ) )								//绘制1条扫描线到图形缓冲区数组
+					PPU_R2 |= R2_HIT_SP;															//设置Sprite 0点击标记
+				FirstSprite = -1;											//初始化FirstSprite
+
+				NSCROLLY++;																		//NSCROLLY计数器+1
+				NCURLINE = NSCROLLY & 0xFF;														//使NSCROLLY脱去位8的V，相当于VT->FV计数器，即NCURLINE等于当前扫描线在当前NT中的Y坐标
+				if( NCURLINE == 0xF0 || NCURLINE == 0x00 )										//如果VT等于30，说明该垂直切换NT了；或者如果VT等于32，说明这是一个“负的卷轴值”，这不会垂直切换NT，这时需要将之前由于进位而切换的NT再切换回来
+					NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;										//切换垂直方向的NT，同时VT->FV计数器清零
+			}
+		}
+		else
+		{
+			K6502_Step( 25088 );																//只执行224条扫描线而不绘制扫描线，当然也不刷新屏幕，112 * 224 = 25088
+			InfoNES_MemorySet( WorkFrame, 0, sizeof( WorkFrame ) );						//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+			FirstSprite = -1;											//初始化FirstSprite
+		}
+	}
+	else																				//如果在跳桢期间
+		//K6502_Step( STEP_PER_SCANLINE * NES_DISP_HEIGHT );								//只执行240条扫描线而不绘制扫描线，当然也不刷新屏幕
+		K6502_Step( 25088 );																//只执行224条扫描线而不绘制扫描线，当然也不刷新屏幕，112 * 224 = 25088
+
+//#ifdef LEON
+//time2 = clock();
+//#endif
+
+	K6502_Step( STEP_PER_SCANLINE );													//执行第240条扫描线
+
+	//PPU_Scanline = 241;
+	PPU_R2 |= R2_IN_VBLANK;																//在VBlank开始时设置R2_IN_VBLANK标记
+	K6502_Step( 1 );																	//在R2_IN_VBLANK标记和NMI之间执行一条指令
+	if ( PPU_R0 & R0_NMI_VB )															//如果R0_NMI_VB标记被设置
+		K6502_NMI();																		//执行NMI中断
+	K6502_Step( 2240 );																	//执行20条扫描线，112 * 20 = 2240
+	//加速
+	//K6502_Step( STEP_PER_SCANLINE * 11 );							//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
+
+	PPU_R2 &= 0x3F;//= 0;																//在VBlank结束时复位R2_IN_VBLANK和R2_HIT_SP标记，InfoNES采用的是全部复位
+	K6502_Step( STEP_PER_SCANLINE );													//执行最后1条扫描线
+
+//#ifdef LEON
+//time3 = clock();
+//#endif
+
+	if ( !APU_Mute )																	//如果没有将模拟器设为静音状态则输出声音
+		InfoNES_pAPUVsync();
+}
+
+#ifdef THROTTLE_SPEED	//限速，在LEON中用不着，加速还来不及呢:)
+static inline void SleepUntil(long time)
+{
+  long timeleft;
+
+  while(1)
+  {
+    timeleft = time - long(clock());
+    if(timeleft <= 0) break;
+    for(int i = 0; i < 1000; i++)
+    {
+      i++;
+	  i--;
+    }
+  }
+}
+#endif
+
+void do_frame()
+{
+	//此时，last_frame_time是上一次输出画面到屏幕上后的时间
+	cur_time = clock();	//获取当前的时间
+
+#ifdef PrintfFrameClock	//输出每桢的CLOCK数
+	//printf("FrameClock: %d;	Frame: %d\n", cur_time - temp, Frame++ );
+	temp = cur_time;
+
+	////printf("NonVBlank: %d;	VBlank: %d;	Ratio: %d;	Frame: %d\n", time2 - time1, time3 - time2, ( time2 - time1 ) / ( time3 - time2 ), Frame++ );
+	//printf("NonVBlank: %d;	VBlank: %d\n", time2 - time1, time3 - time2 );
+	////time1 = ( time2 - time1 ) / ( time3 - time2 );
+	////printf("%d\n", time1 );
+
+#endif /* PrintfFrameClock */
+
+#ifndef PrintfFrameClock
+#ifndef PrintfFrameGraph
+	frames_since_last = (int)((cur_time - last_frame_time) / FRAME_PERIOD);	//查看按正常速度应该已经过了多少桢
+
+	if( frames_since_last > 1 )													//如果真实世界中已经经过的时间包含的桢数大于1帧的话，则说明需要跳过一些桢才能使模拟器的速度正常
+	{
+		for( int i = 1; i < frames_since_last; i++ )
+		{
+			last_frame_time += FRAME_PERIOD;
+			emulate_frame( false );														//在跳桢期间只模拟6502和APU
+		}
+	}
+#endif /* PrintfFrameGraph */
+#endif /* PrintfFrameClock */
+
+	InfoNES_PadState( &PAD1_Latch, &PAD2_Latch, &PAD_System );							//在非跳桢期间获取手柄输入信息
+	emulate_frame( true );																//在非跳桢期间模拟6502、PPU和APU
+	//emulate_frame( false );																//仅用于测试跳桢期间的FrameClock
+
+#ifdef THROTTLE_SPEED	//限速，在LEON中用不着，加速还来不及呢:)
+	SleepUntil(long(last_frame_time + FRAME_PERIOD));
+#endif
+
+#ifdef PrintfFrameSkip	//输出跳桢数
+	printf("FrameSkip: %d\n", frames_since_last - 1 );
+#else /* PrintfFrameSkip */
+#ifndef PrintfFrameClock
+	InfoNES_LoadFrame();																//将图形缓冲区数组里的内容刷新到屏幕上
+//#ifdef LEON
+//memcpy( DUMY, WorkFrame, NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
+//#endif
+
+#endif /* PrintfFrameClock */
+#endif /* PrintfFrameSkip */
+
+	//为下一桢的计算作准备
+	//if(THROTTLE_SPEED)
+	//{
+	last_frame_time += FRAME_PERIOD;
+	//}
+	//else
+	//{
+	//  last_frame_time = cur_time;
+	//}
+}
+
+#endif /* AFS */
+
+
 /*===================================================================*/
 /*                                                                   */
 /*              InfoNES_Cycle() : The loop of emulation              */
 /*                                                                   */
 /*===================================================================*/
+
+
 void InfoNES_Cycle()
 {
 /*
@@ -783,6 +1067,155 @@ void InfoNES_Cycle()
 //    // HSYNC Wait
     //InfoNES_Wait();
 
+#ifdef INES
+	if ( FrameCnt == 0 )																//如果在非跳桢期间
+	{
+
+		if ( ( PPU_R1 & R1_SHOW_SCR ) || ( PPU_R1 & R1_SHOW_SP ) )							//在一桢新的画面开始时，如果背景或Sprite允许显示，则重载计数器NSCROLLX和NSCROLLY
+		{
+			NSCROLLX = ARX;
+			NSCROLLY = ARY;
+			for( PPU_Scanline = 0; PPU_Scanline < 8; PPU_Scanline++ )		//显示在屏幕上的0-7共8条扫描线
+			{
+				//K6502_Step( STEP_PER_SCANLINE );								//执行1条扫描线
+				//NSCROLLX = ARX;
+				NSCROLLY++;																		//NSCROLLY计数器+1
+				NCURLINE = NSCROLLY & 0xFF;														//使NSCROLLY脱去位8的V，相当于VT->FV计数器，即NCURLINE等于当前扫描线在当前NT中的Y坐标
+				if( NCURLINE == 0xF0 || NCURLINE == 0x00 )										//如果VT等于30，说明该垂直切换NT了；或者如果VT等于32，说明这是一个“负的卷轴值”，这不会垂直切换NT，这时需要将之前由于进位而切换的NT再切换回来
+					NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;										//切换垂直方向的NT，同时VT->FV计数器清零
+			}
+			for( ; PPU_Scanline < 232; PPU_Scanline++ )											//显示在屏幕上的8-231共224条扫描线
+			{
+				//加速
+				//if( PPU_Scanline < 140 || PPU_Scanline > 201)		//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
+				K6502_Step( STEP_PER_SCANLINE );													//执行1条扫描线
+				NSCROLLX = ARX;
+				buf = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8;						//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+
+				if( PPU_R1 & R1_SHOW_SP ) NES_CompareSprites( PPU_Scanline );
+				if( InfoNES_DrawLine( PPU_Scanline, NSCROLLY ) )								//绘制1条扫描线到图形缓冲区数组
+					PPU_R2 |= R2_HIT_SP;															//设置Sprite 0点击标记
+				FirstSprite = -1;											//初始化FirstSprite
+
+				NSCROLLY++;																		//NSCROLLY计数器+1
+				NCURLINE = NSCROLLY & 0xFF;														//使NSCROLLY脱去位8的V，相当于VT->FV计数器，即NCURLINE等于当前扫描线在当前NT中的Y坐标
+				if( NCURLINE == 0xF0 || NCURLINE == 0x00 )										//如果VT等于30，说明该垂直切换NT了；或者如果VT等于32，说明这是一个“负的卷轴值”，这不会垂直切换NT，这时需要将之前由于进位而切换的NT再切换回来
+					NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;										//切换垂直方向的NT，同时VT->FV计数器清零
+			}
+			InfoNES_LoadFrame();																//将图形缓冲区数组里的内容刷新到屏幕上
+		}
+		else
+		{
+		K6502_Step( 25088 );																//只执行224条扫描线而不绘制扫描线，当然也不刷新屏幕，112 * 224 = 25088
+				InfoNES_MemorySet( WorkFrame, 0, sizeof( WorkFrame ) );						//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+				FirstSprite = -1;											//初始化FirstSprite
+			InfoNES_LoadFrame();																//将图形缓冲区数组里的内容刷新到屏幕上
+		}
+
+		//if ( ( PPU_R1 & R1_SHOW_SCR ) || ( PPU_R1 & R1_SHOW_SP ) )							//在一桢新的画面开始时，如果背景或Sprite允许显示，则重载计数器NSCROLLX和NSCROLLY
+		//{
+		//	  NSCROLLX = ARX;
+		//	  NSCROLLY = ARY;
+		//	  //NSCROLLX |= ( ( PPU_Addr & 0x001F ) << 3 ) | ( ( PPU_Addr & 0x0400 ) >> 2 );
+		//	  //NSCROLLY = ( ( PPU_Addr & 0x03E0 ) >> 2 ) | ( ( PPU_Addr & 0x0800 ) >> 3 ) | ( ( PPU_Addr & 0x7000 ) >> 12 );
+		//}
+		//PPU_Scanline = 0;
+		//for( ; PPU_Scanline < 8; PPU_Scanline++ )		//显示在屏幕上的0-7共8条扫描线
+		//{
+		//	//K6502_Step( STEP_PER_SCANLINE );								//执行1条扫描线
+		//	if ( ( PPU_R1 & R1_SHOW_SCR ) || ( PPU_R1 & R1_SHOW_SP ) )
+		//	{
+		//		//NSCROLLX |= ( ( PPU_Addr & 0x001F ) << 3 ) | ( ( PPU_Addr & 0x0400 ) >> 2 );	//在一条扫描线开始绘制时，如果背景或Sprite允许显示，则重载计数器NSCROLLX
+		//		//NSCROLLX = ARX;
+		//		NSCROLLY++;																		//NSCROLLY计数器+1
+		//		NCURLINE = NSCROLLY & 0xFF;														//使NSCROLLY脱去位8的V，相当于VT->FV计数器，即NCURLINE等于当前扫描线在当前NT中的Y坐标
+		//		if( NCURLINE == 0xF0 || NCURLINE == 0x00 )										//如果VT等于30，说明该垂直切换NT了；或者如果VT等于32，说明这是一个“负的卷轴值”，这不会垂直切换NT，这时需要将之前由于进位而切换的NT再切换回来
+		//			NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;										//切换垂直方向的NT，同时VT->FV计数器清零
+		//	}
+		//}
+		//for( PPU_Scanline = 8; PPU_Scanline < 232; PPU_Scanline++ )											//显示在屏幕上的8-231共224条扫描线
+		//{
+		//	//加速
+		//	//if( PPU_Scanline < 140 || PPU_Scanline > 201)		//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
+		//	K6502_Step( STEP_PER_SCANLINE );													//执行1条扫描线
+		//	if ( ( PPU_R1 & R1_SHOW_SCR ) || ( PPU_R1 & R1_SHOW_SP ) )
+		//	{
+		//		//NSCROLLX |= ( ( PPU_Addr & 0x001F ) << 3 ) | ( ( PPU_Addr & 0x0400 ) >> 2 );	//在一条扫描线开始绘制时，如果背景或Sprite允许显示，则重载计数器NSCROLLX
+		//		NSCROLLX = ARX;
+		//		buf = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8;						//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+
+		//		if( PPU_R1 & R1_SHOW_SP ) NES_CompareSprites( PPU_Scanline );
+		//		if( InfoNES_DrawLine( PPU_Scanline, NSCROLLY ) )								//绘制1条扫描线到图形缓冲区数组
+		//			PPU_R2 |= R2_HIT_SP;															//设置Sprite 0点击标记
+		//		FirstSprite = -1;											//初始化FirstSprite
+
+		//		NSCROLLY++;																		//NSCROLLY计数器+1
+		//		NCURLINE = NSCROLLY & 0xFF;														//使NSCROLLY脱去位8的V，相当于VT->FV计数器，即NCURLINE等于当前扫描线在当前NT中的Y坐标
+		//		if( NCURLINE == 0xF0 || NCURLINE == 0x00 )										//如果VT等于30，说明该垂直切换NT了；或者如果VT等于32，说明这是一个“负的卷轴值”，这不会垂直切换NT，这时需要将之前由于进位而切换的NT再切换回来
+		//			NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;										//切换垂直方向的NT，同时VT->FV计数器清零
+		//	}
+		//}
+		////for( ; PPU_Scanline < 240; PPU_Scanline++ )		//显示在屏幕上的232-239共8条扫描线
+		////{
+		////	//K6502_Step( STEP_PER_SCANLINE );								//执行1条扫描线
+		////	if ( ( PPU_R1 & R1_SHOW_SCR ) || ( PPU_R1 & R1_SHOW_SP ) )
+		////	{
+		////		//NSCROLLX |= ( ( PPU_Addr & 0x001F ) << 3 ) | ( ( PPU_Addr & 0x0400 ) >> 2 );	//在一条扫描线开始绘制时，如果背景或Sprite允许显示，则重载计数器NSCROLLX
+		////		//NSCROLLX = ARX;
+		////		NSCROLLY++;																		//NSCROLLY计数器+1
+		////		NCURLINE = NSCROLLY & 0xFF;														//使NSCROLLY脱去位8的V，相当于VT->FV计数器，即NCURLINE等于当前扫描线在当前NT中的Y坐标
+		////		if( NCURLINE == 0xF0 )															//如果VT等于30，说明该垂直切换NT了
+		////			NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;										//切换垂直方向的NT，同时VT->FV计数器清零
+		////		else if( NCURLINE == 0x00 )														//如果VT等于32，说明这是一个“负的卷轴值”，这不会垂直切换NT
+		////			NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;										//将之前切换的NT再切换回来，同时VT->FV计数器清零
+		////	}
+		////}
+		//InfoNES_LoadFrame();																//将图形缓冲区数组里的内容刷新到屏幕上
+
+	}
+	else																				//如果在跳桢期间
+		//K6502_Step( STEP_PER_SCANLINE * NES_DISP_HEIGHT );								//只执行240条扫描线而不绘制扫描线，当然也不刷新屏幕
+		K6502_Step( 25088 );																//只执行224条扫描线而不绘制扫描线，当然也不刷新屏幕，112 * 224 = 25088
+
+	FrameCnt = ( FrameCnt >= FrameSkip ) ? 0 : FrameCnt + 1;							//循环跳桢状态
+
+	//if ( FrameIRQ_Enable )											//执行桢中断，不过由nester的源代码可知，它只有在map4和map40时执行
+	//{
+	//	IRQ_REQ;
+	//	APU_Reg[ 0x15 ] |= 0x40;
+	//}
+	K6502_Step( STEP_PER_SCANLINE );													//执行第240条扫描线
+
+	//PPU_Scanline = 241;
+	PPU_R2 |= R2_IN_VBLANK;																//在VBlank开始时设置R2_IN_VBLANK标记
+	K6502_Step( 1 );																	//在R2_IN_VBLANK标记和NMI之间执行一条指令
+	if ( PPU_R0 & R0_NMI_VB )															//如果R0_NMI_VB标记被设置
+		K6502_NMI();																		//执行NMI中断
+	//PPU_Latch_Flag = 0;											//nesterJ没有在VBlank开始时复位PPU_Latch_Flag标记
+	//MapperVSync();												//在VBlank期间的Mapper交换，但我们现在的几个Mapper格式用不着这种交换方式
+//for(; PPU_Scanline < 261; PPU_Scanline++)
+//K6502_Step( STEP_PER_SCANLINE);
+	//K6502_Step( STEP_PER_SCANLINE * 20 );												//执行20条扫描线
+	K6502_Step( 2240 );																	//执行20条扫描线，112 * 20 = 2240
+	//加速
+	//K6502_Step( STEP_PER_SCANLINE * 11 );							//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
+
+	PPU_R2 &= 0x3F;//= 0;																//在VBlank结束时复位R2_IN_VBLANK和R2_HIT_SP标记，InfoNES采用的是全部复位
+	K6502_Step( STEP_PER_SCANLINE );													//执行最后1条扫描线
+
+	if ( FrameCnt == 0 )																//如果在非跳桢期间
+		InfoNES_PadState( &PAD1_Latch, &PAD2_Latch, &PAD_System );							//获取手柄输入信息
+	if ( PAD_PUSH( PAD_System, PAD_SYS_QUIT ) )												//如果手柄按下了退出键，则退出模拟器，
+		return;
+	if ( !APU_Mute )																	//如果没有将模拟器设为静音状态则输出声音
+		InfoNES_pAPUVsync();
+	
+	//for( PPU_Scanline = 0; PPU_Scanline < 263/*/(FrameSkip+1)*/; PPU_Scanline++ )		//为了使游戏运行速度不至于过快而进行的同步等待
+	//	InfoNES_Wait();
+	for( PPU_Scanline = 0; PPU_Scanline < 255/*/(FrameSkip+1)*/; PPU_Scanline++ )		//为了使游戏运行速度不至于过快而进行的同步等待
+		InfoNES_Wait();
+
+#else
 
 	//nesterJ
 
@@ -872,7 +1305,9 @@ void InfoNES_Cycle()
 	//	InfoNES_Wait();
 	for( PPU_Scanline = 0; PPU_Scanline < 255/*/(FrameSkip+1)*/; PPU_Scanline++ )		//为了使游戏运行速度不至于过快而进行的同步等待
 		InfoNES_Wait();
+#endif /* INES */
   }
+
 }
 
 /*===================================================================*/
@@ -989,6 +1424,167 @@ void InfoNES_Cycle()
 /*              InfoNES_DrawLine() : Render a scanline               */
 /*                                                                   */
 /*===================================================================*/
+
+#ifdef INES
+inline int InfoNES_DrawLine( register int DY, register int SY )	//DY是当前的扫描线序号（0-239）；SY相当于V->VT->FV计数器
+{
+	register BYTE /* X1,X2,Shift,*/*R, *Z;
+#ifdef LEON
+	register BYTE *P, *C/*, *PP*/;
+#else
+	register WORD *P, *C/*, *PP*/;
+#endif
+	register int D0, D1, X1, X2, Shift, Scr;
+	BYTE *ChrTab, *CT, *AT/*, *XPal*/;
+	BYTE ZBuf[ 35 ];
+
+	P = buf;														//指向WorkFrame[]中相应的扫描线开始的地方
+
+	/* If display is off... */
+	if( !( PPU_R1 & R1_SHOW_SCR ) )									//如果背景被设定为不显示的话（就只有sprite显示了，要不然也不会进入这个函数）
+	{
+		/* Clear scanline and Z-buffer */								//则将WorkFrame[]的相应扫描线和只代表当前扫描线的ZBuf设为黑色
+		ZBuf[ 32 ] = ZBuf[ 33 ] = ZBuf[ 34 ] = 0;
+		for( D0 = 0; D0 < 32; D0++, P += 8 )
+		{
+#ifdef LEON
+			P[ 0 ] = P[ 1 ] = P[ 2 ] = P[ 3 ] = P[ 4 ] = P[ 5 ] = P[ 6 ] = P[ 7 ] = NES_BLACK;
+#else
+			P[ 0 ] = P[ 1 ] = P[ 2 ] = P[ 3 ] = P[ 4 ] = P[ 5 ] = P[ 6 ] = P[ 7 ] = NesPalette[ NES_BLACK ];
+#endif
+			ZBuf[ D0 ] = 0;
+		}
+
+		/* Refresh sprites in this scanline */
+		D0 = FirstSprite >= 0 ? NES_RefreshSprites( /*DY*/buf, ZBuf + 1):0;
+
+		/* Return hit flag */
+		return( D0 );
+	}
+
+	Scr = ( ( SY & 0x100 ) >> 7 ) + ( ( NSCROLLX & 0x100 ) >> 8 );	//Scr等于VH，也就是指明了当前绘制的NT
+	SY &= 0xFF;														//使SY脱去位8的V，相当于VT->FV计数器，只指向当前NT所代表画面的的像素级垂直位移（0-241）
+	ChrTab = PPUBANK[ Scr + 8 ];									//使ChrTab指向$2x00，这里的x就是由Scr的值和水平或垂直镜像状态决定的
+	CT = ChrTab + ( ( SY & 0xF8 ) << 2 );							//相当于(SY>>3)<<5，也就是相隔32个tile，即CT等于在当前NT中的tile级的垂直位移（0-29）
+	AT = ChrTab + 0x03C0 + ( ( SY & 0xE0 ) >> 2 );					//相当于(SY>>5)<<3，也就是相隔8个AT，即AT等于在当前AT中的AT级的垂直位移（0-7）
+	X1 = ( NSCROLLX & 0xF8 ) >> 3;									//使NSCROLLX脱去位8的H再右移3，相当于HT计数器，即X1等于在当前NT中当前扫描线上的tile级的水平位移（0-32）
+	Shift = NSCROLLX & 0x07;										//使Shift等于FH
+	P -= Shift;														//如果FH不等于零，那就从位于屏幕左面外边的8个像素中开始绘制
+	Z = ZBuf;
+	Z[ 0 ] = 0x00;
+
+	for( X2 = 0; X2 < 33; X2++ )
+	{
+		/* Fetch data */
+		C = PalTable + ( ( ( AT[ X1 >> 2 ] >> ( ( X1 & 0x02 ) + ( ( SY & 0x10 ) >> 2 ) ) ) & 0x03 ) << 2 );	//C等于PalTable加上AT中的两位，也就是背景调色板选择值0、4、8或C
+		R = NES_ChrGen + ( (int)( CT[ X1 ] ) << 4 ) + ( SY & 0x07 );	//R指向位于当前扫描线上的Tile中的8个像素的第1个像素的颜色索引值的0位在PT中的地址
+		D0 = *R;														//D0等于代表颜色索引值的0位8个像素的字节
+
+		/* Modify Z-buffer */
+		D1 = ( D0 | *( R + 8 ) ) << Shift;								//D1等于代表颜色索引值的0、1位8个像素相或（1为不透明色）后的字节再左移FH
+		Z[ 0 ] |= D1 >> 8;												//Z[0]与该tile的位于FH外的几个像素的透明色判定位相或（与上一次的Z[1]重合）
+		Z[ 1 ] = D1 & 0xFF;												//Z[1]则确切的等于该tile的位于FH内的几个像素的透明色判定位
+		Z++;															//Z只是增加1，也就是说下一次的Z[0]也就是这次的Z[1]
+
+		/* Draw pixels */
+		D1 = (int)*( R + 8 ) << 1;										//D1等于代表颜色索引值的1位8个像素的字节，再左移1是为了方便把D0和D1合并成16位，且像素的排列方式是02461357
+		D1 = ( D1 & 0xAAA ) | ( ( D1 & 0x555 ) << 7 ) | ( D0 & 0x55 ) | ( ( D0 & 0xAA ) << 7 );
+		P[ 0 ] = C[ D1 >> 14 ];
+		P[ 1 ] = C[ ( D1 & 0x00C0 ) >> 6 ];
+		P[ 2 ] = C[ ( D1 & 0x3000 ) >> 12 ];
+		P[ 3 ] = C[ ( D1 & 0x0030 ) >> 4 ];
+		P[ 4 ] = C[ ( D1 & 0x0C00 ) >> 10 ];
+		P[ 5 ] = C[ ( D1 & 0x000C ) >> 2 ];
+		P[ 6 ] = C[ ( D1 & 0x0300 ) >> 8 ];
+		P[ 7 ] = C[ D1 & 0x0003 ];
+		P += 8;
+
+		X1 = ( X1 + 1 ) & 0x1F;											//HT计数器+1
+		if( !X1 )														//如果HT归零，说明该水平切换NT了
+		{
+			D1 = CT - ChrTab;												//计算出在一个NT中的绝对VT（0-29）
+			ChrTab = PPUBANK[ ( Scr ^ 0x01 ) + 8 ];							//使ChrTab指向水平切换后的NT的地址（$2000和$2400之间）
+			CT = ChrTab + D1;												//将CT指向下一个NT中的tile级的垂直位移
+			AT = ChrTab + 0x03C0 + ( ( SY & 0xE0 ) >> 2 );					//按新的基地址ChrTab计算出新的AT
+		}
+	}
+	/* Refresh sprites in this scanline */
+	D0 = FirstSprite >= 0 ? NES_RefreshSprites( /*DY*/buf, ZBuf + 1) : 0;
+//#if 0
+//	/* Mask out left 8 pixels if needed  */
+//	if( !( PPU_R1 & R1_CLIP_BG ) )
+//	{
+//		P+=Shift-8-256;
+//		P[0]=P[1]=P[2]=P[3]=P[4]=P[5]=P[6]=P[7]=NES_BLACK;
+//	}
+//#endif
+
+	/* Return 1 if we hit sprite #0 */
+	return( D0 );
+}
+
+/** RefreshSprites *******************************************/
+/** Refresh sprites at a given scanline. Returns 1 if       **/
+/** intersection of sprite #0 with the background occurs, 0 **/
+/** otherwise.                                              **/
+/*************************************************************/
+#ifdef LEON
+inline int NES_RefreshSprites( /*register int Y*/BYTE *PP, register BYTE *Z )
+#else
+inline int NES_RefreshSprites( /*register int Y*/WORD *PP, register BYTE *Z )
+#endif
+{
+	register BYTE *T/*, *XPal, *SprCol*/;
+#ifdef LEON
+	register BYTE *P, *C, *Pal;
+#else
+	register WORD *P, *C, *Pal;
+#endif
+	register int D0, D1, J, I;
+
+	Pal = PalTable + 16;											//Pal指向调色板数组PalTable[32]的sprite部分
+
+	for( J = FirstSprite, T = SPRRAM + ( J << 2 ), I = 0; J >= 0; J--, T -= 4 )	//在SPRRAM[256]中按63到0的顺序处理sprite
+		if( D1 = Sprites[ J ] )											//如果当前的sprite在当前扫描线上的各像素中至少有一个像素不为透明色（00）
+		{
+			/* Compute background mask if needed */
+			if( T[ SPR_ATTR ] & SPR_ATTR_PRI || !J)							//如果当前sprite的优先权为低或者是sprite 0
+			{
+				D0 = T[ 3 ];												//将当前sprite的X坐标赋给D0
+				I = 8 - ( D0 & 0x07 );										//计算出sprite的右边界所处的ZBuf与sprite的右边界之间像素级的偏移量
+				D0 >>= 3;													//将D0设为当前sprite的左边界所处的ZBuf的序号（0-31）
+				D0 = ( ( ( (int)Z[ D0 ] << 8 ) | Z[ D0 + 1 ] ) >> I ) & 0xFF;	//得到sprite8个像素所在的ZBuf值（在两个相邻的ZBuf中取8个位）
+				D0 = ( D0 & 0x55 ) | ( ( D0 & 0xAA ) << 7 );				//这两行语句是把8位的ZBuf值转换成16位，像素的排列方式
+				D0 = D0 | ( D0 << 1 );										//    也是02461357，以便和Sprite[]中的16位数据进行计算
+
+				/* Compute hit flag if needed */
+				I = J ? 0 : ( ( D0 & D1 ) != 0 );							//如果是sprite 0，这里就可以方便的计算出是否有sprite 0点击事件发生
+
+				/* Mask bits if needed */
+				if( T[ SPR_ATTR ] & SPR_ATTR_PRI ) D1 &= ~D0;				//如果当前sprite的优先权为低，则只要背景里有像素为透明色，就以掩码的方式指明sprite需要被绘制的相应像素
+			}
+
+			/* If any bits left to draw... */
+			if( D1 )														//如果D1中有不透明的像素（非0）的话
+			{
+				P = buf + T[ 3 ];
+				C = Pal + ( ( T[ 2 ] & SPR_ATTR_COLOR ) << 2 );					//C等于Pal加上sprite属性字节中的低两位，也就是sprite调色板选择值0、4、8或C
+				if(D0=D1&0xC000) P[0]=C[D0>>14];
+				if(D0=D1&0x00C0) P[1]=C[D0>>6];
+				if(D0=D1&0x3000) P[2]=C[D0>>12];
+				if(D0=D1&0x0030) P[3]=C[D0>>4];
+				if(D0=D1&0x0C00) P[4]=C[D0>>10];
+				if(D0=D1&0x000C) P[5]=C[D0>>2];
+				if(D0=D1&0x0300) P[6]=C[D0>>8];
+				if(D0=D1&0x0003) P[7]=C[D0];
+			}
+		}
+		/* If I contains nonzero value at this point, */
+		/* then we have hit sprite #0                 */
+		return(I);
+}
+
+#else
 
 //nesterJ
 void InfoNES_DrawLine2()
@@ -1232,7 +1828,7 @@ void InfoNES_DrawLine2()
 				else										//没有
 					inc_x = 1;
 
-				///Sprite 0是否有垂直翻转属性？
+				//Sprite 0是否有垂直翻转属性？
 				if( spr[ SPR_ATTR ] & SPR_ATTR_V_FLIP )		//有
 					y = (spr_height-1) - y;
 
@@ -1364,7 +1960,7 @@ void InfoNES_DrawLine2()
 				else										//没有
 					inc_x = 1;
 
-				///Sprite #是否有垂直翻转属性？
+				//Sprite #是否有垂直翻转属性？
 				if( spr[ SPR_ATTR ] & SPR_ATTR_V_FLIP )		//有
 					y = (spr_height-1) - y;
 
@@ -1466,6 +2062,8 @@ void InfoNES_DrawLine2()
 		LOOPY_NEXT_LINE( PPU_Addr );
 	}
 }
+
+#endif /* INES */ 
 
 //void InfoNES_DrawLine()
 //{

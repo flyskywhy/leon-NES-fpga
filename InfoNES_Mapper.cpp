@@ -29,17 +29,17 @@
 struct MapperTable_tag MapperTable[] =
 {
   {   0, Map0_Init   },
-  {   1, Map1_Init   },
+  //{   1, Map1_Init   },
   {   2, Map2_Init   },
   {   3, Map3_Init   },
-  {   4, Map4_Init   },
+  //{   4, Map4_Init   },
 /*  {   5, Map5_Init   },
   {   6, Map6_Init   },*///ºı»›
-  {   7, Map7_Init   },
+  //{   7, Map7_Init   },
 /*  {   8, Map8_Init   },
   {   9, Map9_Init   },
   {  10, Map10_Init  },*///ºı»›
-  {  11, Map11_Init  },
+  //{  11, Map11_Init  },
 /*  {  13, Map13_Init  },
   {  15, Map15_Init  },
   {  16, Map16_Init  },
@@ -173,17 +173,17 @@ struct MapperTable_tag MapperTable[] =
 /*-------------------------------------------------------------------*/
 
 #include "mapper/InfoNES_Mapper_000.cpp"
-#include "mapper/InfoNES_Mapper_001.cpp"
+//#include "mapper/InfoNES_Mapper_001.cpp"
 #include "mapper/InfoNES_Mapper_002.cpp"
 #include "mapper/InfoNES_Mapper_003.cpp"
-#include "mapper/InfoNES_Mapper_004.cpp"
+//#include "mapper/InfoNES_Mapper_004.cpp"
 /*#include "mapper/InfoNES_Mapper_005.cpp"
 #include "mapper/InfoNES_Mapper_006.cpp"*///ºı»› 
-#include "mapper/InfoNES_Mapper_007.cpp"
+//#include "mapper/InfoNES_Mapper_007.cpp"
 /*#include "mapper/InfoNES_Mapper_008.cpp"
 #include "mapper/InfoNES_Mapper_009.cpp"
 #include "mapper/InfoNES_Mapper_010.cpp"*///ºı»›
-#include "mapper/InfoNES_Mapper_011.cpp"
+//#include "mapper/InfoNES_Mapper_011.cpp"
 /*#include "mapper/InfoNES_Mapper_013.cpp"
 #include "mapper/InfoNES_Mapper_015.cpp"
 #include "mapper/InfoNES_Mapper_016.cpp"

@@ -29,7 +29,7 @@
 #include "../InfoNES_pAPU.h"
 
 //LEON
-#include "../gamefile/mario.h"
+#include "../gamefile/contra.h"
 DWORD FrameCount = 0;
 
 #define TRUE 1
@@ -949,8 +949,8 @@ void InfoNES_LoadFrame()
 //      else
 //      	printf( "\n" );
 
-//nesterJ
 #ifdef LEON
+#ifdef PrintfFrameGraph
 if( FrameCount++ > 32)
   for ( register int y = 130; y < 210; y++ ) 
     for ( register int x = 0; x < 190; x++ )
@@ -958,6 +958,7 @@ if( FrameCount++ > 32)
       	printf( "%c", WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] );
       else
       	printf( "\n" );
+#endif /* PrintfFrameGraph */
 #else
 if( FrameCount++ > 32)
   for ( register int y = 130; y < 210; y++ ) 
@@ -966,7 +967,7 @@ if( FrameCount++ > 32)
       	printf( "%c", (BYTE)WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] );
       else
       	printf( "\n" );
-#endif
+#endif /* LEON */
 
 
 //	printf( "Outputing Frame %d\n", FrameCount++ );

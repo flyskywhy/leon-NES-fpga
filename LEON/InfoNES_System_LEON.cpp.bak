@@ -29,7 +29,7 @@
 #include "../InfoNES_pAPU.h"
 
 //LEON
-#include "../gamefile/mario.h"
+#include "../gamefile/contra.h"
 DWORD FrameCount = 0;
 
 #define TRUE 1
@@ -758,7 +758,7 @@ int InfoNES_ReadRom( const char *pszFileName )
 
   /* Read ROM Header */
 //Ìæ»»GccBugFunc   fread( &NesHeader, sizeof NesHeader, 1, fp );
-  memcpy( &NesHeader, fp, 16 );
+  //memcpy( &NesHeader, fp, 16 );
   fp += 16;
   if ( memcmp( NesHeader.byID, "NES\x1a", 4 ) != 0 )
   {
@@ -768,13 +768,13 @@ int InfoNES_ReadRom( const char *pszFileName )
   }
 
   /* Clear SRAM */
-  memset( SRAM, 0, SRAM_SIZE );
+  //memset( SRAM, 0, SRAM_SIZE );
 
   /* If trainer presents Read Triner at 0x7000-0x71ff */
   if ( NesHeader.byInfo1 & 4 )
   {
 //Ìæ»»GccBugFunc     fread( &SRAM[ 0x1000 ], 512, 1, fp );
-    memcpy( &SRAM[ 0x1000 ], fp, 512 );
+    //memcpy( &SRAM[ 0x1000 ], fp, 512 );
     fp += 512;
   }
 
@@ -783,7 +783,7 @@ int InfoNES_ReadRom( const char *pszFileName )
 
   /* Read ROM Image */
 //Ìæ»»GccBugFunc   fread( ROM, 0x4000, NesHeader.byRomSize, fp );
-  memcpy(ROM, fp, 0x4000 * NesHeader.byRomSize);
+  //memcpy(ROM, fp, 0x4000 * NesHeader.byRomSize);
   fp += 0x4000 * NesHeader.byRomSize;
 
   if ( NesHeader.byVRomSize > 0 )
@@ -793,7 +793,7 @@ int InfoNES_ReadRom( const char *pszFileName )
 
     /* Read VROM Image */
 //Ìæ»»GccBugFunc     fread( VROM, 0x2000, NesHeader.byVRomSize, fp );
-  memcpy(VROM, fp, 0x2000 * NesHeader.byVRomSize);
+  //memcpy(VROM, fp, 0x2000 * NesHeader.byVRomSize);
   }
 
   /* File close */
@@ -852,7 +852,7 @@ void *InfoNES_MemoryCopy( void *dest, const void *src, int count )
  *    Pointer of destination
  */
 
-  memcpy( dest, src, count );
+  //memcpy( dest, src, count );
   return dest;
 }
 
@@ -880,7 +880,7 @@ void *InfoNES_MemorySet( void *dest, int c, int count )
  *    Pointer of destination
  */
 
-  memset( dest, c, count);  
+  //memset( dest, c, count);  
   return dest;
 }
 
@@ -949,7 +949,17 @@ void InfoNES_LoadFrame()
 //      else
 //      	printf( "\n" );
 
-//nesterJ
+#ifdef LEON
+#ifdef PrintfFrameGraph
+if( FrameCount++ > 32)
+  for ( register int y = 130; y < 210; y++ ) 
+    for ( register int x = 0; x < 190; x++ )
+      if( x != 189 )
+      	printf( "%c", WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] );
+      else
+      	printf( "\n" );
+#endif /* PrintfFrameGraph */
+#else
 if( FrameCount++ > 32)
   for ( register int y = 130; y < 210; y++ ) 
     for ( register int x = 0; x < 190; x++ )
@@ -957,6 +967,7 @@ if( FrameCount++ > 32)
       	printf( "%c", (BYTE)WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] );
       else
       	printf( "\n" );
+#endif /* LEON */
 
 
 //	printf( "Outputing Frame %d\n", FrameCount++ );

@@ -64,193 +64,214 @@
 
 static inline BYTE K6502_ReadIO( WORD wAddr )
 {
-  BYTE byRet;
-  switch ( wAddr )
-  {
-    case 0x2007:   /* PPU Memory */
+	BYTE byRet;
+	switch ( wAddr )
+	{
+	case 0x2007:   /* PPU Memory */
 		{
-		WORD addr = PPU_Addr & 0x3fff;
+#ifdef INES
+			PPU_Addr = ( NSCROLLY & 0x0003 ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLX & 0x00F8 ) >> 3;
+			//int addr = PPU_Addr & 0x3fff;
+			byRet = PPU_R7;
+			PPU_R7 = PPUBANK[ PPU_Addr >> 10 ][ PPU_Addr & 0x3ff ];
+			PPU_Addr += PPU_Increment;
+			//PPU_R7 = PPUBANK[ addr >> 10 ][ addr & 0x3ff ];
+			NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+			NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+#else
+			WORD addr = PPU_Addr & 0x3fff;
 
-        // Increment PPU Address
-        PPU_Addr += PPU_Increment;
+			// Increment PPU Address
+			PPU_Addr += PPU_Increment;
 
-        // Set return value;
-        byRet = PPU_R7;
+			// Set return value;
+			byRet = PPU_R7;
 
-		//nester
-  //if(addr >= 0x3000)
-  //{
-  //  // is it a palette entry?
-  //  if(addr >= 0x3F00)
-  //  {
-  //    // palette
+			//nester
+			//if(addr >= 0x3000)
+			//{
+			//  // is it a palette entry?
+			//  if(addr >= 0x3F00)
+			//  {
+			//    // palette
 
-  //    // handle palette mirroring
-  //    if(0x0000 == (addr & 0x0010))
-  //    {
-  //      // background palette
-  //      return PalTable[addr & 0x000F];
-  //    }
-  //    else
-  //    {
-  //      // sprite palette
-  //      return PalTable[addr & 0x001F];
-  //    }
-  //  }
+			//    // handle palette mirroring
+			//    if(0x0000 == (addr & 0x0010))
+			//    {
+			//      // background palette
+			//      return PalTable[addr & 0x000F];
+			//    }
+			//    else
+			//    {
+			//      // sprite palette
+			//      return PalTable[addr & 0x001F];
+			//    }
+			//  }
 
-  //  // handle mirroring
-  //  addr &= 0xEFFF;
-  //}
+			//  // handle mirroring
+			//  addr &= 0xEFFF;
+			//}
 
-		////FCEU
-		//PPUGenLatch = byRet = PPU_R7;
+			////FCEU
+			//PPUGenLatch = byRet = PPU_R7;
 
-        // Read PPU Memory
-        PPU_R7 = PPUBANK[ addr >> 10 ][ addr & 0x3ff ];
-
-		return byRet;
+			// Read PPU Memory
+			PPU_R7 = PPUBANK[ addr >> 10 ][ addr & 0x3ff ];
+#endif /* INES */
+			return byRet;
 		}
 
 	case 0x2002:   /* PPU Status */
-        // Set return value
-        byRet = PPU_R2;
+		// Set return value
+		byRet = PPU_R2;
 
-        // Reset a V-Blank flag
-        PPU_R2 &= 0x7F;//加速~R2_IN_VBLANK;
+		// Reset a V-Blank flag
+		PPU_R2 &= 0x7F;//加速~R2_IN_VBLANK;
 
-        // Reset address latch
-        PPU_Latch_Flag = 0;
+		// Reset address latch
+		PPU_Latch_Flag = 0;
 
-        //// Make a Nametable 0 in V-Blank // 经测试如果去除这段代码会使mario的状态栏闪烁（用InfoNES_DrawLine2()不会），其他几个游戏倒没问题。
-        //if ( PPU_Scanline >= SCAN_VBLANK_START && !( PPU_R0 & R0_NMI_VB ) )
-        //{
-        //  PPU_R0 &= 0xFC;//加速~R0_NAME_ADDR;
-        //  PPU_NameTableBank = NAME_TABLE0;
-        //}
-    //    if ( PPU_Scanline == 241 && !( PPU_R0 & R0_NMI_VB ) )
-    //    {
-    //      PPU_R0 &= 0xFC;//加速~R0_NAME_ADDR;
-		  //PPU_Temp &= 0xF3FF;
-    //    }
-        return byRet;
+		//// Make a Nametable 0 in V-Blank // 经测试如果去除这段代码会使mario的状态栏闪烁（用InfoNES_DrawLine2()不会），其他几个游戏倒没问题。
+		//if ( PPU_Scanline >= SCAN_VBLANK_START && !( PPU_R0 & R0_NMI_VB ) )
+		//{
+		//  PPU_R0 &= 0xFC;//加速~R0_NAME_ADDR;
+		//  PPU_NameTableBank = NAME_TABLE0;
+		//}
+		//    if ( PPU_Scanline == 241 && !( PPU_R0 & R0_NMI_VB ) )
+		//    {
+		//      PPU_R0 &= 0xFC;//加速~R0_NAME_ADDR;
+		//PPU_Temp &= 0xF3FF;
+		//    }
+		return byRet;
 
-        //FCEU
+		//FCEU
 		//return byRet|( PPUGenLatch & 0x1F );
 
-	//VirtuaNES
+		//VirtuaNES
 	case 0x2004: // SPR_RAM I/O Register(RW)
 		byRet = SPRRAM[ PPU_R3++ ];
-        return byRet;
-	//lizheng
+		return byRet;
+		//lizheng
 	case 0x2000: return PPU_R0;
 	case 0x2001: return PPU_R1;
 	case 0x2003: return PPU_R3;
-	//case 0x2004: return PPU_R4;
+		//case 0x2004: return PPU_R4;
 	case 0x2005: return PPU_R5;
 	case 0x2006: return PPU_R6;
-        //return SPRRAM[ PPU_R3++ ];
+		//return SPRRAM[ PPU_R3++ ];
 
 		////FCEU
 		//return PPUGenLatch;
 
-    case 0x4015:   // APU control
- //       byRet = APU_Reg[ 0x15 ];
-	//if ( ApuC1Atl > 0 ) byRet |= (1<<0);
-	//if ( ApuC2Atl > 0 ) byRet |= (1<<1);
-	//if (  !ApuC3Holdnote ) {
-	//  if ( ApuC3Atl > 0 ) byRet |= (1<<2);
-	//} else {
-	//  if ( ApuC3Llc > 0 ) byRet |= (1<<2);
-	//}
-	//if ( ApuC4Atl > 0 ) byRet |= (1<<3);
+	case 0x4015:   // APU control
+		//       byRet = APU_Reg[ 0x15 ];
+		//if ( ApuC1Atl > 0 ) byRet |= (1<<0);
+		//if ( ApuC2Atl > 0 ) byRet |= (1<<1);
+		//if (  !ApuC3Holdnote ) {
+		//  if ( ApuC3Atl > 0 ) byRet |= (1<<2);
+		//} else {
+		//  if ( ApuC3Llc > 0 ) byRet |= (1<<2);
+		//}
+		//if ( ApuC4Atl > 0 ) byRet |= (1<<3);
 
-	//// FrameIRQ
- //       APU_Reg[ 0x15 ] &= ~0x40;
-        //return byRet;
+		//// FrameIRQ
+		//       APU_Reg[ 0x15 ] &= ~0x40;
+		//return byRet;
 
-//APU
+		//APU
 		return apu_read( wAddr );
 
-    case 0x4016:   // Set Joypad1 data
-        byRet = (BYTE)( ( PAD1_Latch >> PAD1_Bit ) & 1 ) | 0x40;
-        PAD1_Bit = ( PAD1_Bit == 23 ) ? 0 : ( PAD1_Bit + 1 );
-        return byRet;
+	case 0x4016:   // Set Joypad1 data
+		byRet = (BYTE)( ( PAD1_Latch >> PAD1_Bit ) & 1 ) | 0x40;
+		PAD1_Bit = ( PAD1_Bit == 23 ) ? 0 : ( PAD1_Bit + 1 );
+		return byRet;
 
-    case 0x4017:   // Set Joypad2 data
-        byRet = (BYTE)( ( PAD2_Latch >> PAD2_Bit ) & 1 ) | 0x40;
-        PAD2_Bit = ( PAD2_Bit == 23 ) ? 0 : ( PAD2_Bit + 1 );
-        return byRet;
-  }
+	case 0x4017:   // Set Joypad2 data
+		byRet = (BYTE)( ( PAD2_Latch >> PAD2_Bit ) & 1 ) | 0x40;
+		PAD2_Bit = ( PAD2_Bit == 23 ) ? 0 : ( PAD2_Bit + 1 );
+		return byRet;
+	}
 
-  return ( wAddr >> 8 ); /* when a register is not readable the upper half
-                            address is returned. */
+	return ( wAddr >> 8 ); /* when a register is not readable the upper half
+						   address is returned. */
 }
 
 #define ASSERT(expr) \
-   if(!(expr)) \
-   { \
-     InfoNES_MessageBox( "0x%x", wAddr ); \
-   }
+	if(!(expr)) \
+{ \
+	InfoNES_MessageBox( "0x%x", wAddr ); \
+}
 
 static inline void K6502_WritePPU( WORD wAddr, BYTE byData )
 {
-  ASSERT((wAddr >= 0x2000) && (wAddr < 0x2008));
+	ASSERT((wAddr >= 0x2000) && (wAddr < 0x2008));
 	switch ( wAddr )// & 0x7 )
 	{
-        case 0x2000:    /* 0x2000 */
-          PPU_R0 = byData;
+	case 0x2000:    /* 0x2000 */
+		PPU_R0 = byData;
 
 		//FCEU
 		//PPUGenLatch = PPU_R0 = byData;
 
-          PPU_Increment = ( PPU_R0 & R0_INC_ADDR ) ? 32 : 1;
-          //PPU_NameTableBank = NAME_TABLE0 + ( PPU_R0 & R0_NAME_ADDR );
-          //PPU_BG_Base = ( PPU_R0 & R0_BG_ADDR ) ? ChrBuf + 16384 : ChrBuf;//加速256 * 64 : ChrBuf;
-          //PPU_SP_Base = ( PPU_R0 & R0_SP_ADDR ) ? ChrBuf + 16384 : ChrBuf;//加速256 * 64 : ChrBuf;
-          //PPU_SP_Height = ( PPU_R0 & R0_SP_SIZE ) ? 16 : 8;
+		PPU_Increment = ( PPU_R0 & R0_INC_ADDR ) ? 32 : 1;
+		//PPU_NameTableBank = NAME_TABLE0 + ( PPU_R0 & R0_NAME_ADDR );
+		//PPU_BG_Base = ( PPU_R0 & R0_BG_ADDR ) ? ChrBuf + 16384 : ChrBuf;//加速256 * 64 : ChrBuf;
+		//PPU_SP_Base = ( PPU_R0 & R0_SP_ADDR ) ? ChrBuf + 16384 : ChrBuf;//加速256 * 64 : ChrBuf;
+		//PPU_SP_Height = ( PPU_R0 & R0_SP_SIZE ) ? 16 : 8;
 
-      //nesterJ
-      bg_pattern_table_addr  = (PPU_R0 & R0_BG_ADDR) ? 0x1000 : 0x0000;
-      spr_pattern_table_addr = (PPU_R0 & R0_SP_ADDR) ? 0x1000 : 0x0000;
+#ifdef INES
+		ARX = ( ARX & 0xFF ) | (int)( byData & 1 ) << 8;
+		ARY = ( ARY & 0xFF ) | (int)( byData & 2 ) << 7;
+		NES_ChrGen = PPUBANK[ ( PPU_R0 & R0_BG_ADDR ) >> 2];
+		NES_SprGen = PPUBANK[ ( PPU_R0 & R0_SP_ADDR ) >> 1];
+		PPU_SP_Height = ( PPU_R0 & R0_SP_SIZE ) ? 16 : 8;
+		//// t:0000110000000000=d:00000011
+		//  //PPU_Temp = ( PPU_Temp & 0xF3FF ) | ( ( byData & 3 ) << 10 );//加速( ( ( (WORD)byData ) & 0x0003 ) << 10 );
+		//  PPU_Addr = ( PPU_Addr & 0xF3FF ) | ( ( byData & 3 ) << 10 );//加速( ( ( (WORD)byData ) & 0x0003 ) << 10 );
+#else
+		//nesterJ
+		bg_pattern_table_addr  = (PPU_R0 & R0_BG_ADDR) ? 0x1000 : 0x0000;
+		spr_pattern_table_addr = (PPU_R0 & R0_SP_ADDR) ? 0x1000 : 0x0000;
 
-      // t:0000110000000000=d:00000011
-		      PPU_Temp = ( PPU_Temp & 0xF3FF ) | ( ( byData & 3 ) << 10 );//加速( ( ( (WORD)byData ) & 0x0003 ) << 10 );
-          break;
+		// t:0000110000000000=d:00000011
+		PPU_Temp = ( PPU_Temp & 0xF3FF ) | ( ( byData & 3 ) << 10 );//加速( ( ( (WORD)byData ) & 0x0003 ) << 10 );
+#endif /* INES */
+		break;
 
-        case 0x2001:   /* 0x2001 */
-          PPU_R1 = byData;
+	case 0x2001:   /* 0x2001 */
+		PPU_R1 = byData;
 
 		//FCEU
 		//PPUGenLatch = PPU_R1 = byData;
 
-          break;
+		break;
 
-        case 0x2002:   /* 0x2002 */
-//#if 0	  
-          PPU_R2 = byData;     // 0x2002 is not writable
-//#endif
+	case 0x2002:   /* 0x2002 */
+		//#if 0	  
+		PPU_R2 = byData;     // 0x2002 is not writable
+		//#endif
 
 		//FCEU
 		//PPUGenLatch = byData;
 
-          break;
+		break;
 
-        case 0x2003:   /* 0x2003 */
-          // Sprite RAM Address
-          PPU_R3 = byData;
+	case 0x2003:   /* 0x2003 */
+		// Sprite RAM Address
+		PPU_R3 = byData;
 
 		//FCEU
 		//PPUGenLatch = PPU_R3 = byData;
 		//PPUSPL = byData & 0x7;
 
-          break;
+		break;
 
-        case 0x2004:   /* 0x2004 */
-          // Write data to Sprite RAM
-          SPRRAM[ PPU_R3++ ] = byData;
+	case 0x2004:   /* 0x2004 */
+		// Write data to Sprite RAM
+		SPRRAM[ PPU_R3++ ] = byData;
 
-          //lizheng
-		  //PPU_R4 = byData;
+		//lizheng
+		//PPU_R4 = byData;
 
 		////FCEU
 		////PPUGenLatch = SPRRAM[ PPU_R3++ ] = byData;
@@ -258,204 +279,386 @@ static inline void K6502_WritePPU( WORD wAddr, BYTE byData )
 		//if( PPUSPL >= 8 )
 		//{
 		// if( PPU_R3 >= 8 )
-  //		  SPRRAM[ PPU_R3 ] = byData;
+		//		  SPRRAM[ PPU_R3 ] = byData;
 		//}
 		//else
 		// SPRRAM[ PPUSPL ] = byData;
 		//PPU_R3++;
 		//PPUSPL++;
 
-          break;
+		break;
 
-        case 0x2005:   /* 0x2005 */
+	case 0x2005:   /* 0x2005 */
 
-		  //lizheng
-		  PPU_R5 = byData;
-
-		////FCEU
-		//PPUGenLatch = byData;
-
-          // Set Scroll Register
-          if ( PPU_Latch_Flag )//2005第二次写入
-          {
-            // V-Scroll Register
-        //    PPU_Scr_V_Next = ( byData > 239 ) ? 0 : byData;
-        //// t:0000001111100000=d:11111000
-        //    PPU_Scr_V_Byte_Next = PPU_Scr_V_Next >> 3;
-        //// t:0111000000000000=d:00000111
-        //    PPU_Scr_V_Bit_Next = PPU_Scr_V_Next & 7;
-
-            // Added : more Loopy Stuff
-			      //PPU_Temp = ( PPU_Temp & 0xFC1F ) | ( ( ( (WORD)byData ) & 0xF8 ) << 2);
-			      //PPU_Temp = ( PPU_Temp & 0x8FFF ) | ( ( ( (WORD)byData ) & 0x07 ) << 12);
-				  
-				  //加速
-        // t:0000001111100000=d:11111000
-				  PPU_Temp = ( PPU_Temp & 0x8C1F ) | ( ( byData & 0xF8 ) << 2);
-        // t:0111000000000000=d:00000111
-			      PPU_Temp |= ( byData & 0x7 ) << 12;
-
-          }
-          else//2005第一次写入
-          {
-        //    // H-Scroll Register
-        //    PPU_Scr_H_Next = byData;
-        //// t:0000000000011111=d:11111000
-        //    PPU_Scr_H_Byte_Next = PPU_Scr_H_Next >> 3;
-        //// x=d:00000111
-        //    PPU_Scr_H_Bit_Next = PPU_Scr_H_Next & 7;
-
-            // Added : more Loopy Stuff
-        // t:0000000000011111=d:11111000
-			      PPU_Temp = ( PPU_Temp & 0xFFE0 ) | ( byData >> 3 );//加速( ( ( (WORD)byData ) & 0xF8 ) >> 3 );
-
-	    //nesterJ
-		// x=d:00000111
-        PPU_x = byData & 0x07;
-
-          }
-          PPU_Latch_Flag ^= 1;
-          break;
-
-        case 0x2006:   /* 0x2006 */
-
-		  //lizheng
-		  PPU_R6 = byData;
+		//lizheng
+		PPU_R5 = byData;
 
 		////FCEU
 		//PPUGenLatch = byData;
 
-          // Set PPU Address
-          if ( PPU_Latch_Flag )
-          {
-            /* Low *///2006第二次写入
-//#if 0
-//            PPU_Addr = ( PPU_Addr & 0xff00 ) | ( (WORD)byData );
-//#else
-        // t:0000000011111111=d:11111111
-            PPU_Temp = ( PPU_Temp & 0xFF00 ) | byData;//加速( ( (WORD)byData ) & 0x00FF);
-	    PPU_Addr = PPU_Temp;
-//#endif
-            //InfoNES_SetupScr();
-          }
-          else
-          {
-            /* High *///2006第一次写入
-//#if 0
-//            PPU_Addr = ( PPU_Addr & 0x00ff ) | ( (WORD)( byData & 0x3f ) << 8 );
-//            InfoNES_SetupScr();
-//#else
-        // t:0011111100000000=d:00111111
-        // t:1100000000000000=0
-            PPU_Temp = ( PPU_Temp & 0x00FF ) | ( ( byData & 0x3F ) << 8 );//加速( ( ((WORD)byData) & 0x003F ) << 8 );
-//#endif            
-          }
-          PPU_Latch_Flag ^= 1;
-          break;
+		// Set Scroll Register
+		if ( PPU_Latch_Flag )//2005第二次写入
+		{
+			// V-Scroll Register
+			//    PPU_Scr_V_Next = ( byData > 239 ) ? 0 : byData;
+			//// t:0000001111100000=d:11111000
+			//    PPU_Scr_V_Byte_Next = PPU_Scr_V_Next >> 3;
+			//// t:0111000000000000=d:00000111
+			//    PPU_Scr_V_Bit_Next = PPU_Scr_V_Next & 7;
 
-        case 0x2007:   /* 0x2007 */
-          {
+			// Added : more Loopy Stuff
+			//PPU_Temp = ( PPU_Temp & 0xFC1F ) | ( ( ( (WORD)byData ) & 0xF8 ) << 2);
+			//PPU_Temp = ( PPU_Temp & 0x8FFF ) | ( ( ( (WORD)byData ) & 0x07 ) << 12);
 
-		  //lizheng
-		  PPU_R7 = byData;
+#ifdef INES
+			ARY = ( ARY & 0x0100 ) | byData;
+			// t:0000001111100000=d:11111000
+			//PPU_Temp = ( PPU_Temp & 0x8C1F ) | ( ( byData & 0xF8 ) << 2);
+			//PPU_Addr = ( PPU_Addr & 0x8C1F ) | ( ( byData & 0xF8 ) << 2);
+			//// t:0111000000000000=d:00000111
+			// //PPU_Temp |= ( byData & 0x7 ) << 12;
+			// PPU_Addr |= ( byData & 0x7 ) << 12;
+#else
+			//加速
+			// t:0000001111100000=d:11111000
+			PPU_Temp = ( PPU_Temp & 0x8C1F ) | ( ( byData & 0xF8 ) << 2);
+			// t:0111000000000000=d:00000111
+			PPU_Temp |= ( byData & 0x7 ) << 12;
+#endif /* INES */
+
+		}
+		else//2005第一次写入
+		{
+			//    // H-Scroll Register
+			//    PPU_Scr_H_Next = byData;
+			//// t:0000000000011111=d:11111000
+			//    PPU_Scr_H_Byte_Next = PPU_Scr_H_Next >> 3;
+			//// x=d:00000111
+			//    PPU_Scr_H_Bit_Next = PPU_Scr_H_Next & 7;
+
+#ifdef INES
+			ARX = ( ARX & 0x0100 ) | byData;
+			//// t:0000000000011111=d:11111000
+			//	  //PPU_Temp = ( PPU_Temp & 0xFFE0 ) | ( byData >> 3 );//加速( ( ( (WORD)byData ) & 0xF8 ) >> 3 );
+			//	  PPU_Addr = ( PPU_Addr & 0xFFE0 ) | ( byData >> 3 );//加速( ( ( (WORD)byData ) & 0xF8 ) >> 3 );
+			//// x=d:00000111
+			//	  NSCROLLX = ( NSCROLLX & 0xFFF8 ) | byData & 0x07;
+#else
+			// Added : more Loopy Stuff
+			// t:0000000000011111=d:11111000
+			PPU_Temp = ( PPU_Temp & 0xFFE0 ) | ( byData >> 3 );//加速( ( ( (WORD)byData ) & 0xF8 ) >> 3 );
+
+			//nesterJ
+			// x=d:00000111
+			PPU_x = byData & 0x07;
+#endif /* INES */
+
+		}
+		PPU_Latch_Flag ^= 1;
+		break;
+
+	case 0x2006:   /* 0x2006 */
+
+		//lizheng
+		PPU_R6 = byData;
 
 		////FCEU
 		//PPUGenLatch = byData;
 
-            WORD addr = PPU_Addr & 0x3fff;
-            
-            // Increment PPU Address
-            PPU_Addr += PPU_Increment;
-
-  //nester
-  if(addr >= 0x3000)
-  {
-    // is it a palette entry?
-    if(addr >= 0x3F00)
-    {
-      // palette
-      byData &= 0x3F;
-
-      if(0x0000 == (addr & 0x000F)) // is it THE 0 entry?
-      {
-#ifdef LEON
-		PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
+		// Set PPU Address
+		if ( PPU_Latch_Flag )
+		{
+			/* Low *///2006第二次写入
+			//#if 0
+			//            PPU_Addr = ( PPU_Addr & 0xff00 ) | ( (WORD)byData );
+			//#else
+#ifdef INES
+			ARY = ( ARY & 0x01C7 ) | ( byData & 0xE0 ) >> 2;
+			ARX = ( ARX & 0x0107 ) | ( byData & 0x1F ) << 3;
+			NSCROLLX = ARX;
+			NSCROLLY = ARY;
+			PPU_Addr = ( NSCROLLY & 0x0003 ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLX & 0x00F8 ) >> 3;
+			//PPU_Addr = ( PPU_Addr & 0xFF00 ) | byData;//加速( ( (WORD)byData ) & 0x00FF);
+			//NSCROLLX |= ( ( PPU_Addr & 0x001F ) << 3 ) | ( ( PPU_Addr & 0x0400 ) >> 2 );
+			//NSCROLLY = ( ( PPU_Addr & 0x03E0 ) >> 2 ) | ( ( PPU_Addr & 0x0800 ) >> 3 ) | ( ( PPU_Addr & 0x7000 ) >> 12 );
+			//PPU_Temp = ( PPU_Temp & 0xFF00 ) | byData;//加速( ( (WORD)byData ) & 0x00FF);
+			//PPU_Addr = PPU_Temp;
+			////NSCROLLX |= ( ( PPU_Temp & 0x001F ) << 3 ) | ( ( PPU_Temp & 0x0400 ) >> 2 );
+			//NSCROLLY = ( ( PPU_Temp & 0x03E0 ) >> 2 ) | ( ( PPU_Temp & 0x0800 ) >> 3 ) | ( ( PPU_Temp & 0x7000 ) >> 12 );	//视情况而定是否注释掉
 #else
-        PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = byData;
-		PalTable[ 0x00 ] = PalTable[ 0x10 ] = NesPalette[ byData ] | 0x8000;
-#endif
-      }
-      else if(0x0000 == (addr & 0x0010))
-      {
-        // background palette
-#ifdef LEON
-		PPURAM[ addr ] = PalTable[ addr & 0x000F ] = byData;
+			// t:0000000011111111=d:11111111
+			PPU_Temp = ( PPU_Temp & 0xFF00 ) | byData;//加速( ( (WORD)byData ) & 0x00FF);
+			PPU_Addr = PPU_Temp;
+#endif /* INES */
+			//#endif
+			//InfoNES_SetupScr();
+		}
+		else
+		{
+			/* High *///2006第一次写入
+			//#if 0
+			//            PPU_Addr = ( PPU_Addr & 0x00ff ) | ( (WORD)( byData & 0x3f ) << 8 );
+			//            InfoNES_SetupScr();
+			//#else
+#ifdef INES
+			ARY = ( ARY & 0x0038 ) | ( byData & 0x8 ) << 5 | ( byData & 0x3 ) << 6 | ( byData & 0x30 ) >> 4;
+			ARX = ( ARX & 0x00FF ) | ( byData & 0x4 ) << 6;
+			//PPU_Addr = ( PPU_Addr & 0x00FF ) | ( ( byData & 0x3F ) << 8 );//加速( ( ((WORD)byData) & 0x003F ) << 8 );
+			//PPU_Temp = ( PPU_Temp & 0x00FF ) | ( ( byData & 0x3F ) << 8 );//加速( ( ((WORD)byData) & 0x003F ) << 8 );
 #else
-        PPURAM[ addr ] = byData;
-		PalTable[ addr & 0x000F ] = NesPalette[ byData ];
-#endif
-      }
-      else
-      {
-        // sprite palette
-#ifdef LEON
-		PPURAM[ addr/* & 0x000F*/ ] = PalTable[ addr & 0x001F ] = byData; 
-#else
-        PPURAM[ addr/* & 0x000F*/ ] = byData;
-		PalTable[ addr & 0x001F ] = NesPalette[ byData ]; 
-#endif
-      }
-      PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] = PalTable[ 0x10 ] = 
-      PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ]  = PalTable[ 0x00 ];
-      break;
-    }
-    // handle mirroring
-    addr &= 0xEFFF;
-  }
-  if( byVramWriteEnable || addr >= 0x2000 )
-    PPUBANK[ addr >> 10 ][ addr & 0x3ff ] = byData;
+			// t:0011111100000000=d:00111111
+			// t:1100000000000000=0
+			PPU_Temp = ( PPU_Temp & 0x00FF ) | ( ( byData & 0x3F ) << 8 );//加速( ( ((WORD)byData) & 0x003F ) << 8 );
+#endif /* INES */
+			//#endif            
+		}
+		PPU_Latch_Flag ^= 1;
+		break;
 
-   //         // Write to PPU Memory
-   //         if ( addr < 0x2000 && byVramWriteEnable )
-   //         {
-   //           // Pattern Data
-   //           //ChrBufUpdate |= ( 1 << ( addr >> 10 ) );
-   //           PPUBANK[ addr >> 10 ][ addr & 0x3ff ] = byData;
-   //         }
-   //         else
-   //         if ( addr < 0x3f00 )  /* 0x2000 - 0x3eff */
-   //         {
-   //           // Name Table and mirror
-   //           PPUBANK[   addr            >> 10 ][ addr & 0x3ff ] = byData;
-   //           PPUBANK[ ( addr ^ 0x1000 ) >> 10 ][ addr & 0x3ff ] = byData;
-   //         }
-   //         else
-   //         if ( !( addr & 0xf ) )  /* 0x3f00 or 0x3f10 */
-   //         {
-   //           // Palette mirror
-   //           PPURAM[ 0x3f10 ] = PPURAM[ 0x3f14 ] = PPURAM[ 0x3f18 ] = PPURAM[ 0x3f1c ] = 
-   //           PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = byData;
+	case 0x2007:   /* 0x2007 */
+		{
+
+			//lizheng
+			PPU_R7 = byData;
+
+#ifdef INES
+			//PPU_Addr = ( NSCROLLY & 0x0007 ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLX & 0x00F8 ) >> 3;
+			//if( PPU_R0 & R0_INC_ADDR )	//+32
+			//{
+			//	NSCROLLY = ( NSCROLLY + 0x8 ) & 0x;
+			//	if
+			//}
+			//else							//+1
+			//{
+			//}
+			//			int addr = PPU_Addr & 0x3fff;
+			//
+			//			// Increment PPU Address
+			//			PPU_Addr += PPU_Increment;
+			//			NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+			//			NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+			//
+			//			//nester
+			//			if(addr >= 0x3000)
+			//			{
+			//				// is it a palette entry?
+			//				if(addr >= 0x3F00)
+			//				{
+			//					// palette
+			//					byData &= 0x3F;
+			//
+			//					if(0x0000 == (addr & 0x000F)) // is it THE 0 entry?
+			//					{
+			//#ifdef LEON
+			//						PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
+			//#else
+			//						PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = byData;
+			//						PalTable[ 0x00 ] = PalTable[ 0x10 ] = NesPalette[ byData ] | 0x8000;
+			//#endif
+			//					}
+			//					else if(0x0000 == (addr & 0x0010))
+			//					{
+			//						// background palette
+			//#ifdef LEON
+			//						PPURAM[ addr ] = PalTable[ addr & 0x000F ] = byData;
+			//#else
+			//						PPURAM[ addr ] = byData;
+			//						PalTable[ addr & 0x000F ] = NesPalette[ byData ];
+			//#endif
+			//					}
+			//					else
+			//					{
+			//						// sprite palette
+			//#ifdef LEON
+			//						PPURAM[ addr/* & 0x000F*/ ] = PalTable[ addr & 0x001F ] = byData; 
+			//#else
+			//						PPURAM[ addr/* & 0x000F*/ ] = byData;
+			//						PalTable[ addr & 0x001F ] = NesPalette[ byData ]; 
+			//#endif
+			//					}
+			//					PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] = PalTable[ 0x10 ] = 
+			//						PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ]  = PalTable[ 0x00 ];
+			//					break;
+			//				}
+			//				// handle mirroring
+			//				addr &= 0xEFFF;
+			//			}
+			//			if( byVramWriteEnable || addr >= 0x2000 )
+			//				PPUBANK[ addr >> 10 ][ addr & 0x3ff ] = byData;
+
+
+			//PPU_Addr = ( NSCROLLY & 0x0003 ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLX & 0x00F8 ) >> 3;
+
+			if( PPU_Addr >= 0x2000/*NSCROLLY & 0x0002*/ )	//2000-3FFF
+			{
+				if( PPU_Addr >= 0x3F00/*NSCROLLY & 0x0040*/)	//3F00-3FFF
+				{
+					byData &= 0x3F;
+
+					if(0x0000 == (PPU_Addr & 0x000F)) // is it THE 0 entry?
+					{
+#ifdef LEON
+						PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
+#else
+						PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = byData;
+						PalTable[ 0x00 ] = PalTable[ 0x10 ] = NesPalette[ byData ] | 0x8000;
+#endif
+					}
+					else if(0x0000 == (PPU_Addr & 0x0010))
+					{
+						// background palette
+#ifdef LEON
+						PPURAM[ PPU_Addr ] = PalTable[ PPU_Addr & 0x000F ] = byData;
+#else
+						PPURAM[ PPU_Addr ] = byData;
+						PalTable[ PPU_Addr & 0x000F ] = NesPalette[ byData ];
+#endif
+					}
+					else
+					{
+						// sprite palette
+#ifdef LEON
+						PPURAM[ PPU_Addr/* & 0x000F*/ ] = PalTable[ PPU_Addr & 0x001F ] = byData; 
+#else
+						PPURAM[ PPU_Addr/* & 0x000F*/ ] = byData;
+						PalTable[ PPU_Addr & 0x001F ] = NesPalette[ byData ]; 
+#endif
+					}
+					PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] = PalTable[ 0x10 ] = 
+						PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ]  = PalTable[ 0x00 ];
+					PPU_Addr += PPU_Increment;
+					//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+					//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+					break;
+				}
+				else						//2000-3EFF
+					//PPUBANK[ ( ( NSCROLLY & 0x100 ) >> 7 ) + ( ( NSCROLLX & 0x100 ) >> 8 ) + 8 ][ addr & 0x3ff ] = byData;
+					PPUBANK[ ( PPU_Addr & 0x2FFF ) >> 10 ][ PPU_Addr & 0x3ff ] = byData;
+			}
+			else if( byVramWriteEnable )	//0000-1FFF
+				PPUBANK[ PPU_Addr >> 10 ][ PPU_Addr & 0x3ff ] = byData;
+
+			PPU_Addr += PPU_Increment;
+			//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+			//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+
+#else
+
+			////FCEU
+			//PPUGenLatch = byData;
+
+			//#ifdef INES
+			//            WORD addr = ( NSCROLLY & 0xFFFC ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLY & 0x00F8 ) >> 3;
+			//#else
+			WORD addr = PPU_Addr & 0x3fff;
+			//#endif /* INES */
+
+			// Increment PPU Address
+			PPU_Addr += PPU_Increment;
+
+			//nester
+			if(addr >= 0x3000)
+			{
+				// is it a palette entry?
+				if(addr >= 0x3F00)
+				{
+					// palette
+					byData &= 0x3F;
+
+					if(0x0000 == (addr & 0x000F)) // is it THE 0 entry?
+					{
+#ifdef LEON
+						PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
+#else
+						PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = byData;
+						PalTable[ 0x00 ] = PalTable[ 0x10 ] = NesPalette[ byData ] | 0x8000;
+#endif
+					}
+					else if(0x0000 == (addr & 0x0010))
+					{
+						// background palette
+#ifdef LEON
+						PPURAM[ addr ] = PalTable[ addr & 0x000F ] = byData;
+#else
+						PPURAM[ addr ] = byData;
+						PalTable[ addr & 0x000F ] = NesPalette[ byData ];
+#endif
+					}
+					else
+					{
+						// sprite palette
+#ifdef LEON
+						PPURAM[ addr/* & 0x000F*/ ] = PalTable[ addr & 0x001F ] = byData; 
+#else
+						PPURAM[ addr/* & 0x000F*/ ] = byData;
+						PalTable[ addr & 0x001F ] = NesPalette[ byData ]; 
+#endif
+					}
+					PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] = PalTable[ 0x10 ] = 
+						PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ]  = PalTable[ 0x00 ];
+					break;
+				}
+				// handle mirroring
+				addr &= 0xEFFF;
+			}
+			if( byVramWriteEnable || addr >= 0x2000 )
+				PPUBANK[ addr >> 10 ][ addr & 0x3ff ] = byData;
+
+			//#ifdef INES
+			//  if( PPU_R0 & R0_INC_ADDR )	//+32
+			//  {
+			//	  NSCROLLY = ( NSCROLLY + 0x8 ) &;
+			//	  if
+			//  }
+			//  else							//+1
+			//  {
+			//  }
+			//            WORD addr = ( NSCROLLY & 0xFFFC ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLY & 0x00F8 ) >> 3;
+			//#endif /* INES */
+#endif /* INES */
+
+
+			//         // Write to PPU Memory
+			//         if ( addr < 0x2000 && byVramWriteEnable )
+			//         {
+			//           // Pattern Data
+			//           //ChrBufUpdate |= ( 1 << ( addr >> 10 ) );
+			//           PPUBANK[ addr >> 10 ][ addr & 0x3ff ] = byData;
+			//         }
+			//         else
+			//         if ( addr < 0x3f00 )  /* 0x2000 - 0x3eff */
+			//         {
+			//           // Name Table and mirror
+			//           PPUBANK[   addr            >> 10 ][ addr & 0x3ff ] = byData;
+			//           PPUBANK[ ( addr ^ 0x1000 ) >> 10 ][ addr & 0x3ff ] = byData;
+			//         }
+			//         else
+			//         if ( !( addr & 0xf ) )  /* 0x3f00 or 0x3f10 */
+			//         {
+			//           // Palette mirror
+			//           PPURAM[ 0x3f10 ] = PPURAM[ 0x3f14 ] = PPURAM[ 0x3f18 ] = PPURAM[ 0x3f1c ] = 
+			//           PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = byData;
 
 			//  ////颜色
-   //           PalTable[ 0x00 ] = PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] =
-   //           PalTable[ 0x10 ] = PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ] = NesPalette[ byData ] | 0x8000;
-   //         }
-   //         else
-   //         if ( addr & 3 )
-   //         {
-   //           // Palette
-   //           PPURAM[ addr ] = byData;
+			//           PalTable[ 0x00 ] = PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] =
+			//           PalTable[ 0x10 ] = PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ] = NesPalette[ byData ] | 0x8000;
+			//         }
+			//         else
+			//         if ( addr & 3 )
+			//         {
+			//           // Palette
+			//           PPURAM[ addr ] = byData;
 			//  ////颜色
-   //           //PPURAM[ 0x3f00 | ( addr & 0x1F ) ] = byData;
+			//           //PPURAM[ 0x3f00 | ( addr & 0x1F ) ] = byData;
 
-   //           PalTable[ addr & 0x1f ] = NesPalette[ byData ];
+			//           PalTable[ addr & 0x1f ] = NesPalette[ byData ];
 
 			//  //LEON
 			//  //PalTable[ addr & 0x1f ] = byData;
 
 			//}
-          }
-		  break;
+		}
+		break;
 	}
 }
 
@@ -463,105 +666,105 @@ static inline void K6502_WriteAPU( WORD wAddr, BYTE byData )
 {
 	switch ( wAddr )
 	{
-        case 0x4000:
-        case 0x4001:
-        case 0x4002:
-        case 0x4003:          
-        case 0x4004:
-        case 0x4005:
-        case 0x4006:
-        case 0x4007:
-        case 0x4008:
-        case 0x4009:
-        case 0x400a:
-        case 0x400b:
-        case 0x400c:
-        case 0x400d:
-        case 0x400e:
-        case 0x400f:
-        case 0x4010:
-        case 0x4011:	  
-        case 0x4012:
-        case 0x4013:
-          // Call Function corresponding to Sound Registers
-          if ( !APU_Mute )
-            //pAPUSoundRegs[ wAddr & 0x1f ]( wAddr, byData );
+	case 0x4000:
+	case 0x4001:
+	case 0x4002:
+	case 0x4003:          
+	case 0x4004:
+	case 0x4005:
+	case 0x4006:
+	case 0x4007:
+	case 0x4008:
+	case 0x4009:
+	case 0x400a:
+	case 0x400b:
+	case 0x400c:
+	case 0x400d:
+	case 0x400e:
+	case 0x400f:
+	case 0x4010:
+	case 0x4011:	  
+	case 0x4012:
+	case 0x4013:
+		// Call Function corresponding to Sound Registers
+		if ( !APU_Mute )
+			//pAPUSoundRegs[ wAddr & 0x1f ]( wAddr, byData );
+
+			//APU
+			apu_write( wAddr , byData );
+
+		APU_Reg[ wAddr & 0x1f ] = byData;
+		break;
+
+	case 0x4014:  /* 0x4014 */
+		// Sprite DMA
+		switch ( byData >> 5 )
+		{
+		case 0x0:  /* RAM */
+			InfoNES_MemoryCopy( SPRRAM, &RAM[ ( (WORD)byData << 8 ) & 0x7ff ], SPRRAM_SIZE );
+			break;
+
+		case 0x3:  /* SRAM */
+			InfoNES_MemoryCopy( SPRRAM, &SRAM[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
+			break;
+
+		case 0x4:  /* ROM BANK 0 */
+			InfoNES_MemoryCopy( SPRRAM, &ROMBANK0[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
+			break;
+
+		case 0x5:  /* ROM BANK 1 */
+			InfoNES_MemoryCopy( SPRRAM, &ROMBANK1[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
+			break;
+
+		case 0x6:  /* ROM BANK 2 */
+			InfoNES_MemoryCopy( SPRRAM, &ROMBANK2[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
+			break;
+
+		case 0x7:  /* ROM BANK 3 */
+			InfoNES_MemoryCopy( SPRRAM, &ROMBANK3[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
+			break;
+		}
+		APU_Reg[ wAddr & 0x1f ] = byData;
+		break;
+
+	case 0x4015:  /* 0x4015 */
+		//InfoNES_pAPUWriteControl( wAddr, byData );
 
 		//APU
-		apu_write( wAddr , byData );
+		if ( !APU_Mute )
+			apu_write( wAddr , byData );
 
-		  APU_Reg[ wAddr & 0x1f ] = byData;
-          break;
+		APU_Reg[ wAddr & 0x1f ] = byData;
+		//#if 0
+		//          /* Unknown */
+		//          if ( byData & 0x10 ) 
+		//          {
+		//	    byData &= ~0x80;
+		//	  }
+		//#endif
+		break;
 
-        case 0x4014:  /* 0x4014 */
-          // Sprite DMA
-          switch ( byData >> 5 )
-          {
-            case 0x0:  /* RAM */
-              InfoNES_MemoryCopy( SPRRAM, &RAM[ ( (WORD)byData << 8 ) & 0x7ff ], SPRRAM_SIZE );
-              break;
+	case 0x4016:  /* 0x4016 */
+		// Reset joypad
+		if ( !( APU_Reg[ 0x16 ] & 1 ) && ( byData & 1 ) )
+		{
+			PAD1_Bit = 0;
+			PAD2_Bit = 0;
+		}
+		APU_Reg[ wAddr & 0x1f ] = byData;
+		break;
 
-            case 0x3:  /* SRAM */
-              InfoNES_MemoryCopy( SPRRAM, &SRAM[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
-              break;
-
-            case 0x4:  /* ROM BANK 0 */
-              InfoNES_MemoryCopy( SPRRAM, &ROMBANK0[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
-              break;
-
-            case 0x5:  /* ROM BANK 1 */
-              InfoNES_MemoryCopy( SPRRAM, &ROMBANK1[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
-              break;
-
-            case 0x6:  /* ROM BANK 2 */
-              InfoNES_MemoryCopy( SPRRAM, &ROMBANK2[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
-              break;
-
-            case 0x7:  /* ROM BANK 3 */
-              InfoNES_MemoryCopy( SPRRAM, &ROMBANK3[ ( (WORD)byData << 8 ) & 0x1fff ], SPRRAM_SIZE );
-              break;
-          }
-		  APU_Reg[ wAddr & 0x1f ] = byData;
-          break;
-
-        case 0x4015:  /* 0x4015 */
-          //InfoNES_pAPUWriteControl( wAddr, byData );
-
-		//APU
-          if ( !APU_Mute )
-		apu_write( wAddr , byData );
-
-		  APU_Reg[ wAddr & 0x1f ] = byData;
-//#if 0
-//          /* Unknown */
-//          if ( byData & 0x10 ) 
-//          {
-//	    byData &= ~0x80;
-//	  }
-//#endif
-          break;
-
-        case 0x4016:  /* 0x4016 */
-          // Reset joypad
-          if ( !( APU_Reg[ 0x16 ] & 1 ) && ( byData & 1 ) )
-          {
-            PAD1_Bit = 0;
-            PAD2_Bit = 0;
-          }
-		  APU_Reg[ wAddr & 0x1f ] = byData;
-          break;
-
-        case 0x4017:  /* 0x4017 */
-          // Frame IRQ
-          //FrameStep = 0;
-          //if ( !( byData & 0xc0 ) )
-          //{
-          //  FrameIRQ_Enable = 1;
-          //} else {
-          //  FrameIRQ_Enable = 0;
-          //}
-		  APU_Reg[ wAddr & 0x1f ] = byData;
-          break;
+	case 0x4017:  /* 0x4017 */
+		// Frame IRQ
+		//FrameStep = 0;
+		//if ( !( byData & 0xc0 ) )
+		//{
+		//  FrameIRQ_Enable = 1;
+		//} else {
+		//  FrameIRQ_Enable = 0;
+		//}
+		APU_Reg[ wAddr & 0x1f ] = byData;
+		break;
 	}
 }
 //

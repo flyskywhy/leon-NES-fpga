@@ -16,14 +16,43 @@
 #include "InfoNES_Types.h"
 
 #define PocketNES 1
-//#define LEON
+#define INES
+//#define LEON				//这里基本上不用，由LEON平台中的makefile来定义
+
+#ifndef LEON
+#define THROTTLE_SPEED		//限速，在LEON中用不着，加速还来不及呢:)
+#endif
+
+#define AFS					//AutoFrameSkip 自动跳桢
+
+#ifdef LEON
+//#define PrintfFrameSkip																//是否输出打印出跳桢数
+//#define PrintfFrameClock	//这三者在LEON平台中只能同时取一，在Win32平台则都不取		//是否输出打印出每桢的CLOCK数
+//#define PrintfFrameGraph																//是否输出打印出每桢的部分画面
+#endif
+
+#ifdef AFS
+
+#ifdef LEON
+//#define CLOCKS_PER_SEC 1000000						//每个clock是1微秒
+#define FRAME_PERIOD 16667							//( CLOCKS_PER_SEC / 60 )		//每帧的时钟周期数
+#else /* LEON */
+//#define CLOCKS_PER_SEC 2405000000					//2.4GHz，不过win32下固定是1000，ARM下固定是100
+#define FRAME_PERIOD 17		/*40083333*/			//( CLOCKS_PER_SEC / 60 )		//每帧的时钟周期数
+#endif
+
+#endif /* AFS */
 
 /*-------------------------------------------------------------------*/
 /*  NES resources                                                    */
 /*-------------------------------------------------------------------*/
 
-#define RAM_SIZE     0x2000
-#define SRAM_SIZE    0x2000
+//减容 #define RAM_SIZE     0x2000
+#define RAM_SIZE     0x800
+
+//减容 #define SRAM_SIZE    0x2000
+#define SRAM_SIZE    1
+
 #define PPURAM_SIZE  0x4000
 #define SPRRAM_SIZE  256
 
@@ -119,11 +148,24 @@ extern BYTE PPUSPL;
 //extern BYTE PPU_Scr_H_Bit_Next;
 
 extern BYTE PPU_Latch_Flag;
+
+#ifdef INES
+  extern int PPU_Addr;
+  //int PPU_Temp;
+  extern int ARX;							//X卷轴锁存器
+  extern int ARY;							//Y卷轴锁存器
+  extern int NSCROLLX;						//应该是指H（1位）->HT（5位）->FH（3位）组成的X卷轴计数器（公有，指VGB也用它？）
+  extern int NSCROLLY;						//应该是指V（1位）->VT（5位）->FV（3位）组成的Y卷轴计数器（私有？）
+  extern BYTE *NES_ChrGen,*NES_SprGen;		//背景和sprite的PT在模拟器中的地址
+#define NES_BLACK  63						//63即0x3F，在NES的64色调色板中索引的黑色
+#else
 extern WORD PPU_Addr;
 extern WORD PPU_Temp;
 
 //nesterJ
 extern BYTE PPU_x;
+
+#endif /*INES*/
 
 extern WORD PPU_Increment;
 
@@ -181,7 +223,7 @@ extern BYTE PPU_UpDown_Clip;
 
 //nesterJ
 /*
-在一条扫描开始绘制时（如果背景或Sprite允许显示）：
+在一条扫描线开始绘制时（如果背景或Sprite允许显示）：
 	v:0000010000011111=t:0000010000011111
 */
 #define LOOPY_SCANLINE_START(v,t) \
@@ -195,9 +237,40 @@ extern BYTE PPU_UpDown_Clip;
 位。在这里有一些古怪的边缘效果。如果你将该值人为设置为超
 过29（通过2005或者2006），则很明显从29绕回的现象不会发生，
 并且AT的数据会被当作NT的数据来用。“y卷轴值”仍旧会从31绕
-回到0，但是不会切换第11位。这可以解释为什么通过2005向“Y”
+回到0，但是不会切换位11。这可以解释为什么通过2005向“Y”
 写入的值超过240会表现得像一个负的卷轴值一样。
 */
+#ifdef INES
+#define LOOPY_NEXT_LINE(v) \
+  { \
+    if((v & 0x0007) == 0x0007) /* is subtile y offset == 7? */ \
+    { \
+      v &= 0x8FFF; /* subtile y offset = 0 */ \
+      if((v & 0x03E0) == 0x03A0) /* name_tab line == 29? */ \
+      { \
+        v ^= 0x0800;  /* switch nametables (bit 11) */ \
+        v &= 0xFC1F;  /* name_tab line = 0 */ \
+      } \
+      else \
+      { \
+        if((v & 0x03E0) == 0x03E0) /* line == 31? */ \
+        { \
+          v &= 0xFC1F;  /* name_tab line = 0 */ \
+        } \
+        else \
+        { \
+          v += 0x0020; /* next name_tab line */ \
+        } \
+      } \
+    } \
+    else \
+    { \
+      v += 0x1000; /* next subtile y offset */ \
+    } \
+  }
+
+#else
+
 #define LOOPY_NEXT_LINE(v) \
   { \
     if((v & 0x7000) == 0x7000) /* is subtile y offset == 7? */ \
@@ -225,6 +298,8 @@ extern BYTE PPU_UpDown_Clip;
       v += 0x1000; /* next subtile y offset */ \
     } \
   }
+#endif /* INES */ 
+
 #define VRAM(addr)  PPUBANK[ ( addr ) >> 10 ] [ ( addr ) & 0x3FF ]
 //#define DRAW_BG_PIXEL() \
 //  col = attrib_bits; \
@@ -238,7 +313,11 @@ extern BYTE PPU_UpDown_Clip;
 //  p++;
 
 /* Current Scanline */
+#ifdef INES
+extern int PPU_Scanline;
+#else
 extern WORD PPU_Scanline;
+#endif /*INES*/
 
 /* Scanline Table */
 //extern BYTE PPU_ScanTable[];
@@ -303,6 +382,10 @@ extern WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
 //extern BYTE WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
 
 //#endif
+#ifdef INES
+  extern int  NSCROLLX;			//应该是指H（1位）->HT（5位）->FH（3位）组成的X卷轴计数器（公有，指VGB也用它？）
+  extern int  NSCROLLY;			//应该是指V（1位）->VT（5位）->FV（3位）组成的Y卷轴计数器（私有？）
+#endif /* INES */
 
 //extern BYTE ChrBuf[];
 //
@@ -419,8 +502,13 @@ void InfoNES_Cycle();
 int InfoNES_HSync();
 
 /* Render a scanline */
-//void InfoNES_DrawLine();
+/* Current Scanline */
+#ifdef INES
+int InfoNES_DrawLine(int DY,int SY);
+#else
 void InfoNES_DrawLine2();
+#endif /*INES*/
+
 
 /* Get a position of scanline hits sprite #0 */
 //void InfoNES_GetSprHitY();

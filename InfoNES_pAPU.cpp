@@ -748,7 +748,8 @@ void apu_build_luts(int num_samples)
 
 	/* triangle wave channel's linear length table */
 	for (i = 0; i < 128; i++)
-		trilength_lut[i] = (int) (0.25 * (i * num_samples));
+		//trilength_lut[i] = (int) (0.25 * (i * num_samples));	//避免浮点运算，以免LEON的TSIM中软件仿真浮点运算出错
+		trilength_lut[i] = (i * num_samples) / 4;
 }
 
 static void apu_setactive(apu_t *active)
@@ -767,7 +768,13 @@ void apu_setparams(int sample_rate, int refresh_rate, int frag_size, int sample_
 	frag_size = frag_size; /* quell warnings */
 
 	/* turn into fixed point! */
-	apu->cycle_rate = (int32) (APU_BASEFREQ * 65536.0 / (float) sample_rate);
+	//apu->cycle_rate = (int32) (APU_BASEFREQ * 65536.0 / (float) sample_rate);	//因为LEON的TSIM中软件仿真浮点运算出来的结果是0，不正确，导致apu_regwrite->APU_WRC3:中的228 / APU_FROM_FIXED(apu->cycle_rate)除数为0而中断程序，只好手工计算
+	if( pAPU_QUALITY == 1 )
+		apu->cycle_rate = 10638961;
+	else if ( pAPU_QUALITY == 2 )
+		apu->cycle_rate = 5319480;
+	else
+		apu->cycle_rate = 2659740;
 
 	/* build various lookup tables for apu */
 	apu_build_luts(apu->num_samples);
@@ -805,7 +812,7 @@ void InfoNES_pAPUInit(void)
 	num_samples = sample_rate / refresh_rate;
 
 	apu_setparams(sample_rate, refresh_rate, frag_size, sample_bits);
-	//apu_reset(); //DCR
+	apu_reset(); //DCR
 	InfoNES_MemorySet( (void *)wave_buffers, 0, num_samples );  
 
 	InfoNES_SoundOpen( num_samples, sample_rate );

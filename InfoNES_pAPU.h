@@ -11,7 +11,7 @@
 
 
 //nester
-#define pAPU_QUALITY 2	//模拟器发出的声音质量，1为11025，2为22050，3为44100
+#define pAPU_QUALITY 1	//模拟器发出的声音质量，1为11025，2为22050，3为44100
 
 #define INLINE static inline
 #define int8 char
@@ -43,7 +43,7 @@
 
 #define  APU_SMASK      0x4015
 
-#define  APU_BASEFREQ   1789772.7272727272727272
+//#define  APU_BASEFREQ   1789772.7272727272727272
 
 /* to/from 16.16 fixed point */
 #define  APU_TO_FIXED(x)    ((x) << 16)

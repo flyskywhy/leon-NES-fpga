@@ -39,7 +39,7 @@
 /* The address of 1Kbytes unit of the VROM */
 #define VROMPAGE(a)    &VROM[ (a) * 0x400 ]
 /* The address of 1Kbytes unit of the CRAM */
-#define CRAMPAGE(a)   &PPURAM[ 0x0000 + ((a)&0x1F) * 0x400 ]
+//#define CRAMPAGE(a)   &PPURAM[ 0x0000 + ((a)&0x1F) * 0x400 ]	//只在mapper1、4中用得着
 /* The address of 1Kbytes unit of the VRAM */
 //减容 #define VRAMPAGE(a)    &PPURAM[ 0x2000 + (a) * 0x400 ] //只用于Mapper5和19
 /* Translate the pointer to ChrBuf into the address of Pattern Table */ 
@@ -84,9 +84,9 @@ void Map0_Write( WORD wAddr, BYTE byData );
 void Map0_PPU( WORD wAddr );
 //减容 void Map0_RenderScreen( BYTE byMode );
 
-void Map1_Init();
-void Map1_Write( WORD wAddr, BYTE byData );
-void Map1_set_ROM_banks();
+//void Map1_Init();
+//void Map1_Write( WORD wAddr, BYTE byData );
+//void Map1_set_ROM_banks();
 
 void Map2_Init();
 void Map2_Write( WORD wAddr, BYTE byData );
@@ -94,11 +94,11 @@ void Map2_Write( WORD wAddr, BYTE byData );
 void Map3_Init();
 void Map3_Write( WORD wAddr, BYTE byData );
 
-void Map4_Init();
-void Map4_Write( WORD wAddr, BYTE byData );
-void Map4_HSync();
-void Map4_Set_CPU_Banks();
-void Map4_Set_PPU_Banks();
+//void Map4_Init();
+//void Map4_Write( WORD wAddr, BYTE byData );
+//void Map4_HSync();
+//void Map4_Set_CPU_Banks();
+//void Map4_Set_PPU_Banks();
 
 /*void Map5_Init();
 void Map5_Write( WORD wAddr, BYTE byData );
@@ -113,8 +113,8 @@ void Map6_Write( WORD wAddr, BYTE byData );
 void Map6_Apu( WORD wAddr, BYTE byData );
 void Map6_HSync();*///减容
 
-void Map7_Init();
-void Map7_Write( WORD wAddr, BYTE byData );
+//void Map7_Init();
+//void Map7_Write( WORD wAddr, BYTE byData );
 
 /*void Map8_Init();
 void Map8_Write( WORD wAddr, BYTE byData );
@@ -127,8 +127,8 @@ void Map10_Init();
 void Map10_Write( WORD wAddr, BYTE byData );
 void Map10_PPU( WORD wAddr );*///减容
 
-void Map11_Init();
-void Map11_Write( WORD wAddr, BYTE byData );
+//void Map11_Init();
+//void Map11_Write( WORD wAddr, BYTE byData );
 
 /*void Map13_Init();
 void Map13_Write( WORD wAddr, BYTE byData );
