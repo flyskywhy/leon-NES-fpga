@@ -192,13 +192,39 @@ static inline BYTE K6502_ReadIO( WORD wAddr )
 #endif
 
 	case 0x4016:   // Set Joypad1 data
-		byRet = (BYTE)( ( PAD1_Latch >> PAD1_Bit ) & 1 ) | 0x40;
-		PAD1_Bit = ( PAD1_Bit == 23 ) ? 0 : ( PAD1_Bit + 1 );
+#ifdef nesterpad
+
+#ifdef HACKpad
+		byRet = PAD1_Latch & 0x01;
+		PAD1_Latch >>= 1;
+#else /* HACKpad */
+		byRet = pad1_bits & 0x01;
+		pad1_bits >>= 1;
+#endif /* HACKpad */
+
+#else /* nesterpad */
+		byRet = (BYTE)( ( PAD1_Latch >> ( PAD1_Bit++ ) ) & 1 )/* | 0x40*/;
+		//PAD1_Bit = ( PAD1_Bit == 23 ) ? 0 : ( PAD1_Bit + 1 );
+		//PAD1_Bit = ( PAD1_Bit == 7 ) ? 0 : ( PAD1_Bit + 1 );
+#endif /* nesterpad */
 		return byRet;
 
 	case 0x4017:   // Set Joypad2 data
-		byRet = (BYTE)( ( PAD2_Latch >> PAD2_Bit ) & 1 ) | 0x40;
-		PAD2_Bit = ( PAD2_Bit == 23 ) ? 0 : ( PAD2_Bit + 1 );
+#ifdef nesterpad
+
+#ifdef HACKpad
+		byRet = PAD2_Latch & 0x01;
+		PAD2_Latch >>= 1;
+#else /* HACKpad */
+		byRet = pad2_bits & 0x01;
+		pad2_bits >>= 1;
+#endif /* HACKpad */
+
+#else /* nesterpad */
+		byRet = (BYTE)( ( PAD2_Latch >> ( PAD2_Bit++) ) & 1 )/* | 0x40*/;
+		//PAD2_Bit = ( PAD2_Bit == 23 ) ? 0 : ( PAD2_Bit + 1 );
+		//PAD2_Bit = ( PAD2_Bit == 7 ) ? 0 : ( PAD2_Bit + 1 );
+#endif /* nesterpad */
 		return byRet;
 	}
 
@@ -272,20 +298,44 @@ static inline void K6502_WriteIO( WORD wAddr, BYTE byData )
 					if(0x0000 == (PPU_Addr & 0x000F)) // is it THE 0 entry?
 					{
 #ifdef LEON
+
+#ifdef killPALRAM
+						PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
+#else /* killPALRAM */
 						PALRAM[ 0x300 ] = PALRAM[ 0x310 ] = PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
+#endif /* killPALRAM */
+
 #else
+
+#ifdef killPALRAM
+						PalTable[ 0x00 ] = PalTable[ 0x10 ] = /*NesPalette[*/ byData/*<<2*/ /*]*//* | 0x8000*/;
+#else /* killPALRAM */
 						PALRAM[ 0x300 ] = PALRAM[ 0x310 ] = byData;
 						PalTable[ 0x00 ] = PalTable[ 0x10 ] = NesPalette[ byData ] | 0x8000;
+#endif /* killPALRAM */
+
 #endif
 					}
 					else
 					{
 					//int iaddr = PPU_Addr & 0x001F;
 #ifdef LEON
+
+#ifdef killPALRAM
+						PalTable[ PPU_Addr & 0x001F ] = byData;
+#else /* killPALRAM */
 						PALRAM[ PPU_Addr & 0x3FF ] = PalTable[ PPU_Addr & 0x001F ] = byData;
+#endif /* killPALRAM */
+
 #else
+
+#ifdef killPALRAM
+						PalTable[ PPU_Addr & 0x001F ] = /*NesPalette[*/ byData/*<<2*/ /*]*/;
+#else /* killPALRAM */
 						PALRAM[ PPU_Addr & 0x3FF ] = byData;
 						PalTable[ PPU_Addr & 0x001F ] = NesPalette[ byData ];
+#endif /* killPALRAM */
+
 #endif
 					}
 					PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] = PalTable[ 0x10 ] = 

@@ -186,36 +186,16 @@ typedef struct apudata_s
 } apudata_t;
 
 
-typedef struct apu_s
-{
-	rectangle_t rectangle[2];
-	triangle_t triangle;
-	noise_t noise;
-	dmc_t dmc;
-	uint8 enable_reg;
 
-	apudata_t queue[APUQUEUE_SIZE];
-	int q_head, q_tail;
-	uint32 elapsed_cycles;
-
-	void *buffer; /* pointer to output buffer */
-	int num_samples;
-
-	int32 cycle_rate;
-
-	int sample_rate;
-	int sample_bits;
-	int refresh_rate;
-} apu_t;
 
 //#ifdef __cplusplus
 //extern "C" {
 //#endif /* __cplusplus */
 
 /* Function prototypes */
-extern void apu_destroy(apu_t **apu);
-extern void apu_setparams(int sample_rate, int refresh_rate, int frag_size,
-						  int sample_bits);
+//extern void apu_destroy(apu_t **apu);
+//extern void apu_setparams(int sample_rate, int refresh_rate, int frag_size,
+//						  int sample_bits);
 
 extern void apu_reset(void);
 
@@ -235,7 +215,10 @@ extern void apu_write(uint32 address, uint8 value);
 
 extern void InfoNES_pAPUInit(void);
 extern void InfoNES_pAPUVsync(void);
+
+#ifndef killsystem
 extern void InfoNES_pAPUDone(void);
+#endif /* killsystem */
 
 //#ifdef __cplusplus
 //}

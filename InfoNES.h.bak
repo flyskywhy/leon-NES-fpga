@@ -15,9 +15,32 @@
 
 #include "InfoNES_Types.h"
 
+//#define TESTGRAPH			//测试画面是否正确，如果注释掉的话则可以使用开启#define PrintfFrameClock的方法来测试每桢的速度，定义在Makefile中
+
+#define FRAME_SKIP 5		//跳桢数，一般设为10以下
+
+#define IRAM	0x08000			//PPU桢存0的起始地址
+#define PRAM	0x11480			//PPU桢存1的起始地址
+
+#define VCD					//如果使用VCD的硬件则将本语句开启
+
+
+
 //#define killsystem			//用于LEON，不用InfoNES_System_LEON.cpp文件，现在定义在Makefile中
 
+//#define DTCM8K				//使用8KB的DTCM，定义在Makefile中
+
+//#define nesterpad			//使用nester的手柄代码
+//#define HACKpad				//不处理写$4016的pad_strobe，不能用
+
+//#define killPALRAM			//不使用PALRAM[ 1024 ]，而只用PalTable[ 32 ]，这是为了要把DTCM中的7.5KB数据减少1KB以便在由DTCM转成锁定dcache方式时尽量提供更多的cache给其它应用
+#define killlut				//将decay_lut[ 16 ]、trilength_lut[ 128 ]转换为代码，这也是为了要把DTCM中的7.5KB数据减少0.5KB以便在由DTCM转成锁定dcache方式时尽量提供更多的cache给其它应用
+
+#define g2l					//尽可能多地将全局变量转为本地变量
+
 #define killstring			//用于LEON，不使用string.h中提供的memcmp、memcpy和memset库函数。
+
+#define killtable			//用M6502中的代码的方式代替K6502中查找g_ASLTable、g_LSRTable、g_ROLTable、g_RORTable，目的是减少3KB的代码量
 
 #define PocketNES 1			//以查找数组的方式获取指令
 
@@ -57,22 +80,30 @@ extern writefunc PPU_write_tbl[ 8 ];
 //extern void PPU_W( WORD wAddr, BYTE byData );
 #endif /* killif */
 
-#define INES				//使用ines模拟器的PPU代码思想
+#define INES				//使用ines模拟器的PPU代码思想，如果不用的话就要注释掉AFS、writeIO、splitPPURAM、nesterpad、g2l这几个#define
 //#define LEON				//这里基本上不用，由LEON平台中的makefile来定义
 
 #ifndef LEON
 #define THROTTLE_SPEED		//限速，在LEON中用不着，加速还来不及呢:)
 #endif
 
+#ifndef TESTGRAPH
 #define AFS					//AutoFrameSkip 自动跳桢
+#endif /* TESTGRAPH */
+
+//#define LH					//使用LastHit指明最后的Sprite 0点击标记在那一条扫描线上，这样虽然会加快速度，但很难去除乘法，代码尺寸也会变大
+#ifdef AFS
 
 #ifdef LEON
+#define PrintfFrameClock	//这三者在LEON平台中只能同时取一，在Win32平台则都不取		//是否输出打印出每桢的CLOCK数
 //#define PrintfFrameSkip																//是否输出打印出跳桢数
-//#define PrintfFrameClock	//这三者在LEON平台中只能同时取一，在Win32平台则都不取		//是否输出打印出每桢的CLOCK数
 //#define PrintfFrameGraph																//是否输出打印出每桢的部分画面
 #endif
 
-#ifdef AFS
+#ifdef PrintfFrameClock
+#define Test6502APU		//在使用PrintfFrameClock测试每桢的微秒数时只测试6502+APU
+#endif PrintfFrameClock
+
 
 #ifdef LEON
 //#define CLOCKS_PER_SEC 1000000						//每个clock是1微秒
@@ -83,7 +114,6 @@ extern writefunc PPU_write_tbl[ 8 ];
 #endif
 
 #endif /* AFS */
-
 
 #define ASSERT(expr) \
 	if(!(expr)) \
@@ -99,8 +129,9 @@ extern writefunc PPU_write_tbl[ 8 ];
 //减容 #define RAM_SIZE     0x2000
 #define RAM_SIZE     0x800
 
-//减容 #define SRAM_SIZE    0x2000
-#define SRAM_SIZE    1
+#ifndef DTCM8K
+#define SRAM_SIZE    0x2000
+#endif /* DTCM8K */
 
 #define PPURAM_SIZE  0x4000
 #define SPRRAM_SIZE  256
@@ -109,7 +140,9 @@ extern writefunc PPU_write_tbl[ 8 ];
 extern BYTE RAM[];
 
 /* SRAM */
+#ifndef DTCM8K
 extern BYTE SRAM[];
+#endif /* DTCM8K */
 
 /* ROM */
 extern BYTE *ROM;
@@ -141,9 +174,19 @@ extern BYTE *memmap_tbl[8];
 #define splitPPURAM	//把PPURAM分割成几块内存，如果游戏测试通过的话，这样做会加快速度和减少内存需求
 
 #ifdef splitPPURAM
-extern BYTE PTRAM[];
+
+#ifdef DTCM8K
+//extern BYTE *PTRAM[];
+#else /* DTCM8K */
+extern BYTE PTRAM[];		//图形缓冲区数组，保存6位的颜色索引值
+#endif /* DTCM8K */
+
 extern BYTE NTRAM[];
+
+#ifndef killPALRAM
 extern BYTE PALRAM[];
+#endif /* killPALRAM */
+
 #else
 extern BYTE PPURAM[];
 #endif /* splitPPURAM */
@@ -369,12 +412,12 @@ extern BYTE PPU_UpDown_Clip;
 //    *p = PalTable[0]; \
 //  p++;
 
-/* Current Scanline */
-#ifdef INES
-extern int PPU_Scanline;
-#else
-extern WORD PPU_Scanline;
-#endif /*INES*/
+///* Current Scanline */
+//#ifdef INES
+//extern int PPU_Scanline;
+//#else
+//extern WORD PPU_Scanline;
+//#endif /*INES*/
 
 /* Scanline Table */
 //extern BYTE PPU_ScanTable[];
@@ -434,9 +477,21 @@ extern WORD FrameWait;
 
 //nesterJ
 #ifdef LEON
-extern BYTE WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
+
+//#ifdef DTCM8K
+//extern BYTE *WorkFrame;
+//#else /* DTCM8K */
+//extern BYTE WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//图形缓冲区数组，保存6位的颜色索引值
+//#endif /* DTCM8K */
+
 #else
-extern WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
+
+#ifdef killPALRAM
+extern BYTE WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//图形缓冲区数组，保存6位的颜色索引值
+#else /* killPALRAM */
+extern WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//图形缓冲区数组，保存RGB值
+#endif /* killPALRAM */
+
 #endif
 
 ////颜色
@@ -455,21 +510,34 @@ extern WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
 #ifdef LEON
 extern BYTE PalTable[];
 #else
-extern WORD PalTable[];
+
+#ifdef killPALRAM
+extern BYTE PalTable[ 32 ];
+#else /* killPALRAM */
+extern WORD PalTable[ 32 ];
+#endif /* killPALRAM */
+
 #endif
 
 /*-------------------------------------------------------------------*/
 /*  APU and Pad resources                                            */
 /*-------------------------------------------------------------------*/
 
-extern BYTE APU_Reg[];
 extern int APU_Mute;
+
+extern DWORD pad_strobe;
+#ifdef nesterpad
+extern DWORD pad1_bits;
+extern DWORD pad2_bits;
+#else /* nesterpad */
+extern BYTE APU_Reg[];
+extern DWORD PAD1_Bit;
+extern DWORD PAD2_Bit;
+#endif /* nesterpad */
 
 extern DWORD PAD1_Latch;
 extern DWORD PAD2_Latch;
 extern DWORD PAD_System;
-extern DWORD PAD1_Bit;
-extern DWORD PAD2_Bit;
 
 #define PAD_SYS_QUIT   1
 #define PAD_SYS_OK     2
@@ -569,7 +637,11 @@ void InfoNES_Main();
 
 #ifndef AFS
 /* The loop of emulation */
+#ifdef TESTGRAPH
+void SLNES( BYTE *DisplayFrameBase);
+#else /* TESTGRAPH */
 void InfoNES_Cycle();
+#endif /* TESTGRAPH */
 #endif /* AFS */
 
 /* A function in H-Sync */

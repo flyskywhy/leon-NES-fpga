@@ -1,4 +1,4 @@
-//Microsoft Developer Studio generated resource script.
+// Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
 
@@ -16,7 +16,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// ì˙ñ{åÍ resources
+// »’”Ô resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
 #ifdef _WIN32
@@ -30,12 +30,12 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE 
 BEGIN
     "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
     "#include ""windows.h""\r\n"
@@ -44,7 +44,7 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE 
 BEGIN
     "\r\n"
     "\0"
@@ -58,7 +58,7 @@ END
 // Menu
 //
 
-IDR_MENU MENU DISCARDABLE 
+IDR_MENU MENU 
 BEGIN
     POPUP "Ãß≤Ÿ(&F)"
     BEGIN
@@ -70,9 +70,9 @@ BEGIN
     END
     POPUP "µÃﬂºÆ›(&O)"
     BEGIN
-        POPUP "Ã⁄∞—Ω∑ØÃﬂ(&F)"
+        POPUP "Ã⁄∞—Ω∑ØÃ?&F)"
         BEGIN
-            MENUITEM "µ∞ƒ(&A)",                     IDC_BTN_FRAMESKIP
+            MENUITEM "µ∞?&A)",                      IDC_BTN_FRAMESKIP
             , CHECKED
             MENUITEM "å∏ÇÁÇ∑(&D)",                  IDC_BTN_SLOW
             MENUITEM "ëùÇ‚Ç∑(&I)",                  IDC_BTN_FAST
@@ -86,13 +86,13 @@ BEGIN
                 MENUITEM "2î{(&2)",                     IDC_BTN_DOUBLE
                 MENUITEM "3î{(&3)",                     IDC_BTN_TRIPLE
             END
-            POPUP "∏ÿØÃﬂ(&C)"
+            POPUP "∏ÿØÃ?&C)"
             BEGIN
                 MENUITEM "è„í[ÅEâ∫í[(&V)",              IDC_BTN_CLIP_VERTICAL
 
             END
         END
-        POPUP "ª≥›ƒﬁ(&S)"
+        POPUP "ª≥›ƒ?&S)"
         BEGIN
             MENUITEM "–≠∞ƒ(&M)",                    IDC_BTN_MUTE
         END
@@ -110,8 +110,8 @@ END
 // Dialog
 //
 
-IDD_DIALOG DIALOG DISCARDABLE  0, 0, 95, 69
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_DIALOG DIALOG  0, 0, 95, 69
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "ÉoÅ[ÉWÉáÉìèÓïÒ"
 FONT 9, "ÇlÇr ÇoÉSÉVÉbÉN"
 BEGIN
@@ -128,7 +128,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
+GUIDELINES DESIGNINFO 
 BEGIN
     IDD_DIALOG, DIALOG
     BEGIN
@@ -144,7 +144,7 @@ END
 // Bitmap
 //
 
-IDB_BITMAP              BITMAP  DISCARDABLE     "bitmap1.bmp"
+IDB_BITMAP              BITMAP                  "bitmap1.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -153,8 +153,8 @@ IDB_BITMAP              BITMAP  DISCARDABLE     "bitmap1.bmp"
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON                ICON    DISCARDABLE     "InfoNES.ico"
-#endif    // ì˙ñ{åÍ resources
+IDI_ICON                ICON                    "InfoNES.ico"
+#endif    // »’”Ô resources
 /////////////////////////////////////////////////////////////////////////////
 
 

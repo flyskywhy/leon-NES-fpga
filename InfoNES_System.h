@@ -18,7 +18,12 @@
 /*-------------------------------------------------------------------*/
 /*  Palette data                                                     */
 /*-------------------------------------------------------------------*/
+
+#ifdef killPALRAM
+extern BYTE NesPalette[];
+#else /* killPALRAM */
 extern WORD NesPalette[];
+#endif /* killPALRAM */
 
 /*-------------------------------------------------------------------*/
 /*  Function prototypes                                              */

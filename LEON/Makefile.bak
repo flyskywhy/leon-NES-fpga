@@ -2,14 +2,16 @@ AS=sparc-rtems-as
 CC=sparc-rtems-gcc
 DUMP=sparc-rtems-objdump
 
-CFLAGS = -g -c -O2 -mv8 -mno-fpu -DLEON -Dkillsystem
+CFLAGS = -g -c -O2 -mv8 -mno-fpu -DLEON -Dkillsystem -DDTCM8K -DTESTGRAPH
 #CFLAGS = -g -c -O2 -mv8 -mno-fpu -DLEON --verbose
 #ASFLAGS = -D -gstabs 
 LDFLAGS = -g -N -Ttext=40000000 #-nostdlib -nodefaultlibs -nostdinclude #-e main 
-LIBS= -LD:/cygwin/opt/rtems/sparc-rtems/lib -lgcc -lm
+LIBS= -LD:/cygwin/opt/rtems/sparc-rtems/lib -lgcc
 DUMPFLAGS = -a -f -x -d -S -s -t
 
-OBJS = K6502.o InfoNES_pAPU.o InfoNES.o
+OBJS = K6502.o InfoNES_pAPU.o InfoNES.o contra.o leonram.o AVSync.o Int.o periph.o
+#OBJS = K6502.o InfoNES_pAPU.o InfoNES.o contra.o leonram.o
+#OBJS = K6502.o InfoNES_pAPU.o InfoNES.o
 #OBJS = InfoNES_System_LEON.o K6502.o InfoNES_pAPU.o InfoNES.o
 
 all: $(OBJS)
@@ -39,3 +41,20 @@ InfoNES_pAPU.o: ../InfoNES_pAPU.cpp ../K6502.h ../K6502_rw.h ../InfoNES.h ../Inf
 
 InfoNES.o: ../InfoNES.cpp ../InfoNES.h ../InfoNES_Types.h ../InfoNES_pAPU.h ../K6502.h
 	$(CC) -c $(CFLAGS) ../InfoNES.cpp -o InfoNES.o
+
+contra.o: ../gamefile/contra.cpp
+	$(CC) -c $(CFLAGS) ../gamefile/contra.cpp -o contra.o
+
+leonram.o: ../leonram.cpp
+	$(CC) -c $(CFLAGS) ../leonram.cpp -o leonram.o
+
+AVSync.o: ../AVSync.cpp ../AVSync.h
+	$(CC) -c $(CFLAGS) ../AVSync.cpp -o AVSync.o
+
+Int.o: ../Int.cpp ../Int.h
+	$(CC) -c $(CFLAGS) ../Int.cpp -o Int.o
+
+periph.o: ../periph.cpp ../periph.h
+	$(CC) -c $(CFLAGS) ../periph.cpp -o periph.o
+
+                                                                                                        

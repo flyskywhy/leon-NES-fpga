@@ -1782,7 +1782,7 @@ void emulate_frame( boolean draw )
 //#endif
 
 				//if ( !APU_Mute )								//如果没有将模拟器设为静音状态则输出声音
-//	InfoNES_pAPUVsync();
+	//InfoNES_pAPUVsync();
 }
 
 #ifdef THROTTLE_SPEED	//限速，在LEON中用不着，加速还来不及呢:)
@@ -1810,9 +1810,10 @@ static inline void SleepUntil(long time)
 
 void do_frame()
 {
-	lr->timercnt1  = 0xFFFFFF;
-	lr->timerload1 = 0xFFFFFF;
 #ifdef LEON
+	//lr->timerctrl1 |= 0x2;
+	//lr->timercnt1  = 0x01FFFF;
+	//lr->timerload1 = 0xFFFFFF;
 	last_frame_time = lr->timercnt1;
 #else /* LEON */
 	last_frame_time = clock();
@@ -1836,11 +1837,11 @@ void do_frame()
 #endif /* LEON */
 
 #ifdef PrintfFrameClock	//输出每桢的CLOCK数
-//	printf("FrameClock: %d;	Frame: %d\n", temp - cur_time, Frame++ );
-	if( temp > cur_time )
-		printf("FrameClock: %d;	Frame: %d;	temp: %x;	cur_time: %x\n", temp - cur_time, Frame++, temp, cur_time );
-	else
-		printf("FrameClock: %d;	Frame: %d	temp: %x;	cur_time: %x\n", lr->timerload1 - cur_time + temp, Frame++, temp, cur_time );
+	printf("FrameClock: %d;	Frame: %d\n", temp - cur_time, Frame++ );
+	//if( temp > cur_time )
+	//	printf("FrameClock: %d;	Frame: %d;	temp: %x;	cur_time: %x\n", temp - cur_time, Frame++, temp, cur_time );
+	//else
+	//	printf("FrameClock: %d;	Frame: %d	temp: %x;	cur_time: %x\n", lr->timerload1 - cur_time + temp, Frame++, temp, cur_time );
 #ifdef LEON
 	temp = lr->timercnt1;
 #else /* LEON */

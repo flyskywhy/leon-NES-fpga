@@ -1,0 +1,23 @@
+测试之前先检查源文件后缀名是否是c，如果是cpp，则执行一下cpp2c.bat文件。（cpp主要用于win32平台用VC检验模拟器代码的正确性）
+
+一、测试游戏画面是否正常显示在电视机上：
+1.在makefile里的CFLAGS中使用-DTESTGRAPH；
+2.为了能快速检验画面的正确性，用的是游戏mario，如果想要顺便测试速度，则使用另一个游戏contra，只需将makefile中的mario全部替换为contra并将InfoNES.c里的#include "./gamefile/mario.h"改为#include "./gamefile/contra.h"即可；
+3.注释掉MyLink文件中的TCM分配。
+
+
+
+
+二、测试速度，在FPGA上printf出每桢的微秒数：
+1.确认makefile里没有mario，否则将所有的mario替换为contra；
+2.确认InfoNES.c里没有#include "./gamefile/mario.h"，否则将其改为#include "./gamefile/contra.h"；
+3.在makefile里的CFLAGS中不使用-DTESTGRAPH；
+4.在InofNES.h里确认开启#define PrintfFrameClock；
+5.如果想测试6502+APU+PPU每桢的微秒数，则开启#define Test6502APU，否则只测试6502+APU；
+6.开启MyLink文件中的TCM分配。
+
+
+
+
+其他：
+LEON子目录中的是使用rtems编译的版本，不用理会，ARM子目录也不用理会。

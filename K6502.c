@@ -19,6 +19,9 @@
 #include "InfoNES_System.h"
 #endif
 
+#ifdef DTCM8K
+#include "leonram.h"
+#endif
 
 #ifdef splitIO
 #include "InfoNES_pAPU.h"
@@ -433,10 +436,37 @@ static inline void rom_WE0( WORD wAddr, BYTE byData )
 #define POPW(a)   POP(a); a |= ( RAM[ BASE_STACK + ++SP ] << 8 )
 
 // Shift Op.
+#ifdef killtable
+
+#define M_FL(Rg)	F = ( F & ~( FLAG_Z | FLAG_N ) ) | g_byTestTable[ Rg ]
+
+#define M_ASL(Rg)	F &= ~FLAG_C; F |= Rg >> 7; Rg <<= 1; M_FL(Rg)
+#define M_LSR(Rg)	F &= ~FLAG_C; F |= Rg & FLAG_C; Rg >>= 1; M_FL(Rg)
+#define M_ROL(Rg)	byD1 = ( Rg << 1 ) | ( F & FLAG_C ); \
+					F &= ~FLAG_C; F |= Rg >> 7; Rg = byD1; \
+					M_FL(Rg)
+#define M_ROR(Rg)	byD1 = ( Rg >> 1 ) | ( F << 7 ); \
+					F &= ~FLAG_C; F |= Rg & FLAG_C; Rg = byD1; \
+					M_FL(Rg)
+
+#define ASLA	M_ASL(A) 
+#define ASL		M_ASL(byD0)
+#define LSRA	M_LSR(A) 
+#define LSR		M_LSR(byD0)
+#define ROLA	M_ROL(A)
+#define ROL		M_ROL(byD0)
+#define RORA	M_ROR(A)
+#define ROR		M_ROR(byD0)
+
+#else /* killtable */
+
 #define ASLA    RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_ASLTable[ A ].byFlag ); A = g_ASLTable[ A ].byValue 
 #define LSRA    RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_LSRTable[ A ].byFlag ); A = g_LSRTable[ A ].byValue 
 #define ROLA    byD0 = F & FLAG_C; RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_ROLTable[ byD0 ][ A ].byFlag ); A = g_ROLTable[ byD0 ][ A ].byValue 
 #define RORA    byD0 = F & FLAG_C; RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( g_RORTable[ byD0 ][ A ].byFlag ); A = g_RORTable[ byD0 ][ A ].byValue 
+
+#endif /* killtable */
+
 //作用于ASL LSR ROL ROR四类对6502RAM进行位操作的指令
 #ifdef HACK
 #define Bit6502RAM(a)  byD0 = RAM[ wA0 ]; WriteZp( wA0, a )				//稍微不能确定，需测遍所有的游戏
@@ -586,6 +616,8 @@ const BYTE g_byTestTable[ 256 ] = {
 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80};
 
+#ifndef killtable
+
 // Value and Flag Data
 struct value_table_tag
 {
@@ -704,6 +736,8 @@ const struct value_table_tag g_RORTable[ 2 ][ 256 ] = {
 0xe8, 0x80, 0xe8, 0x81, 0xe9, 0x80, 0xe9, 0x81, 0xea, 0x80, 0xea, 0x81, 0xeb, 0x80, 0xeb, 0x81, 0xec, 0x80, 0xec, 0x81, 0xed, 0x80, 0xed, 0x81, 0xee, 0x80, 0xee, 0x81, 0xef, 0x80, 0xef, 0x81,
 0xf0, 0x80, 0xf0, 0x81, 0xf1, 0x80, 0xf1, 0x81, 0xf2, 0x80, 0xf2, 0x81, 0xf3, 0x80, 0xf3, 0x81, 0xf4, 0x80, 0xf4, 0x81, 0xf5, 0x80, 0xf5, 0x81, 0xf6, 0x80, 0xf6, 0x81, 0xf7, 0x80, 0xf7, 0x81,
 0xf8, 0x80, 0xf8, 0x81, 0xf9, 0x80, 0xf9, 0x81, 0xfa, 0x80, 0xfa, 0x81, 0xfb, 0x80, 0xfb, 0x81, 0xfc, 0x80, 0xfc, 0x81, 0xfd, 0x80, 0xfd, 0x81, 0xfe, 0x80, 0xfe, 0x81, 0xff, 0x80, 0xff, 0x81};
+
+#endif /* killtable */
 
 /*===================================================================*/
 /*                                                                   */
@@ -830,11 +864,13 @@ void K6502_Init()
 void (*MapperWrite)( WORD wAddr, BYTE byData );
 
 /* The address of 8Kbytes unit of the ROM */
-#define ROMPAGE(a)     ( ROM + (a) * 0x2000 )
+//#define ROMPAGE(a)     ( ROM + (a) * 0x2000 )
+#define ROMPAGE(a)     ( ROM + ( (a) << 13 ) )
 ///* From behind the ROM, the address of 8kbytes unit */
 //#define ROMLASTPAGE(a) &ROM[ NesHeader.byRomSize * 0x4000 - ( (a) + 1 ) * 0x2000 ]
 /* The address of 1Kbytes unit of the VROM */
-#define VROMPAGE(a)    ( VROM + (a) * 0x400 )
+//#define VROMPAGE(a)    ( VROM + (a) * 0x400 )
+#define VROMPAGE(a)    ( VROM + ( (a) << 10 ) )
 
 
 void Map0_Write( WORD wAddr, BYTE byData )
@@ -846,11 +882,17 @@ void Map2_Write( WORD wAddr, BYTE byData )
 	//byData %= NesHeader.byRomSize;
 	//byData <<= 1;
 	//byData = ( byData & 7 ) << 1;
+#ifdef HACK
+	//ROMBANK0 = ROM + byData * 0x4000;
+	ROMBANK0 = ROM + ( byData << 14 );
+	ROMBANK1 = ROMBANK0 + 0x2000;
+#else
 	byData &= 7;
 	byData <<= 1;
 
 	ROMBANK0 = ROMPAGE( byData );
 	ROMBANK1 = ROMPAGE( byData + 1 );
+#endif
 
 #if PocketNES == 1
 	memmap_tbl[ 4 ] = ROMBANK0 - 0x8000;		//这里- 0x8000是为了在encodePC中不用再做& 0x1FFF的运算了，下同
@@ -954,7 +996,8 @@ void K6502_Reset()
 #ifdef splitPPURAM
 	  /* Set PPU Banks */
 	  for ( nPage = 0; nPage < 8; ++nPage )
-		  PPUBANK[ nPage ] = &PTRAM[ nPage * 0x400 ];
+		  //PPUBANK[ nPage ] = &PTRAM[ nPage * 0x400 ];
+		  PPUBANK[ nPage ] = &PTRAM[ nPage << 10];
 #endif /* splitPPURAM */
   }
 
@@ -1042,7 +1085,7 @@ void K6502_Reset()
 
 	//memmap_tbl[ 1 ] = ( BYTE *)K6502_ReadIO;
 	//memmap_tbl[ 2 ] = ( BYTE *)K6502_ReadIO;
-	//memmap_tbl[ 3 ] = ( BYTE *)K6502_ReadIO;
+	memmap_tbl[ 3 ] = SRAM;
 	memmap_tbl[ 4 ] = ROMBANK0 - 0x8000;		//这里- 0x8000是为了在encodePC中不用再做& 0x1FFF的运算了，下同
 	memmap_tbl[ 5 ] = ROMBANK1 - 0xA000;
 	memmap_tbl[ 6 ] = ROMBANK2 - 0xC000;
@@ -1938,11 +1981,18 @@ void K6502_Step( WORD wClocks )
         //ASL( AA_ZP ); CLK( 5 );
 
 		//加速
+#ifdef killtable
+		ReadPC( wA0 );
+		ReadZp( wA0 );
+		ASL;
+		WriteZp( wA0, byD0 );
+#else
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		ReadPC( wA0 );
 		ReadZp( wA0 );
 		SETF( g_ASLTable[ byD0 ].byFlag );
 		WriteZp( wA0, g_ASLTable[ byD0 ].byValue );
+#endif
 		CLK( 5 );
 
         break;
@@ -1996,14 +2046,21 @@ void K6502_Step( WORD wClocks )
 
         break;
 
-      case 0x0e:  // ASL Abs 
+      case 0x0E:  // ASL Abs 
         //ASL( AA_ABS ); CLK( 6 );
         
 		//加速
-        RSTF( FLAG_N | FLAG_Z | FLAG_C );
+#ifdef killtable
+		ReadPCW( wA0 );
+		ReadZp( wA0 );
+		ASL;
+		WriteZp( wA0, byD0 );
+#else
+		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		ReadPCW( wA0 );
 		Bit6502RAM( g_ASLTable[ byD0 ].byValue );
 		SETF( g_ASLTable[ byD0 ].byFlag );
+#endif
 		CLK( 6 );
 
         break;
@@ -2052,11 +2109,18 @@ void K6502_Step( WORD wClocks )
         //ASL( AA_ZPX ); CLK( 6 );
         
 		//加速
+#ifdef killtable
+		ReadPCX( wA0 );
+		ReadZp( wA0 );
+		ASL;
+		WriteZp( wA0, byD0 );
+#else
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		ReadPCX( wA0 );
 		ReadZp( wA0 );
 		SETF( g_ASLTable[ byD0 ].byFlag );
 		WriteZp( wA0, g_ASLTable[ byD0 ].byValue );
+#endif
 		CLK( 6 );
 
         break;
@@ -2117,11 +2181,19 @@ void K6502_Step( WORD wClocks )
         //ASL( AA_ABSX ); CLK( 7 );
         
 		//加速
+#ifdef killtable
+		ReadPCW( wA0 );
+        wA0 += X;
+		ReadZp( wA0 );
+		ASL;
+		WriteZp( wA0, byD0 );
+#else
         RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		ReadPCW( wA0 );
         wA0 += X;
 		Bit6502RAM( g_ASLTable[ byD0 ].byValue );
 		SETF( g_ASLTable[ byD0 ].byFlag );
+#endif
         CLK( 7 );
 
         break;
@@ -2210,12 +2282,19 @@ void K6502_Step( WORD wClocks )
         //ROL( AA_ZP ); CLK( 5 );
 
 		//加速
+#ifdef killtable
+		ReadPC( wA0 );
+		ReadZp( wA0 );
+		ROL;
+		WriteZp( wA0, byD0 );
+#else
 		byD1 = F & FLAG_C;
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		ReadPC( wA0 );
 		ReadZp( wA0 );
 		SETF( g_ROLTable[ byD1 ][ byD0 ].byFlag );
 		WriteZp( wA0, g_ROLTable[ byD1 ][ byD0 ].byValue );
+#endif
 		CLK( 5 );
 
         break;
@@ -2296,11 +2375,18 @@ void K6502_Step( WORD wClocks )
         //ROL( AA_ABS ); CLK( 6 );
         
 		//加速
+#ifdef killtable
+		ReadPCW( wA0 );
+		ReadZp( wA0 );
+		ROL;
+		WriteZp( wA0, byD0 );
+#else
         byD1 = F & FLAG_C;
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		ReadPCW( wA0 );
 		Bit6502RAM( g_ROLTable[ byD1 ][ byD0 ].byValue );
 		SETF( g_ROLTable[ byD1 ][ byD0 ].byFlag );
+#endif
 		CLK( 6 );
 
         break;
@@ -2349,12 +2435,19 @@ void K6502_Step( WORD wClocks )
         //ROL( AA_ZPX ); CLK( 6 );
         
 		//加速
+#ifdef killtable
+		ReadPCX( wA0 );
+		ReadZp( wA0 );
+		ROL;
+		WriteZp( wA0, byD0 );
+#else
         byD1 = F & FLAG_C;
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		ReadPCX( wA0 );
 		ReadZp( wA0 );
 		SETF( g_ROLTable[ byD1 ][ byD0 ].byFlag );
 		WriteZp( wA0, g_ROLTable[ byD1 ][ byD0 ].byValue );
+#endif
 		CLK( 6 );
 
         break;
@@ -2415,12 +2508,20 @@ void K6502_Step( WORD wClocks )
         //ROL( AA_ABSX ); CLK( 7 );
         
 		//加速
+#ifdef killtable
+		ReadPCW( wA0 );
+        wA0 += X;
+		ReadZp( wA0 );
+		ROL;
+		WriteZp( wA0, byD0 );
+#else
         byD1 = F & FLAG_C;
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		ReadPCW( wA0 );
         wA0 += X;
 		Bit6502RAM( g_ROLTable[ byD1 ][ byD0 ].byValue );
 		SETF( g_ROLTable[ byD1 ][ byD0 ].byFlag );
+#endif
 		CLK( 7 );
 
         break;
@@ -2475,11 +2576,18 @@ void K6502_Step( WORD wClocks )
         //LSR( AA_ZP ); CLK( 5 );
         
 		//加速
+#ifdef killtable
+		ReadPC( wA0 );
+		ReadZp( wA0 );
+		LSR;
+		WriteZp( wA0, byD0 );
+#else
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		ReadPC( wA0 );
 		ReadZp( wA0 );
 		SETF( g_LSRTable[ byD0 ].byFlag );
 		WriteZp( wA0, g_LSRTable[ byD0 ].byValue );
+#endif
 		CLK( 5 );
 
         break;
@@ -2566,10 +2674,17 @@ void K6502_Step( WORD wClocks )
         //LSR( AA_ABS ); CLK( 6 );
 
 		//加速
+#ifdef killtable
+		ReadPCW( wA0 );
+		ReadZp( wA0 );
+		LSR;
+		WriteZp( wA0, byD0 );
+#else
         RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		ReadPCW( wA0 );
 		Bit6502RAM( g_LSRTable[ byD0 ].byValue );
 		SETF( g_LSRTable[ byD0 ].byFlag );
+#endif
 		CLK( 6 );
 
         break;
@@ -2618,11 +2733,18 @@ void K6502_Step( WORD wClocks )
         //LSR( AA_ZPX ); CLK( 6 );
         
 		//加速
+#ifdef killtable
+		ReadPCX( wA0 );
+		ReadZp( wA0 );
+		LSR;
+		WriteZp( wA0, byD0 );
+#else
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		ReadPCX( wA0 );
 		ReadZp( wA0 );
 		SETF( g_LSRTable[ byD0 ].byFlag );
 		WriteZp( wA0, g_LSRTable[ byD0 ].byValue );
+#endif
 		CLK( 6 );
 
         break;
@@ -2702,11 +2824,19 @@ void K6502_Step( WORD wClocks )
         //LSR( AA_ABSX ); CLK( 7 );
 
 		//加速
+#ifdef killtable
+		ReadPCW( wA0 );
+        wA0 += X;
+		ReadZp( wA0 );
+		LSR;
+		WriteZp( wA0, byD0 );
+#else
         RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		ReadPCW( wA0 );
         wA0 += X;
 		Bit6502RAM( g_LSRTable[ byD0 ].byValue );
 		SETF( g_LSRTable[ byD0 ].byFlag );
+#endif
         CLK( 7 );
 
 		break;
@@ -2758,12 +2888,19 @@ void K6502_Step( WORD wClocks )
         //ROR( AA_ZP ); CLK( 5 );
 
 		//加速
+#ifdef killtable
+		ReadPC( wA0 );
+		ReadZp( wA0 );
+		ROR;
+		WriteZp( wA0, byD0 );
+#else
 		byD1 = F & FLAG_C;
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		ReadPC( wA0 );
 		ReadZp( wA0 );
 		SETF( g_RORTable[ byD1 ][ byD0 ].byFlag );
 		WriteZp( wA0, g_RORTable[ byD1 ][ byD0 ].byValue );
+#endif
 		CLK( 5 );
 
         break;
@@ -2872,11 +3009,18 @@ void K6502_Step( WORD wClocks )
         //ROR( AA_ABS ); CLK( 6 );
         
 		//加速
+#ifdef killtable
+		ReadPCW( wA0 );
+		ReadZp( wA0 );
+		ROR;
+		WriteZp( wA0, byD0 );
+#else
         byD1 = F & FLAG_C;
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		ReadPCW( wA0 );
 		Bit6502RAM( g_RORTable[ byD1 ][ byD0 ].byValue );
 		SETF( g_RORTable[ byD1 ][ byD0 ].byFlag );
+#endif
 		CLK( 6 );
 
         break;
@@ -2922,12 +3066,19 @@ void K6502_Step( WORD wClocks )
         //ROR( AA_ZPX ); CLK( 6 );
         
 		//加速
+#ifdef killtable
+		ReadPCX( wA0 );
+		ReadZp( wA0 );
+		ROR;
+		WriteZp( wA0, byD0 );
+#else
         byD1 = F & FLAG_C;
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		ReadPCX( wA0 );
 		ReadZp( wA0 );
 		SETF( g_RORTable[ byD1 ][ byD0 ].byFlag );
 		WriteZp( wA0, g_RORTable[ byD1 ][ byD0 ].byValue );
+#endif
 		CLK( 6 );
 
         break;
@@ -2974,12 +3125,20 @@ void K6502_Step( WORD wClocks )
         //ROR( AA_ABSX ); CLK( 7 );
         
 		//加速
+#ifdef killtable
+		ReadPCW( wA0 );
+        wA0 += X;
+		ReadZp( wA0 );
+		ROR;
+		WriteZp( wA0, byD0 );
+#else
         byD1 = F & FLAG_C;
 		RSTF( FLAG_N | FLAG_Z | FLAG_C );
 		ReadPCW( wA0 );
         wA0 += X;
 		Bit6502RAM( g_RORTable[ byD1 ][ byD0 ].byValue );
 		SETF( g_RORTable[ byD1 ][ byD0 ].byFlag );
+#endif
 		CLK( 7 );
 
         break;
