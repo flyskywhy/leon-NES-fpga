@@ -9,6 +9,12 @@
 #ifndef InfoNES_PAPU_H_INCLUDED
 #define InfoNES_PAPU_H_INCLUDED
 
+#ifdef killwif
+extern writefunc APU_write_tbl[ 32 ];
+//extern BYTE APU_R( WORD wAddr );
+//extern void APU_W( WORD wAddr, BYTE byData );
+#endif
+
 #ifdef killif
 extern readfunc APU_read_tbl[ 32 ];
 extern writefunc APU_write_tbl[ 32 ];
@@ -167,8 +173,10 @@ typedef struct dmc_s
 } dmc_t;
 
 /* APU queue structure */
-#define  APUQUEUE_SIZE  4096
-#define  APUQUEUE_MASK  4095	//加速(APUQUEUE_SIZE - 1)
+#define  APUQUEUE_SIZE  32
+#define  APUQUEUE_MASK  31	//加速(APUQUEUE_SIZE - 1)
+//减容 #define  APUQUEUE_SIZE  4096
+//减容 #define  APUQUEUE_MASK  4095	//加速(APUQUEUE_SIZE - 1)
 
 /* apu ring buffer member */
 typedef struct apudata_s
@@ -211,7 +219,12 @@ extern void apu_setparams(int sample_rate, int refresh_rate, int frag_size,
 
 extern void apu_reset(void);
 
+#ifdef splitIO
+extern uint8 apu_read4015();
+#else
 extern uint8 apu_read(uint32 address);
+#endif
+
 extern void apu_write(uint32 address, uint8 value);
 
 

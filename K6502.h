@@ -10,17 +10,17 @@
 #define K6502_H_INCLUDED
 
 // Type definition
-#ifndef DWORD
-typedef unsigned long  DWORD;
-#endif
-
-#ifndef WORD
-typedef unsigned short WORD;
-#endif
-
-#ifndef BYTE
-typedef unsigned char  BYTE;
-#endif
+//#ifndef DWORD
+//typedef unsigned long  DWORD;
+//#endif
+//
+//#ifndef WORD
+//typedef unsigned short WORD;
+//#endif
+//
+//#ifndef BYTE
+//typedef unsigned char  BYTE;
+//#endif
 
 #ifndef NULL
 #define NULL 0
@@ -51,10 +51,13 @@ typedef unsigned char  BYTE;
 //#define IRQ_REQ  IRQ_State = 0;
 
 // Emulator Operation
+#ifndef killsystem
 void K6502_Init();
+#endif /* killsystem */
+
 void K6502_Reset();
 //void K6502_Set_Int_Wiring( BYTE byNMI_Wiring, BYTE byIRQ_Wiring );
-void K6502_Step( register WORD wClocks );
+void K6502_Step( WORD wClocks );
 
 //nesterJ
 void K6502_NMI();
@@ -71,11 +74,16 @@ void K6502_NMI();
 
 //º”ÀŸ
 //static inline BYTE K6502_ReadPC( WORD wAddr );
-#ifndef killif
 
+#ifndef killif
 static inline BYTE K6502_ReadIO( WORD wAddr );
+
+#ifdef writeIO
+static inline void K6502_WriteIO( WORD wAddr, BYTE byData );
+#else
 static inline void K6502_WritePPU( WORD wAddr, BYTE byData );
 static inline void K6502_WriteAPU( WORD wAddr, BYTE byData );
+#endif /* writeIO */
 
 #endif /* killif */
 

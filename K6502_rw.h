@@ -16,7 +16,11 @@
 #ifndef killif
 
 #include "InfoNES.h"
+
+#ifndef killsystem
 #include "InfoNES_System.h"
+#endif
+
 #include "InfoNES_pAPU.h"
 
 //加速
@@ -74,12 +78,12 @@ static inline BYTE K6502_ReadIO( WORD wAddr )
 	case 0x2007:   /* PPU Memory */
 		{
 #ifdef INES
-			PPU_Addr = ( NSCROLLY & 0x0003 ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLX & 0x00F8 ) >> 3;
+			//PPU_Addr = ( NSCROLLY & 0x0003 ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLX & 0x00F8 ) >> 3;
 			byRet = PPU_R7;
 			PPU_R7 = PPUBANK[ PPU_Addr >> 10 ][ PPU_Addr & 0x3ff ];
 			PPU_Addr += PPU_Increment;
-			NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
-			NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+			//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+			//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
 #else
 			WORD addr = PPU_Addr & 0x3fff;
 
@@ -149,18 +153,18 @@ static inline BYTE K6502_ReadIO( WORD wAddr )
 		//FCEU
 		//return byRet|( PPUGenLatch & 0x1F );
 
-		//VirtuaNES
-	case 0x2004: // SPR_RAM I/O Register(RW)
-		byRet = SPRRAM[ PPU_R3++ ];
-		return byRet;
-		//lizheng
-	case 0x2000: return PPU_R0;
-	case 0x2001: return PPU_R1;
-	case 0x2003: return PPU_R3;
-		//case 0x2004: return PPU_R4;
-	case 0x2005: return PPU_R5;
-	case 0x2006: return PPU_R6;
-		//return SPRRAM[ PPU_R3++ ];
+	//	//VirtuaNES
+	//case 0x2004: // SPR_RAM I/O Register(RW)
+	//	byRet = SPRRAM[ PPU_R3++ ];
+	//	return byRet;
+	//	//lizheng
+	//case 0x2000: return PPU_R0;
+	//case 0x2001: return PPU_R1;
+	//case 0x2003: return PPU_R3;
+	//	//case 0x2004: return PPU_R4;
+	//case 0x2005: return PPU_R5;
+	//case 0x2006: return PPU_R6;
+	//	//return SPRRAM[ PPU_R3++ ];
 
 		////FCEU
 		//return PPUGenLatch;
@@ -181,7 +185,11 @@ static inline BYTE K6502_ReadIO( WORD wAddr )
 		//return byRet;
 
 		//APU
+#ifdef splitIO
+		return apu_read4015();
+#else
 		return apu_read( wAddr );
+#endif
 
 	case 0x4016:   // Set Joypad1 data
 		byRet = (BYTE)( ( PAD1_Latch >> PAD1_Bit ) & 1 ) | 0x40;
@@ -197,6 +205,163 @@ static inline BYTE K6502_ReadIO( WORD wAddr )
 	return ( wAddr >> 8 ); /* when a register is not readable the upper half
 						   address is returned. */
 }
+
+#ifdef writeIO
+static inline void K6502_WriteIO( WORD wAddr, BYTE byData )
+{
+	switch ( wAddr )
+	{
+	case 0x2000:    /* 0x2000 */
+		PPU_R0 = byData;
+		PPU_Increment = ( PPU_R0 & R0_INC_ADDR ) ? 32 : 1;
+		ARX = ( ARX & 0xFF ) | (int)( byData & 1 ) << 8;
+		ARY = ( ARY & 0xFF ) | (int)( byData & 2 ) << 7;
+		NES_ChrGen = PPUBANK[ ( PPU_R0 & R0_BG_ADDR ) >> 2];
+		NES_SprGen = PPUBANK[ ( PPU_R0 & R0_SP_ADDR ) >> 1];
+		PPU_SP_Height = ( PPU_R0 & R0_SP_SIZE ) ? 16 : 8;
+		break;
+
+	case 0x2001:   /* 0x2001 */
+		PPU_R1 = byData;
+		break;
+
+	case 0x2002:   /* 0x2002 */     // 0x2002 is not writable
+		break;
+
+	case 0x2003:   /* 0x2003 */		// Sprite RAM Address
+		break;
+
+	case 0x2004:   /* 0x2004 */		// Write data to Sprite RAM
+		SPRRAM[ PPU_R3++ ] = byData;
+		break;
+
+	case 0x2005:   /* 0x2005 */		// Set Scroll Register
+		if ( PPU_Latch_Flag )//2005第二次写入
+			ARY = ( ARY & 0x0100 ) | byData;// t:0000001111100000=d:11111000
+		else//2005第一次写入
+			ARX = ( ARX & 0x0100 ) | byData;// t:0000000000011111=d:11111000
+		PPU_Latch_Flag ^= 1;
+		break;
+
+	case 0x2006:   /* 0x2006 */		// Set PPU Address
+		if ( PPU_Latch_Flag )//2006第二次写入
+		{
+			ARY = ( ARY & 0x01C7 ) | ( byData & 0xE0 ) >> 2;
+			ARX = ( ARX & 0x0107 ) | ( byData & 0x1F ) << 3;
+			NSCROLLX = ARX;
+			NSCROLLY = ARY;
+			PPU_Addr = ( NSCROLLY & 0x0003 ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLX & 0x00F8 ) >> 3;
+		}
+		else//2006第一次写入
+		{
+			ARY = ( ARY & 0x0038 ) | ( byData & 0x8 ) << 5 | ( byData & 0x3 ) << 6 | ( byData & 0x30 ) >> 4;
+			ARX = ( ARX & 0x00FF ) | ( byData & 0x4 ) << 6;
+		}
+		PPU_Latch_Flag ^= 1;
+		break;
+
+	case 0x2007:   /* 0x2007 */
+			//PPU_Addr = ( NSCROLLY & 0x0003 ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLX & 0x00F8 ) >> 3;
+
+#ifdef splitPPURAM
+
+			if( PPU_Addr >= 0x3C00 )
+			{
+					byData &= 0x3F;
+
+					if(0x0000 == (PPU_Addr & 0x000F)) // is it THE 0 entry?
+					{
+#ifdef LEON
+						PALRAM[ 0x300 ] = PALRAM[ 0x310 ] = PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
+#else
+						PALRAM[ 0x300 ] = PALRAM[ 0x310 ] = byData;
+						PalTable[ 0x00 ] = PalTable[ 0x10 ] = NesPalette[ byData ] | 0x8000;
+#endif
+					}
+					else
+					{
+					//int iaddr = PPU_Addr & 0x001F;
+#ifdef LEON
+						PALRAM[ PPU_Addr & 0x3FF ] = PalTable[ PPU_Addr & 0x001F ] = byData;
+#else
+						PALRAM[ PPU_Addr & 0x3FF ] = byData;
+						PalTable[ PPU_Addr & 0x001F ] = NesPalette[ byData ];
+#endif
+					}
+					PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] = PalTable[ 0x10 ] = 
+						PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ]  = PalTable[ 0x00 ];
+					PPU_Addr += PPU_Increment;
+					//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+					//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+					break;
+			}
+			else if( byVramWriteEnable || PPU_Addr >= 0x2000 )
+				PPUBANK[ PPU_Addr >> 10 ][ PPU_Addr & 0x3ff ] = byData;
+
+#else /* splitPPURAM */
+
+			if( PPU_Addr >= 0x2000/*NSCROLLY & 0x0002*/ )	//2000-3FFF
+			{
+				if( PPU_Addr >= 0x3F00/*NSCROLLY & 0x0040*/)	//3F00-3FFF
+				{
+					byData &= 0x3F;
+
+					if(0x0000 == (PPU_Addr & 0x000F)) // is it THE 0 entry?
+					{
+#ifdef LEON
+						PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
+#else
+						PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = byData;
+						PalTable[ 0x00 ] = PalTable[ 0x10 ] = NesPalette[ byData ] | 0x8000;
+#endif
+					}
+					else if(0x0000 == (PPU_Addr & 0x0010))
+					{
+						// background palette
+#ifdef LEON
+						PPURAM[ PPU_Addr ] = PalTable[ PPU_Addr & 0x000F ] = byData;
+#else
+						PPURAM[ PPU_Addr ] = byData;
+						PalTable[ PPU_Addr & 0x000F ] = NesPalette[ byData ];
+#endif
+					}
+					else
+					{
+						// sprite palette
+#ifdef LEON
+						PPURAM[ PPU_Addr/* & 0x000F*/ ] = PalTable[ PPU_Addr & 0x001F ] = byData; 
+#else
+						PPURAM[ PPU_Addr/* & 0x000F*/ ] = byData;
+						PalTable[ PPU_Addr & 0x001F ] = NesPalette[ byData ]; 
+#endif
+					}
+					PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] = PalTable[ 0x10 ] = 
+						PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ]  = PalTable[ 0x00 ];
+					PPU_Addr += PPU_Increment;
+					//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+					//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+					break;
+				}
+				else						//2000-3EFF
+					//PPUBANK[ ( ( NSCROLLY & 0x100 ) >> 7 ) + ( ( NSCROLLX & 0x100 ) >> 8 ) + 8 ][ addr & 0x3ff ] = byData;
+					PPUBANK[ ( PPU_Addr & 0x2FFF ) >> 10 ][ PPU_Addr & 0x3ff ] = byData;
+			}
+			else if( byVramWriteEnable )	//0000-1FFF
+				PPUBANK[ PPU_Addr >> 10 ][ PPU_Addr & 0x3ff ] = byData;
+
+#endif /* splitPPURAM */
+
+			PPU_Addr += PPU_Increment;
+			//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+			//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+		break;
+	default:
+		apu_write( wAddr, byData );
+		break;
+	}
+}
+#else /* writeIO */
+
 
 static inline void K6502_WritePPU( WORD wAddr, BYTE byData )
 {
@@ -841,6 +1006,9 @@ static inline void K6502_WriteAPU( WORD wAddr, BYTE byData )
 	}
 #endif /* splitIO */
 }
+
+#endif /* writeIO */
+
 
 //
 ///*===================================================================*/

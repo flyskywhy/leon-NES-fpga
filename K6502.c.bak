@@ -14,10 +14,7 @@
 #include "InfoNES.h"
 
 #include "K6502.h"
-
-#ifndef killsystem
 #include "InfoNES_System.h"
-#endif
 
 
 #ifdef splitIO

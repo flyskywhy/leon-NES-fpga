@@ -36,27 +36,55 @@
 /*-------------------------------------------------------------------*/
 
 #include "InfoNES.h"
+
+#ifdef killsystem
+//#include <stdio.h>
+//#include <stdlib.h>
+#else
 #include "InfoNES_System.h"
-#include "InfoNES_Mapper.h"
+#endif
+
+//#include "InfoNES_Mapper.h"
 #include "InfoNES_pAPU.h"
 #include "K6502.h"
 
 #ifdef AFS
+void do_frame();
+
+#ifdef LEON
+#include "leon.h"
+struct lregs *lr = (struct lregs *)PREGS;
+unsigned int cur_time, last_frame_time;
+#else /* LEON */
 #include "time.h"
 clock_t cur_time, last_frame_time;
+#endif /* LEON */
+
 int frames_since_last;
+
 #ifdef PrintfFrameSkip
 #include <stdio.h>
 #endif /* PrintfFrameSkip */
+
 #ifdef PrintfFrameClock
 #include <stdio.h>
-unsigned int temp;
-unsigned int Frame = 0;
-#endif /* PrintfFrameClock */
-void do_frame();
-#endif /* AFS */
 
 #ifdef LEON
+unsigned int  temp;
+#else /* LEON */
+clock_t temp;
+#endif /* LEON */
+
+unsigned int Frame = 0;
+#endif /* PrintfFrameClock */
+
+#ifdef PrintfFrameGraph
+#include <stdio.h>
+#endif /* PrintfFrameGraph */
+
+#endif /* AFS */
+
+#ifndef killstring
 #include <string.h>
 #endif
 
@@ -198,6 +226,117 @@ void do_frame();
 //
 //#endif /* splitIO */
 
+#ifdef killwif
+
+writefunc PPU_write_tbl[ 8 ];
+
+static inline void _2000W( BYTE byData )
+{
+	PPU_R0 = byData;
+	PPU_Increment = ( PPU_R0 & R0_INC_ADDR ) ? 32 : 1;
+	ARX = ( ARX & 0xFF ) | (int)( byData & 1 ) << 8;
+	ARY = ( ARY & 0xFF ) | (int)( byData & 2 ) << 7;
+	NES_ChrGen = PPUBANK[ ( PPU_R0 & R0_BG_ADDR ) >> 2];
+	NES_SprGen = PPUBANK[ ( PPU_R0 & R0_SP_ADDR ) >> 1];
+	PPU_SP_Height = ( PPU_R0 & R0_SP_SIZE ) ? 16 : 8;
+}
+static inline void _2001W( BYTE byData )
+{
+	PPU_R1 = byData;
+}
+static inline void _2002W( BYTE byData )
+{
+}
+static inline void _2003W( BYTE byData )
+{
+	PPU_R3 = byData;				// Sprite RAM Address
+}
+static inline void _2004W( BYTE byData )
+{
+	SPRRAM[ PPU_R3++ ] = byData;	// Write data to Sprite RAM
+}
+static inline void _2005W( BYTE byData )
+{
+	//PPU_R5 = byData;
+	if ( PPU_Latch_Flag )	//2005第二次写入
+		ARY = ( ARY & 0x0100 ) | byData;	// t:0000001111100000=d:11111000
+	else					//2005第一次写入
+		ARX = ( ARX & 0x0100 ) | byData;	// t:0000000000011111=d:11111000
+	PPU_Latch_Flag ^= 1;
+}
+static inline void _2006W( BYTE byData )
+{
+	//PPU_R6 = byData;
+	if ( PPU_Latch_Flag )	//2006第二次写入
+	{
+		ARY = ( ARY & 0x01C7 ) | ( byData & 0xE0 ) >> 2;
+		ARX = ( ARX & 0x0107 ) | ( byData & 0x1F ) << 3;
+		NSCROLLX = ARX;
+		NSCROLLY = ARY;
+		PPU_Addr = ( NSCROLLY & 0x0003 ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLX & 0x00F8 ) >> 3;
+	}
+	else					//2006第一次写入
+	{
+		ARY = ( ARY & 0x0038 ) | ( byData & 0x8 ) << 5 | ( byData & 0x3 ) << 6 | ( byData & 0x30 ) >> 4;
+		ARX = ( ARX & 0x00FF ) | ( byData & 0x4 ) << 6;
+	}
+	PPU_Latch_Flag ^= 1;
+}
+static inline void _2007W( BYTE byData )
+{
+	//PPU_R7 = byData;
+	//PPU_Addr = ( NSCROLLY & 0x0003 ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLX & 0x00F8 ) >> 3;
+	if( PPU_Addr >= 0x2000/*NSCROLLY & 0x0002*/ )	//2000-3FFF
+	{
+		if( PPU_Addr >= 0x3F00/*NSCROLLY & 0x0040*/)	//3F00-3FFF
+		{
+			byData &= 0x3F;
+			if(0x0000 == (PPU_Addr & 0x000F))		// is it THE 0 entry?
+			{
+#ifdef LEON
+				PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
+#else
+				PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = byData;
+				PalTable[ 0x00 ] = PalTable[ 0x10 ] = NesPalette[ byData ] | 0x8000;
+#endif
+			}
+			else if(0x0000 == (PPU_Addr & 0x0010))	// background palette
+			{
+#ifdef LEON
+				PPURAM[ PPU_Addr ] = PalTable[ PPU_Addr & 0x000F ] = byData;
+#else
+				PPURAM[ PPU_Addr ] = byData;
+				PalTable[ PPU_Addr & 0x000F ] = NesPalette[ byData ];
+#endif
+			}
+			else									// sprite palette
+			{
+#ifdef LEON
+				PPURAM[ PPU_Addr/* & 0x000F*/ ] = PalTable[ PPU_Addr & 0x001F ] = byData; 
+#else
+				PPURAM[ PPU_Addr/* & 0x000F*/ ] = byData;
+				PalTable[ PPU_Addr & 0x001F ] = NesPalette[ byData ]; 
+#endif
+			}
+			PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] = PalTable[ 0x10 ] = 
+				PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ]  = PalTable[ 0x00 ];
+			PPU_Addr += PPU_Increment;
+			//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+			//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+			return;
+		}
+		else						//2000-3EFF
+			//PPUBANK[ ( ( NSCROLLY & 0x100 ) >> 7 ) + ( ( NSCROLLX & 0x100 ) >> 8 ) + 8 ][ addr & 0x3ff ] = byData;
+			PPUBANK[ ( PPU_Addr & 0x2FFF ) >> 10 ][ PPU_Addr & 0x3ff ] = byData;
+	}
+	else if( byVramWriteEnable )	//0000-1FFF
+		PPUBANK[ PPU_Addr >> 10 ][ PPU_Addr & 0x3ff ] = byData;
+	PPU_Addr += PPU_Increment;
+	//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+	//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+}
+#endif /* killwif */
+
 
 
 #ifdef killif
@@ -336,7 +475,7 @@ static inline void _2007W( BYTE byData )
 }
 
 
-#endif
+#endif /* killif */
 
 
 
@@ -363,7 +502,7 @@ BYTE *ROMBANK2;
 BYTE *ROMBANK3;
 
 #if PocketNES == 1
-BYTE *memmap_tbl[8];
+BYTE *memmap_tbl[ 8 ];
 #endif
 
 //加速
@@ -376,7 +515,13 @@ BYTE *memmap_tbl[8];
 /*-------------------------------------------------------------------*/
 
 /* PPU RAM */
+#ifdef splitPPURAM
+BYTE PTRAM[ 0x2000 ];	//只用于mapper2的代表VROM的8KB内存
+BYTE NTRAM[ 0x800 ];	//PPU真正的2KB内存
+BYTE PALRAM[ 0x400 ];	//调色板内存，虽然只有PPURAM的$3F00-$3F1F也就是PALRAM的$300-$31F是真正的调色板内存，而前面的是NT4的镜像而后面是调色板内存的镜像，但如果游戏测试通过的话，这样做会加快速度和减少内存需求
+#else
 BYTE PPURAM[ PPURAM_SIZE ];
+#endif
 
 /* VROM */
 BYTE *VROM;
@@ -404,8 +549,8 @@ BYTE PPU_R5;
 BYTE PPU_R6;
 
 //FCEU
-BYTE PPUGenLatch;
-BYTE PPUSPL;
+//BYTE PPUGenLatch;
+//BYTE PPUSPL;
 //
 ///* Vertical scroll value */
 //BYTE PPU_Scr_V;
@@ -459,13 +604,15 @@ WORD PPU_Scanline;
 //BYTE PPU_ScanTable[ 263 ];
 
 /* Name Table Bank */
-BYTE PPU_NameTableBank;
+//BYTE PPU_NameTableBank;
 
 ///* BG Base Address */
 //BYTE *PPU_BG_Base;
 
 //nesterJ
+#ifndef INES
 WORD  bg_pattern_table_addr;
+#endif /* INES */
 
 ///* Sprite Base Address */
 //BYTE *PPU_SP_Base;
@@ -535,6 +682,7 @@ WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//图形缓冲区数组，保存RG
 
 #ifdef INES
 
+  inline int InfoNES_DrawLine( register int DY, register int SY );
 #ifdef LEON
   inline int NES_RefreshSprites( BYTE *P, BYTE *Z );
 #else
@@ -589,16 +737,16 @@ BYTE PalTable[ 32 ];
 WORD PalTable[ 32 ];
 #endif
 
-/* Table for Mirroring */
-BYTE PPU_MirrorTable[][ 4 ] =
-{
-  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE1, NAME_TABLE1 },
-  { NAME_TABLE0, NAME_TABLE1, NAME_TABLE0, NAME_TABLE1 }/*,
-  { NAME_TABLE1, NAME_TABLE1, NAME_TABLE1, NAME_TABLE1 },
-  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE0, NAME_TABLE0 },
-  { NAME_TABLE0, NAME_TABLE1, NAME_TABLE2, NAME_TABLE3 },
-  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE0, NAME_TABLE1 }*///容量
-};
+///* Table for Mirroring */
+//BYTE PPU_MirrorTable[][ 4 ] =
+//{
+//  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE1, NAME_TABLE1 },
+//  { NAME_TABLE0, NAME_TABLE1, NAME_TABLE0, NAME_TABLE1 }/*,
+//  { NAME_TABLE1, NAME_TABLE1, NAME_TABLE1, NAME_TABLE1 },
+//  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE0, NAME_TABLE0 },
+//  { NAME_TABLE0, NAME_TABLE1, NAME_TABLE2, NAME_TABLE3 },
+//  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE0, NAME_TABLE1 }*///容量
+//};
 
 /*-------------------------------------------------------------------*/
 /*  APU and Pad resources                                            */
@@ -618,32 +766,20 @@ DWORD PAD_System;
 DWORD PAD1_Bit;
 DWORD PAD2_Bit;
 
-/*-------------------------------------------------------------------*/
-/*  Mapper Function                                                  */
-/*-------------------------------------------------------------------*/
 
-/* Initialize Mapper */
-void (*MapperInit)();
-/* Write to Mapper */
-void (*MapperWrite)( WORD wAddr, BYTE byData );
-/* Write to SRAM */
-//加速 void (*MapperSram)( WORD wAddr, BYTE byData );
-/* Write to Apu */
-//加速 void (*MapperApu)( WORD wAddr, BYTE byData );
-/* Read from Apu */
-//加速 BYTE (*MapperReadApu)( WORD wAddr );
-/* Callback at VSync */
-//加速 void (*MapperVSync)();
-/* Callback at HSync */
-void (*MapperHSync)();
-/* Callback at PPU read/write */
-//加速 void (*MapperPPU)( WORD wAddr );
-/* Callback at Rendering Screen 1:BG, 0:Sprite */
-//减容 void (*MapperRenderScreen)( BYTE byMode );
+
 
 /*-------------------------------------------------------------------*/
 /*  ROM information                                                  */
 /*-------------------------------------------------------------------*/
+
+#ifdef killsystem
+int RomSize;
+int VRomSize;
+int MapperNo;
+int ROM_Mirroring;
+
+#else /* killsystem */
 
 /* .nes File Header */
 struct NesHeader_tag NesHeader;
@@ -659,12 +795,14 @@ BYTE ROM_SRAM;
 BYTE ROM_Trainer;
 /* Four screen VRAM  */
 BYTE ROM_FourScr;
+#endif /* killsystem */
 
 /*===================================================================*/
 /*                                                                   */
 /*                InfoNES_Init() : Initialize InfoNES                */
 /*                                                                   */
 /*===================================================================*/
+#ifndef killsystem
 void InfoNES_Init()
 {
 /*
@@ -834,7 +972,159 @@ int InfoNES_Reset()
   /*  Initialize PPU                                                   */
   /*-------------------------------------------------------------------*/
 
-  InfoNES_SetupPPU();
+  //InfoNES_SetupPPU();
+
+
+#ifdef killwif
+	PPU_write_tbl[ 0 ] = _2000W;	//$2000
+	PPU_write_tbl[ 1 ] = _2001W;	//$2001
+	PPU_write_tbl[ 2 ] = _2002W;	//$2002
+	PPU_write_tbl[ 3 ] = _2003W;	//$2003
+	PPU_write_tbl[ 4 ] = _2004W;	//$2004
+	PPU_write_tbl[ 5 ] = _2005W;	//$2005
+	PPU_write_tbl[ 6 ] = _2006W;	//$2006
+	PPU_write_tbl[ 7 ] = _2007W;	//$2007
+#endif /* killwif */
+
+
+#ifdef killif
+	PPU_read_tbl[ 0 ] = empty_PPU_R;	//$2000
+	PPU_read_tbl[ 1 ] = empty_PPU_R;	//$2001
+	PPU_read_tbl[ 2 ] = _2002R;			//$2002
+	PPU_read_tbl[ 3 ] = empty_PPU_R;	//$2003
+	PPU_read_tbl[ 4 ] = empty_PPU_R;	//$2004
+	PPU_read_tbl[ 5 ] = empty_PPU_R;	//$2005
+	PPU_read_tbl[ 6 ] = empty_PPU_R;	//$2006
+	PPU_read_tbl[ 7 ] = _2007R;			//$2007
+
+	PPU_write_tbl[ 0 ] = _2000W;	//$2000
+	PPU_write_tbl[ 1 ] = _2001W;	//$2001
+	PPU_write_tbl[ 2 ] = _2002W;	//$2002
+	PPU_write_tbl[ 3 ] = _2003W;	//$2003
+	PPU_write_tbl[ 4 ] = _2004W;	//$2004
+	PPU_write_tbl[ 5 ] = _2005W;	//$2005
+	PPU_write_tbl[ 6 ] = _2006W;	//$2006
+	PPU_write_tbl[ 7 ] = _2007W;	//$2007
+#endif /* killif */
+
+  // Clear PPU and Sprite Memory
+#ifdef splitPPURAM
+  InfoNES_MemorySet( PTRAM, 0, sizeof PTRAM );
+  InfoNES_MemorySet( NTRAM, 0, sizeof NTRAM );
+  InfoNES_MemorySet( PALRAM, 0, sizeof PALRAM );
+#else
+  InfoNES_MemorySet( PPURAM, 0, sizeof PPURAM );
+#endif
+
+  InfoNES_MemorySet( SPRRAM, 0, sizeof SPRRAM );
+
+  // Reset PPU Register
+  PPU_R0 = PPU_R1 = PPU_R2 = PPU_R3 = PPU_R7 = 0;
+
+  //lizheng
+  /*PPU_R4 = */PPU_R5 = PPU_R6 = 0;
+
+  //FCEU
+  //PPUGenLatch = 0;
+  //PPUSPL = 0;
+
+  // Reset latch flag
+  PPU_Latch_Flag = 0;
+
+  // Reset up and down clipping flag
+  PPU_UpDown_Clip = 0;
+
+  //FrameStep = 0;
+  //FrameIRQ_Enable = 0;
+
+  //// Reset Scroll values
+  //PPU_Scr_V = PPU_Scr_V_Next = PPU_Scr_V_Byte = PPU_Scr_V_Byte_Next = PPU_Scr_V_Bit = PPU_Scr_V_Bit_Next = 0;
+  //PPU_Scr_H = PPU_Scr_H_Next = PPU_Scr_H_Byte = PPU_Scr_H_Byte_Next = PPU_Scr_H_Bit = PPU_Scr_H_Bit_Next = 0;
+
+  // Reset PPU address
+  PPU_Addr = 0;
+#ifdef INES
+  ARX = NSCROLLX = 0;
+  ARY = NSCROLLY = 0;
+  FirstSprite = -1;											//初始化FirstSprite
+#else
+  PPU_Temp = 0;
+
+//nesterJ
+  PPU_x = 0;
+
+#endif /*INES*/
+
+  // Reset scanline
+  PPU_Scanline = 0;
+
+  //// Reset hit position of sprite #0 
+  //SpriteJustHit = 0;
+
+  // Reset information on PPU_R0
+  PPU_Increment = 1;
+  //PPU_NameTableBank = NAME_TABLE0;
+  //PPU_BG_Base = ChrBuf;
+  //PPU_SP_Base = ChrBuf + 256 * 64;
+  PPU_SP_Height = 8;
+  //nester
+#ifdef INES
+  NES_ChrGen = 0;
+  NES_SprGen = 0;
+#else
+  bg_pattern_table_addr = 0;
+  spr_pattern_table_addr = 0;
+#endif /* INES */
+
+  // Reset PPU banks
+#ifndef splitPPURAM
+  int nPage;
+  for ( nPage = 0; nPage < 16; ++nPage )
+    PPUBANK[ nPage ] = &PPURAM[ nPage * 0x400 ];
+#endif /* splitPPURAM */
+
+  /* Mirroring of Name Table */
+  //InfoNES_Mirroring( ROM_Mirroring );
+  if( ROM_Mirroring )		//垂直NT镜像
+  {
+#ifdef splitPPURAM
+  PPUBANK[ NAME_TABLE0 ] = NTRAM;
+  PPUBANK[ NAME_TABLE1 ] = NTRAM + 0x400;
+  PPUBANK[ NAME_TABLE2 ] = NTRAM;
+  PPUBANK[ NAME_TABLE3 ] = NTRAM + 0x400;
+  PPUBANK[ 12 ] = NTRAM;
+  PPUBANK[ 13 ] = NTRAM + 0x400;
+  PPUBANK[ 14 ] = NTRAM;
+  PPUBANK[ 15 ] = PALRAM;
+#else
+  PPUBANK[ NAME_TABLE0 ] = &PPURAM[ NAME_TABLE0 * 0x400 ];
+  PPUBANK[ NAME_TABLE1 ] = &PPURAM[ NAME_TABLE1 * 0x400 ];
+  PPUBANK[ NAME_TABLE2 ] = &PPURAM[ NAME_TABLE0 * 0x400 ];
+  PPUBANK[ NAME_TABLE3 ] = &PPURAM[ NAME_TABLE1 * 0x400 ];
+#endif /* splitPPURAM */
+  }
+  else						//水平NT镜像
+  {
+#ifdef splitPPURAM
+  PPUBANK[ NAME_TABLE0 ] = NTRAM;
+  PPUBANK[ NAME_TABLE1 ] = NTRAM;
+  PPUBANK[ NAME_TABLE2 ] = NTRAM + 0x400;
+  PPUBANK[ NAME_TABLE3 ] = NTRAM + 0x400;
+  PPUBANK[ 12 ] = NTRAM;
+  PPUBANK[ 13 ] = NTRAM;
+  PPUBANK[ 14 ] = NTRAM + 0x400;
+  PPUBANK[ 15 ] = PALRAM;
+#else
+  PPUBANK[ NAME_TABLE0 ] = &PPURAM[ NAME_TABLE0 * 0x400 ];
+  PPUBANK[ NAME_TABLE1 ] = &PPURAM[ NAME_TABLE0 * 0x400 ];
+  PPUBANK[ NAME_TABLE2 ] = &PPURAM[ NAME_TABLE1 * 0x400 ];
+  PPUBANK[ NAME_TABLE3 ] = &PPURAM[ NAME_TABLE1 * 0x400 ];
+#endif /* splitPPURAM */
+  }
+
+  /* Reset VRAM Write Enable */
+  byVramWriteEnable = ( NesHeader.byVRomSize == 0 ) ? 1 : 0;
+
 
   /*-------------------------------------------------------------------*/
   /*  Initialize pAPU                                                  */
@@ -842,26 +1132,25 @@ int InfoNES_Reset()
 
   InfoNES_pAPUInit();
 
-  /*-------------------------------------------------------------------*/
-  /*  Initialize Mapper                                                */
-  /*-------------------------------------------------------------------*/
 
-  // Get Mapper Table Index
-  for ( nIdx = 0; MapperTable[ nIdx ].nMapperNo != -1; ++nIdx )
-  {
-    if ( MapperTable[ nIdx ].nMapperNo == MapperNo )
-      break;
-  }
 
-  if ( MapperTable[ nIdx ].nMapperNo == -1 )
-  {
-    // Non support mapper
-    InfoNES_MessageBox( "Mapper #%d is unsupported.\n", MapperNo );
-    return -1;
-  }
 
-  // Set up a mapper initialization function
-  MapperTable[ nIdx ].pMapperInit();
+  //// Get Mapper Table Index
+  //for ( nIdx = 0; MapperTable[ nIdx ].nMapperNo != -1; ++nIdx )
+  //{
+  //  if ( MapperTable[ nIdx ].nMapperNo == MapperNo )
+  //    break;
+  //}
+
+  //if ( MapperTable[ nIdx ].nMapperNo == -1 )
+  //{
+  //  // Non support mapper
+  //  InfoNES_MessageBox( "Mapper #%d is unsupported.\n", MapperNo );
+  //  return -1;
+  //}
+
+  //// Set up a mapper initialization function
+  //MapperTable[ nIdx ].pMapperInit();
 
 //加速
 /*for ( WORD i = 0x0000; i < 0x2000; i++ )
@@ -902,133 +1191,146 @@ memcpy( PAGE + 0x6000, ROMBANK3, 0x2000 );*/
 /*                InfoNES_SetupPPU() : Initialize PPU                */
 /*                                                                   */
 /*===================================================================*/
-void InfoNES_SetupPPU()
-{
-/*
- *  Initialize PPU
- *
- */
-
-#ifdef killif
-	PPU_read_tbl[ 0 ] = empty_PPU_R;	//$2000
-	PPU_read_tbl[ 1 ] = empty_PPU_R;	//$2001
-	PPU_read_tbl[ 2 ] = _2002R;			//$2002
-	PPU_read_tbl[ 3 ] = empty_PPU_R;	//$2003
-	PPU_read_tbl[ 4 ] = empty_PPU_R;	//$2004
-	PPU_read_tbl[ 5 ] = empty_PPU_R;	//$2005
-	PPU_read_tbl[ 6 ] = empty_PPU_R;	//$2006
-	PPU_read_tbl[ 7 ] = _2007R;			//$2007
-
-	PPU_write_tbl[ 0 ] = _2000W;	//$2000
-	PPU_write_tbl[ 1 ] = _2001W;	//$2001
-	PPU_write_tbl[ 2 ] = _2002W;	//$2002
-	PPU_write_tbl[ 3 ] = _2003W;	//$2003
-	PPU_write_tbl[ 4 ] = _2004W;	//$2004
-	PPU_write_tbl[ 5 ] = _2005W;	//$2005
-	PPU_write_tbl[ 6 ] = _2006W;	//$2006
-	PPU_write_tbl[ 7 ] = _2007W;	//$2007
-#endif /* killif */
-
-  int nPage;
-
-  // Clear PPU and Sprite Memory
-  InfoNES_MemorySet( PPURAM, 0, sizeof PPURAM );
-  InfoNES_MemorySet( SPRRAM, 0, sizeof SPRRAM );
-
-  // Reset PPU Register
-  PPU_R0 = PPU_R1 = PPU_R2 = PPU_R3 = PPU_R7 = 0;
-
-  //lizheng
-  /*PPU_R4 = */PPU_R5 = PPU_R6 = 0;
-
-  //FCEU
-  PPUGenLatch = 0;
-  PPUSPL = 0;
-
-  // Reset latch flag
-  PPU_Latch_Flag = 0;
-
-  // Reset up and down clipping flag
-  PPU_UpDown_Clip = 0;
-
-  //FrameStep = 0;
-  //FrameIRQ_Enable = 0;
-
-  //// Reset Scroll values
-  //PPU_Scr_V = PPU_Scr_V_Next = PPU_Scr_V_Byte = PPU_Scr_V_Byte_Next = PPU_Scr_V_Bit = PPU_Scr_V_Bit_Next = 0;
-  //PPU_Scr_H = PPU_Scr_H_Next = PPU_Scr_H_Byte = PPU_Scr_H_Byte_Next = PPU_Scr_H_Bit = PPU_Scr_H_Bit_Next = 0;
-
-  // Reset PPU address
-  PPU_Addr = 0;
-#ifdef INES
-  ARX = NSCROLLX = 0;
-  ARY = NSCROLLY = 0;
-  FirstSprite = -1;											//初始化FirstSprite
-#else
-  PPU_Temp = 0;
-
-//nesterJ
-  PPU_x = 0;
-
-#endif /*INES*/
-
-  // Reset scanline
-  PPU_Scanline = 0;
-
-  //// Reset hit position of sprite #0 
-  //SpriteJustHit = 0;
-
-  // Reset information on PPU_R0
-  PPU_Increment = 1;
-  PPU_NameTableBank = NAME_TABLE0;
-  //PPU_BG_Base = ChrBuf;
-  //PPU_SP_Base = ChrBuf + 256 * 64;
-  PPU_SP_Height = 8;
-  //nester
-  bg_pattern_table_addr = 0;
-  spr_pattern_table_addr = 0;
-
-  // Reset PPU banks
-  for ( nPage = 0; nPage < 16; ++nPage )
-    PPUBANK[ nPage ] = &PPURAM[ nPage * 0x400 ];
-#ifdef INES
-			  NES_ChrGen = PPUBANK[ ( PPU_R0 & R0_BG_ADDR ) >> 2];
-			  NES_SprGen = PPUBANK[ ( PPU_R0 & R0_SP_ADDR ) >> 1];
-#endif /* INES */
-
-  /* Mirroring of Name Table */
-  InfoNES_Mirroring( ROM_Mirroring );
-
-  /* Reset VRAM Write Enable */
-  byVramWriteEnable = ( NesHeader.byVRomSize == 0 ) ? 1 : 0;
-}
-
-/*===================================================================*/
-/*                                                                   */
-/*       InfoNES_Mirroring() : Set up a Mirroring of Name Table      */
-/*                                                                   */
-/*===================================================================*/
-void InfoNES_Mirroring( int nType )
-{
-/*
- *  Set up a Mirroring of Name Table
- *
- *  Parameters
- *    int nType          (Read)
- *      Mirroring Type
- *        0 : Horizontal
- *        1 : Vertical
- *        2 : One Screen 0x2400
- *        3 : One Screen 0x2000
- *        4 : Four Screen
- *        5 : Special for Mapper #233
- */
-
-  PPUBANK[ NAME_TABLE0 ] = &PPURAM[ PPU_MirrorTable[ nType ][ 0 ] * 0x400 ];
-  PPUBANK[ NAME_TABLE1 ] = &PPURAM[ PPU_MirrorTable[ nType ][ 1 ] * 0x400 ];
-  PPUBANK[ NAME_TABLE2 ] = &PPURAM[ PPU_MirrorTable[ nType ][ 2 ] * 0x400 ];
-  PPUBANK[ NAME_TABLE3 ] = &PPURAM[ PPU_MirrorTable[ nType ][ 3 ] * 0x400 ];
-}
+//void InfoNES_SetupPPU()
+//{
+///*
+// *  Initialize PPU
+// *
+// */
+//#ifdef killwif
+//	PPU_write_tbl[ 0 ] = _2000W;	//$2000
+//	PPU_write_tbl[ 1 ] = _2001W;	//$2001
+//	PPU_write_tbl[ 2 ] = _2002W;	//$2002
+//	PPU_write_tbl[ 3 ] = _2003W;	//$2003
+//	PPU_write_tbl[ 4 ] = _2004W;	//$2004
+//	PPU_write_tbl[ 5 ] = _2005W;	//$2005
+//	PPU_write_tbl[ 6 ] = _2006W;	//$2006
+//	PPU_write_tbl[ 7 ] = _2007W;	//$2007
+//#endif /* killwif */
+//
+//
+//#ifdef killif
+//	PPU_read_tbl[ 0 ] = empty_PPU_R;	//$2000
+//	PPU_read_tbl[ 1 ] = empty_PPU_R;	//$2001
+//	PPU_read_tbl[ 2 ] = _2002R;			//$2002
+//	PPU_read_tbl[ 3 ] = empty_PPU_R;	//$2003
+//	PPU_read_tbl[ 4 ] = empty_PPU_R;	//$2004
+//	PPU_read_tbl[ 5 ] = empty_PPU_R;	//$2005
+//	PPU_read_tbl[ 6 ] = empty_PPU_R;	//$2006
+//	PPU_read_tbl[ 7 ] = _2007R;			//$2007
+//
+//	PPU_write_tbl[ 0 ] = _2000W;	//$2000
+//	PPU_write_tbl[ 1 ] = _2001W;	//$2001
+//	PPU_write_tbl[ 2 ] = _2002W;	//$2002
+//	PPU_write_tbl[ 3 ] = _2003W;	//$2003
+//	PPU_write_tbl[ 4 ] = _2004W;	//$2004
+//	PPU_write_tbl[ 5 ] = _2005W;	//$2005
+//	PPU_write_tbl[ 6 ] = _2006W;	//$2006
+//	PPU_write_tbl[ 7 ] = _2007W;	//$2007
+//#endif /* killif */
+//
+//  int nPage;
+//
+//  // Clear PPU and Sprite Memory
+//  InfoNES_MemorySet( PPURAM, 0, sizeof PPURAM );
+//  InfoNES_MemorySet( SPRRAM, 0, sizeof SPRRAM );
+//
+//  // Reset PPU Register
+//  PPU_R0 = PPU_R1 = PPU_R2 = PPU_R3 = PPU_R7 = 0;
+//
+//  //lizheng
+//  /*PPU_R4 = */PPU_R5 = PPU_R6 = 0;
+//
+//  //FCEU
+//  //PPUGenLatch = 0;
+//  //PPUSPL = 0;
+//
+//  // Reset latch flag
+//  PPU_Latch_Flag = 0;
+//
+//  // Reset up and down clipping flag
+//  PPU_UpDown_Clip = 0;
+//
+//  //FrameStep = 0;
+//  //FrameIRQ_Enable = 0;
+//
+//  //// Reset Scroll values
+//  //PPU_Scr_V = PPU_Scr_V_Next = PPU_Scr_V_Byte = PPU_Scr_V_Byte_Next = PPU_Scr_V_Bit = PPU_Scr_V_Bit_Next = 0;
+//  //PPU_Scr_H = PPU_Scr_H_Next = PPU_Scr_H_Byte = PPU_Scr_H_Byte_Next = PPU_Scr_H_Bit = PPU_Scr_H_Bit_Next = 0;
+//
+//  // Reset PPU address
+//  PPU_Addr = 0;
+//#ifdef INES
+//  ARX = NSCROLLX = 0;
+//  ARY = NSCROLLY = 0;
+//  FirstSprite = -1;											//初始化FirstSprite
+//#else
+//  PPU_Temp = 0;
+//
+////nesterJ
+//  PPU_x = 0;
+//
+//#endif /*INES*/
+//
+//  // Reset scanline
+//  PPU_Scanline = 0;
+//
+//  //// Reset hit position of sprite #0 
+//  //SpriteJustHit = 0;
+//
+//  // Reset information on PPU_R0
+//  PPU_Increment = 1;
+//  PPU_NameTableBank = NAME_TABLE0;
+//  //PPU_BG_Base = ChrBuf;
+//  //PPU_SP_Base = ChrBuf + 256 * 64;
+//  PPU_SP_Height = 8;
+//  //nester
+//#ifndef INES
+//  bg_pattern_table_addr = 0;
+//  spr_pattern_table_addr = 0;
+//#endif /* INES */
+//
+//  // Reset PPU banks
+//  for ( nPage = 0; nPage < 16; ++nPage )
+//    PPUBANK[ nPage ] = &PPURAM[ nPage * 0x400 ];
+//#ifdef INES
+//			  NES_ChrGen = PPUBANK[ ( PPU_R0 & R0_BG_ADDR ) >> 2];
+//			  NES_SprGen = PPUBANK[ ( PPU_R0 & R0_SP_ADDR ) >> 1];
+//#endif /* INES */
+//
+//  /* Mirroring of Name Table */
+//  InfoNES_Mirroring( ROM_Mirroring );
+//
+//  /* Reset VRAM Write Enable */
+//  byVramWriteEnable = ( NesHeader.byVRomSize == 0 ) ? 1 : 0;
+//}
+//
+///*===================================================================*/
+///*                                                                   */
+///*       InfoNES_Mirroring() : Set up a Mirroring of Name Table      */
+///*                                                                   */
+///*===================================================================*/
+//void InfoNES_Mirroring( int nType )
+//{
+///*
+// *  Set up a Mirroring of Name Table
+// *
+// *  Parameters
+// *    int nType          (Read)
+// *      Mirroring Type
+// *        0 : Horizontal
+// *        1 : Vertical
+// *        2 : One Screen 0x2400
+// *        3 : One Screen 0x2000
+// *        4 : Four Screen
+// *        5 : Special for Mapper #233
+// */
+//
+//  PPUBANK[ NAME_TABLE0 ] = &PPURAM[ PPU_MirrorTable[ nType ][ 0 ] * 0x400 ];
+//  PPUBANK[ NAME_TABLE1 ] = &PPURAM[ PPU_MirrorTable[ nType ][ 1 ] * 0x400 ];
+//  PPUBANK[ NAME_TABLE2 ] = &PPURAM[ PPU_MirrorTable[ nType ][ 2 ] * 0x400 ];
+//  PPUBANK[ NAME_TABLE3 ] = &PPURAM[ PPU_MirrorTable[ nType ][ 3 ] * 0x400 ];
+//}
 
 /*===================================================================*/
 /*                                                                   */
@@ -1044,10 +1346,6 @@ void InfoNES_Main()
 
   // Initialize InfoNES
   InfoNES_Init();
-
-#ifdef AFS
-  last_frame_time = clock();
-#endif
 
   // Main loop
   while ( 1 )
@@ -1072,17 +1370,33 @@ void InfoNES_Main()
   InfoNES_Fin();
 }
 
+#endif /* killsystem */
+
 #ifdef INES
 inline void NES_CompareSprites( register int DY )
 {
 	register BYTE *T, *R;
 	register int D0, D1, J, Y , SprNum;
 
-//#ifdef LEON
-//	memset( Sprites, 0, 256 );									//初始化Sprites[64]
-//#else
+#ifdef LEON
+
+#ifdef killstring
+	for( J = 0; J < 64; J++)
+		Sprites[ J ] = 0;
+#else /* killstring */
+	memset( Sprites, 0, 256 );									//初始化Sprites[64]
+#endif /* killstring */
+
+#else /* LEON */
+
+#ifdef killstring
+	for( J = 0; J < 64; J++)
+		Sprites[ J ] = 0;
+#else /* killstring */
 	InfoNES_MemorySet( Sprites, 0, 256 );						//初始化Sprites[64]
-//#endif
+#endif /* killstring */
+
+#endif /* LEON */
 
 	SprNum = 0;													//初始化SprNum，它将用来表示在一条扫描线上遇到了多少个sprite
 	for( J = 0, T = SPRRAM; J < 64; J++, T += 4 )				//在SPRRAM[256]中按0到63的顺序比较sprite
@@ -1115,10 +1429,288 @@ inline void NES_CompareSprites( register int DY )
 #endif /* INES */
 
 
-#ifdef AFS
-void emulate_frame( bool draw )
+#ifdef killsystem
+
+#ifdef PrintfFrameGraph
+#include "./gamefile/mario.h"
+#else
+#include "./gamefile/contra.h"
+#endif /* PrintfFrameGraph */
+
+DWORD FrameCount = 0;
+DWORD dwKeyPad1 = 0;
+DWORD dwKeyPad2 = 0;
+DWORD dwKeySystem = 0;
+void reset();
+
+int main()
 {
-	bool retval = draw;
+#ifdef killstring
+	if( gamefile[ 0 ] == 'N' && gamefile[ 1 ] == 'E' && gamefile[ 2 ] == 'S' )	//*.nes文件
+#else
+	if( memcmp( gamefile, "NES\x1a", 4 ) == 0 )	//*.nes文件
+#endif
+	{
+		MapperNo = gamefile[ 6 ] >> 4;					//MapperNo，因为只支持mapper0、2、3，所以只要知道低4位信息就可以了
+		if( MapperNo != 0 && MapperNo != 2 && MapperNo != 3 )
+			return -1;
+		ROM = gamefile + 16;
+		RomSize = gamefile[ 4 ];
+		VRomSize = gamefile[ 5 ];
+		VROM = ROM + gamefile[ 4 ] * 0x4000;
+		ROM_Mirroring = gamefile[ 6 ] & 1;
+
+	}
+	//else										//*.bin文件
+	//{
+	//if( MapperNo == 0)
+	//	VROM = ROM + 0x8000
+	//}
+	for(;;)
+	{
+		reset();
+		do_frame();
+		InfoNES_pAPUDone();
+		//if()									//如果遥控器按的是退出键，就返回主控程序，否则就是reset键，重新进行游戏
+		//	break;
+	}
+	return 0;
+}
+
+void reset()
+{
+	/*-------------------------------------------------------------------*/
+	/*  Initialize resources                                             */
+	/*-------------------------------------------------------------------*/
+#ifdef killstring
+	int i;
+	for( i = 0; i < 2048; i++)
+		RAM[ i ] = 0;
+	for( i = 0; i < 32; i++)
+		PalTable[ i ] = 0;
+	for( i = 0; i < 24; i++)				//待优化 Reset APU register
+		APU_Reg[ i ] = 0;
+#else /* killstring */
+	memset( RAM, 0, sizeof RAM );
+	memset( PalTable, 0, sizeof PalTable );
+	memset( APU_Reg, 0, sizeof APU_Reg );	//待优化 Reset APU register
+#endif /* killstring */
+
+	PAD1_Latch = PAD2_Latch = PAD_System = 0;
+	PAD1_Bit = PAD2_Bit = 0;
+
+#ifndef AFS
+	FrameSkip = 0;
+	FrameCnt = 0;
+#endif /* AFS */
+
+	/*-------------------------------------------------------------------*/
+	/*  Initialize PPU                                                   */
+	/*-------------------------------------------------------------------*/
+#ifdef killwif
+	PPU_write_tbl[ 0 ] = _2000W;	//$2000
+	PPU_write_tbl[ 1 ] = _2001W;	//$2001
+	PPU_write_tbl[ 2 ] = _2002W;	//$2002
+	PPU_write_tbl[ 3 ] = _2003W;	//$2003
+	PPU_write_tbl[ 4 ] = _2004W;	//$2004
+	PPU_write_tbl[ 5 ] = _2005W;	//$2005
+	PPU_write_tbl[ 6 ] = _2006W;	//$2006
+	PPU_write_tbl[ 7 ] = _2007W;	//$2007
+#endif /* killwif */
+
+#ifdef killif
+	PPU_read_tbl[ 0 ] = empty_PPU_R;	//$2000
+	PPU_read_tbl[ 1 ] = empty_PPU_R;	//$2001
+	PPU_read_tbl[ 2 ] = _2002R;			//$2002
+	PPU_read_tbl[ 3 ] = empty_PPU_R;	//$2003
+	PPU_read_tbl[ 4 ] = empty_PPU_R;	//$2004
+	PPU_read_tbl[ 5 ] = empty_PPU_R;	//$2005
+	PPU_read_tbl[ 6 ] = empty_PPU_R;	//$2006
+	PPU_read_tbl[ 7 ] = _2007R;			//$2007
+
+	PPU_write_tbl[ 0 ] = _2000W;	//$2000
+	PPU_write_tbl[ 1 ] = _2001W;	//$2001
+	PPU_write_tbl[ 2 ] = _2002W;	//$2002
+	PPU_write_tbl[ 3 ] = _2003W;	//$2003
+	PPU_write_tbl[ 4 ] = _2004W;	//$2004
+	PPU_write_tbl[ 5 ] = _2005W;	//$2005
+	PPU_write_tbl[ 6 ] = _2006W;	//$2006
+	PPU_write_tbl[ 7 ] = _2007W;	//$2007
+#endif /* killif */
+
+	// Clear PPU and Sprite Memory
+#ifdef splitPPURAM
+
+#ifdef killstring
+	for( i = 0; i < 8192; i++)
+		PTRAM[ i ] = 0;
+	for( i = 0; i < 2048; i++)
+		NTRAM[ i ] = 0;
+	for( i = 0; i < 1024; i++)
+		PALRAM[ i ] = 0;
+#else /* killstring */
+	memset( PTRAM, 0, sizeof PTRAM );
+	memset( NTRAM, 0, sizeof NTRAM );
+	memset( PALRAM, 0, sizeof PALRAM );
+#endif /* killstring */
+
+#else /* splitPPURAM */
+
+#ifdef killstring
+	for( i = 0; i < 16384; i++)
+		PPURAM[ i ] = 0;
+#else /* killstring */
+	memset( PPURAM, 0, sizeof PPURAM );
+#endif /* killstring */
+
+#endif /* splitPPURAM */
+
+#ifdef killstring
+	for( i = 0; i < 256; i++)
+		SPRRAM[ i ] = 0;
+#else /* killstring */
+	memset( SPRRAM, 0, sizeof SPRRAM );
+#endif /* killstring */
+
+	PPU_R0 = PPU_R1 = PPU_R2 = PPU_R3 = PPU_R7 = 0;	//待优化  // Reset PPU Register
+	/*PPU_R4 = */PPU_R5 = PPU_R6 = 0;					//待优化
+	PPU_Latch_Flag = 0;
+	PPU_UpDown_Clip = 0;								//待优化
+
+	PPU_Addr = 0;										// Reset PPU address
+#ifdef INES
+	ARX = NSCROLLX = 0;
+	ARY = NSCROLLY = 0;
+	FirstSprite = -1;									//初始化FirstSprite
+#else
+	PPU_Temp = 0;
+	//nesterJ
+	PPU_x = 0;
+#endif /*INES*/
+
+	PPU_Scanline = 0;
+	//// Reset hit position of sprite #0 
+	//SpriteJustHit = 0;
+
+	// Reset information on PPU_R0
+	PPU_Increment = 1;
+	PPU_SP_Height = 8;
+#ifdef INES
+	NES_ChrGen = 0;
+	NES_SprGen = 0;
+#else
+	//nester
+	bg_pattern_table_addr = 0;
+	spr_pattern_table_addr = 0;
+#endif /* INES */
+
+	// Reset PPU banks
+#ifndef splitPPURAM
+	int nPage;
+	for ( nPage = 0; nPage < 16; ++nPage )
+		PPUBANK[ nPage ] = &PPURAM[ nPage * 0x400 ];
+#endif /* splitPPURAM */
+
+	if( ROM_Mirroring )		//垂直NT镜像
+	{
+#ifdef splitPPURAM
+		PPUBANK[ NAME_TABLE0 ] = NTRAM;
+		PPUBANK[ NAME_TABLE1 ] = NTRAM + 0x400;
+		PPUBANK[ NAME_TABLE2 ] = NTRAM;
+		PPUBANK[ NAME_TABLE3 ] = NTRAM + 0x400;
+		PPUBANK[ 12 ] = NTRAM;
+		PPUBANK[ 13 ] = NTRAM + 0x400;
+		PPUBANK[ 14 ] = NTRAM;
+		PPUBANK[ 15 ] = PALRAM;
+#else
+		PPUBANK[ NAME_TABLE0 ] = &PPURAM[ NAME_TABLE0 * 0x400 ];
+		PPUBANK[ NAME_TABLE1 ] = &PPURAM[ NAME_TABLE1 * 0x400 ];
+		PPUBANK[ NAME_TABLE2 ] = &PPURAM[ NAME_TABLE0 * 0x400 ];
+		PPUBANK[ NAME_TABLE3 ] = &PPURAM[ NAME_TABLE1 * 0x400 ];
+#endif /* splitPPURAM */
+	}
+	else						//水平NT镜像
+	{
+#ifdef splitPPURAM
+		PPUBANK[ NAME_TABLE0 ] = NTRAM;
+		PPUBANK[ NAME_TABLE1 ] = NTRAM;
+		PPUBANK[ NAME_TABLE2 ] = NTRAM + 0x400;
+		PPUBANK[ NAME_TABLE3 ] = NTRAM + 0x400;
+		PPUBANK[ 12 ] = NTRAM;
+		PPUBANK[ 13 ] = NTRAM;
+		PPUBANK[ 14 ] = NTRAM + 0x400;
+		PPUBANK[ 15 ] = PALRAM;
+#else
+		PPUBANK[ NAME_TABLE0 ] = &PPURAM[ NAME_TABLE0 * 0x400 ];
+		PPUBANK[ NAME_TABLE1 ] = &PPURAM[ NAME_TABLE0 * 0x400 ];
+		PPUBANK[ NAME_TABLE2 ] = &PPURAM[ NAME_TABLE1 * 0x400 ];
+		PPUBANK[ NAME_TABLE3 ] = &PPURAM[ NAME_TABLE1 * 0x400 ];
+#endif /* splitPPURAM */
+	}
+
+	/* Reset VRAM Write Enable */
+	byVramWriteEnable = ( MapperNo == 2 ) ? 1 : 0;
+
+	/*-------------------------------------------------------------------*/
+	/*  Initialize pAPU                                                  */
+	/*-------------------------------------------------------------------*/
+	InfoNES_pAPUInit();
+
+	K6502_Reset();
+	return;
+}
+
+void InfoNES_LoadFrame()	//只用于测试打印游戏画面的一部分
+{
+#ifdef PrintfFrameGraph
+	register int x, y;
+	if( FrameCount++ > 32)
+		for ( y = 130; y < 210; y++ ) 
+			for ( x = 0; x < 190; x++ )
+				if( x != 189 )
+					printf( "%c", WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] );
+				else
+					printf( "\n" );
+#endif /* PrintfFrameGraph */
+}
+
+/*int Get_GameKey(void)
+{
+	int i;
+	unsigned BIT[8],GameKey=0x00;
+	rPDATG|=(1<<3);
+	rPDATG&=(~(1<<3));
+	for(i=0;i<=7;i++)
+	{
+		rPDATG&=(~(1<<4));
+		BIT[i]=((rPDATG&(1<<2))<<1);
+		rPDATG|=(1<<4);
+	}
+	for(i=0;i<=7;i++)
+	{
+		GameKey|=(BIT[i]>>i);
+	}
+	return GameKey;
+	Uart_Printf("you pressed %d",GameKey);
+}*/
+void InfoNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
+{
+//		dwKeyPad1=Get_GameKey();
+		
+//  *pdwPad1   = ~dwKeyPad1;
+  *pdwPad1   = dwKeyPad1;
+  *pdwPad2   = dwKeyPad2;
+  *pdwSystem = dwKeySystem;
+}
+
+#endif /* killsystem */
+
+
+
+#ifdef AFS
+void emulate_frame( boolean draw )
+{
+	boolean retval = draw;
 
 //#ifdef LEON
 //time1 = clock();
@@ -1159,7 +1751,7 @@ void emulate_frame( bool draw )
 		else
 		{
 			K6502_Step( 25088 );										//只执行224条扫描线而不绘制扫描线，当然也不刷新屏幕，112 * 224 = 25088
-			InfoNES_MemorySet( WorkFrame, 0, sizeof( WorkFrame ) );		//清空屏幕也就是黑屏，不过这种情况比较少见，可以考虑去除
+			//InfoNES_MemorySet( WorkFrame, 0, sizeof( WorkFrame ) );		//清空屏幕也就是黑屏，不过这种情况比较少见，可以考虑去除
 			FirstSprite = -1;											//初始化FirstSprite
 		}
 	}
@@ -1190,7 +1782,7 @@ void emulate_frame( bool draw )
 //#endif
 
 				//if ( !APU_Mute )								//如果没有将模拟器设为静音状态则输出声音
-	InfoNES_pAPUVsync();
+//	InfoNES_pAPUVsync();
 }
 
 #ifdef THROTTLE_SPEED	//限速，在LEON中用不着，加速还来不及呢:)
@@ -1200,9 +1792,14 @@ static inline void SleepUntil(long time)
 
   while(1)
   {
-    timeleft = time - long(clock());
+#ifdef LEON
+    timeleft = time - (long)(lr->timercnt1);
+#else /* LEON */
+    timeleft = time - (long)(clock());
+#endif /* LEON */
     if(timeleft <= 0) break;
-    for(int i = 0; i < 1000; i++)
+    int i;
+    for(i = 0; i < 1000; i++)
     {
       i++;
 	  i--;
@@ -1213,12 +1810,43 @@ static inline void SleepUntil(long time)
 
 void do_frame()
 {
+	//lr->timerctrl1 |= 0x2;
+	lr->timercnt1  = 0x01FFFF;
+	//lr->timerload1 = 0xFFFFFF;
+#ifdef LEON
+	last_frame_time = lr->timercnt1;
+#else /* LEON */
+	last_frame_time = clock();
+#endif /* LEON */
+
+#ifdef PrintfFrameClock
+#ifdef LEON
+	temp = lr->timercnt1;
+#else /* LEON */
+	temp = clock();
+#endif /* LEON */
+#endif /* PrintfFrameClock */
+
+  for (;;)			//模拟器的主循环
+  {    
 	//此时，last_frame_time是上一次输出画面到屏幕上后的时间
+#ifdef LEON
+	cur_time = lr->timercnt1;	//获取当前的时间
+#else /* LEON */
 	cur_time = clock();	//获取当前的时间
+#endif /* LEON */
 
 #ifdef PrintfFrameClock	//输出每桢的CLOCK数
-	printf("FrameClock: %d;	Frame: %d\n", cur_time - temp, Frame++ );
-	temp = cur_time;
+//	printf("FrameClock: %d;	Frame: %d\n", temp - cur_time, Frame++ );
+	if( temp > cur_time )
+		printf("FrameClock: %d;	Frame: %d;	temp: %x;	cur_time: %x\n", temp - cur_time, Frame++, temp, cur_time );
+	else
+		printf("FrameClock: %d;	Frame: %d	temp: %x;	cur_time: %x\n", lr->timerload1 - cur_time + temp, Frame++, temp, cur_time );
+#ifdef LEON
+	temp = lr->timercnt1;
+#else /* LEON */
+	temp = clock();
+#endif /* LEON */
 
 	////printf("NonVBlank: %d;	VBlank: %d;	Ratio: %d;	Frame: %d\n", time2 - time1, time3 - time2, ( time2 - time1 ) / ( time3 - time2 ), Frame++ );
 	//printf("NonVBlank: %d;	VBlank: %d\n", time2 - time1, time3 - time2 );
@@ -1234,21 +1862,22 @@ void do_frame()
 	if( frames_since_last > 1 )													//如果真实世界中已经经过的时间包含的桢数大于1帧的话，则说明需要跳过一些桢才能使模拟器的速度正常
 	{
 		frames_since_last &= 0xF;													//将最高跳桢数限制为14
-		for( int i = 1; i < frames_since_last; i++ )
+		int i;
+		for( i = 1; i < frames_since_last; i++ )
 		{
 			last_frame_time += FRAME_PERIOD;
-			emulate_frame( false );														//在跳桢期间只模拟6502和APU
+			emulate_frame( FALSE );														//在跳桢期间只模拟6502和APU
 		}
 	}
 #endif /* PrintfFrameGraph */
 #endif /* PrintfFrameClock */
 
 	InfoNES_PadState( &PAD1_Latch, &PAD2_Latch, &PAD_System );							//在非跳桢期间获取手柄输入信息
-	emulate_frame( true );																//在非跳桢期间模拟6502、PPU和APU
-	//emulate_frame( false );																//仅用于测试跳桢期间的FrameClock
+	//emulate_frame( TRUE );																//在非跳桢期间模拟6502、PPU和APU
+	emulate_frame( FALSE );																//仅用于测试跳桢期间的FrameClock
 
 #ifdef THROTTLE_SPEED	//限速，在LEON中用不着，加速还来不及呢:)
-	SleepUntil(long(last_frame_time + FRAME_PERIOD));
+	SleepUntil((long)(last_frame_time + FRAME_PERIOD));
 #endif
 
 #ifdef PrintfFrameSkip	//输出跳桢数
@@ -1257,7 +1886,7 @@ void do_frame()
 #ifndef PrintfFrameClock
 	InfoNES_LoadFrame();																//将图形缓冲区数组里的内容刷新到屏幕上
 //#ifdef LEON
-//memcpy( DUMY, WorkFrame, NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
+//memcpy( DUMMY, WorkFrame, NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
 //#endif
 
 #endif /* PrintfFrameClock */
@@ -1272,9 +1901,10 @@ void do_frame()
 	//{
 	//  last_frame_time = cur_time;
 	//}
+  }
 }
 
-#endif /* AFS */
+#else /* AFS */
 
 
 /*===================================================================*/
@@ -1595,6 +2225,8 @@ void InfoNES_Cycle()
   }
 
 }
+
+#endif /* AFS */
 
 /*===================================================================*/
 /*                                                                   */

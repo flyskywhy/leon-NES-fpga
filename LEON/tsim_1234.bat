@@ -1,2 +1,2 @@
-make
+make rebuild
 tsim -gdb

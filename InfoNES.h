@@ -15,13 +15,32 @@
 
 #include "InfoNES_Types.h"
 
+//#define killsystem			//用于LEON，不用InfoNES_System_LEON.cpp文件，现在定义在Makefile中
+
+#define killstring			//用于LEON，不使用string.h中提供的memcmp、memcpy和memset库函数。
+
 #define PocketNES 1			//以查找数组的方式获取指令
 
-//#define HACK				//将各种可能只从RAM中读取的代码简化为只从RAM中读取
+#define HACK				//将各种可能只从RAM中读取的代码简化为只从RAM中读取
 
-#define splitIO				//通过简化6502种得IO读写函数来提高速度
+#define splitIO				//通过简化6502中的IO读写函数来提高速度
 
-//#define killif			//以查找函数指针数组的方式代替6502代码中的条件分支语句 //速度反而变慢，所以不用
+#define killif2				//以查找数据指针数组的方式代替6502代码中的条件分支语句
+
+#define writeIO				//设定使用K6502_WriteIO()代替K6502_WritePPU()K6502_WriteAPU()以减少Write6502RAM中的分支
+
+//#define killwif				//以查找函数指针数组的方式代替6502代码中Write6502RAM的条件分支语句	//速度会稍变慢，暂时不用
+#ifdef killwif
+#ifndef writefunc
+typedef /*static inline*/ void ( *writefunc )( BYTE byData );
+#endif
+extern writefunc PPU_write_tbl[ 8 ];
+//extern BYTE PPU_R( WORD wAddr );
+//extern void PPU_W( WORD wAddr, BYTE byData );
+#endif /* killwif */
+
+
+//#define killif			//以查找函数指针数组的方式代替6502代码中的条件分支语句 //速度反而变慢，所以不用，速度变慢可能是由于新增的函数调用的开销引起的
 #ifdef killif
 
 #ifndef readfunc
@@ -119,7 +138,15 @@ extern BYTE *memmap_tbl[8];
 /*-------------------------------------------------------------------*/
 
 /* PPU RAM */
+#define splitPPURAM	//把PPURAM分割成几块内存，如果游戏测试通过的话，这样做会加快速度和减少内存需求
+
+#ifdef splitPPURAM
+extern BYTE PTRAM[];
+extern BYTE NTRAM[];
+extern BYTE PALRAM[];
+#else
 extern BYTE PPURAM[];
+#endif /* splitPPURAM */
 
 /* VROM */
 extern BYTE *VROM;
@@ -160,8 +187,8 @@ extern BYTE PPU_R5;
 extern BYTE PPU_R6;
 
 //FCEU
-extern BYTE PPUGenLatch;
-extern BYTE PPUSPL;
+//extern BYTE PPUGenLatch;
+//extern BYTE PPUSPL;
 
 //extern BYTE PPU_Scr_V;
 //extern BYTE PPU_Scr_V_Next;
@@ -353,19 +380,23 @@ extern WORD PPU_Scanline;
 //extern BYTE PPU_ScanTable[];
 
 /* Name Table Bank */
-extern BYTE PPU_NameTableBank;
+//extern BYTE PPU_NameTableBank;
 
 ///* BG Base Address */
 //extern BYTE *PPU_BG_Base;
 
 //nesterJ
+#ifndef INES
 extern WORD  bg_pattern_table_addr;
+#endif /* INES */
 
 ///* Sprite Base Address */
 //extern BYTE *PPU_SP_Base;
 
 //nesterJ
+#ifndef INES
 extern WORD  spr_pattern_table_addr;
+#endif /* INES */
 
 /* Sprite Height */
 extern WORD PPU_SP_Height;
@@ -455,7 +486,7 @@ extern DWORD PAD2_Bit;
 /*-------------------------------------------------------------------*/
 
 /* Initialize Mapper */
-extern void (*MapperInit)();
+//extern void (*MapperInit)();
 /* Write to Mapper */
 extern void (*MapperWrite)( WORD wAddr, BYTE byData );
 /* Write to SRAM */
@@ -467,7 +498,7 @@ extern void (*MapperWrite)( WORD wAddr, BYTE byData );
 /* Callback at VSync */
 //加速 extern void (*MapperVSync)();
 /* Callback at HSync */
-extern void (*MapperHSync)();
+//extern void (*MapperHSync)();
 /* Callback at PPU read/write */
 //加速extern void (*MapperPPU)( WORD wAddr );
 /* Callback at Rendering Screen 1:BG, 0:Sprite */
@@ -476,6 +507,14 @@ extern void (*MapperHSync)();
 /*-------------------------------------------------------------------*/
 /*  ROM information                                                  */
 /*-------------------------------------------------------------------*/
+
+#ifdef killsystem
+extern int RomSize;
+extern int VRomSize;
+extern int MapperNo;
+extern int ROM_Mirroring;
+
+#else /* killsystem */
 
 /* .nes File Header */
 struct NesHeader_tag
@@ -499,11 +538,13 @@ extern BYTE ROM_Mirroring;
 extern BYTE ROM_SRAM;
 extern BYTE ROM_Trainer;
 extern BYTE ROM_FourScr;
+#endif /* killsystem */
 
 /*-------------------------------------------------------------------*/
 /*  Function prototypes                                              */
 /*-------------------------------------------------------------------*/
 
+#ifndef killsystem
 /* Initialize InfoNES */
 void InfoNES_Init();
 
@@ -517,19 +558,22 @@ int InfoNES_Load( const char *pszFileName );
 int InfoNES_Reset();
 
 /* Initialize PPU */
-void InfoNES_SetupPPU();
+//void InfoNES_SetupPPU();
 
 /* Set up a Mirroring of Name Table */
-void InfoNES_Mirroring( int nType );
+//void InfoNES_Mirroring( int nType );
 
 /* The main loop of InfoNES */ 
 void InfoNES_Main();
+#endif /* killsystem */
 
+#ifndef AFS
 /* The loop of emulation */
 void InfoNES_Cycle();
+#endif /* AFS */
 
 /* A function in H-Sync */
-int InfoNES_HSync();
+//int InfoNES_HSync();
 
 /* Render a scanline */
 /* Current Scanline */

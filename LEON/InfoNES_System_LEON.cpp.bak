@@ -1,8 +1,8 @@
 /*===================================================================*/
 /*                                                                   */
-/*  InfoNES_System_Linux.cpp : Linux specific File                   */
+/*  SLNES_System_Linux.c : Linux specific File                   */
 /*                                                                   */
-/*  2001/05/18  InfoNES Project ( Sound is based on DarcNES )        */
+/*  2001/05/18  SLNES Project ( Sound is based on DarcNES )        */
 /*                                                                   */
 /*===================================================================*/
 
@@ -24,12 +24,16 @@
 //#include <unistd.h>
 //ÒôÆµ #include <sys/soundcard.h>
 
-#include "../InfoNES.h"
-#include "../InfoNES_System.h"
-#include "../InfoNES_pAPU.h"
+#include "../SLNES.h"
+#include "../SLNES_System.h"
+#include "../SLNES_pAPU.h"
 
 //LEON
+#ifdef PrintfFrameGraph
+#include "../gamefile/mario.h"
+#else
 #include "../gamefile/contra.h"
+#endif /* PrintfFrameGraph */
 DWORD FrameCount = 0;
 
 #define TRUE 1
@@ -54,7 +58,7 @@ char szRomName[ 256 ];
 
 //lizheng #define VBOX_SIZE    7 
 //lizheng #define SOUND_DEVICE "/dev/dsp"
-#define VERSION      "InfoNES v0.91J"
+#define VERSION      "SLNES v0.91J"
 
 /*-------------------------------------------------------------------*/
 /*  Global Variables ( Linux specific )                              */
@@ -122,7 +126,7 @@ WORD NesPalette[ 64 ] =
 void main(void)
 {                                  
   int argc=2;
-  char *argv[2]={"InfoNES","mario.nes"};	
+  char *argv[2]={"SLNES","mario.nes"};	
 
 //  int       i;
 
@@ -208,7 +212,7 @@ void main(void)
 
 //lizheng void *emulation_thread(void *args)
 //lizheng {
-//lizheng   InfoNES_Main();
+//lizheng   SLNES_Main();
 //lizheng }
 
 /*===================================================================*/
@@ -324,7 +328,7 @@ void main(void)
       /* If emulation thread doesn't run, nothing here */
 //ÊÖ±ú      if ( bThread )
 //ÊÖ±ú      {
-//ÊÖ±ú	InfoNES_MessageBox( "Mapper : %d\nPRG ROM : %dKB\nCHR ROM : %dKB\n" \
+//ÊÖ±ú	SLNES_MessageBox( "Mapper : %d\nPRG ROM : %dKB\nCHR ROM : %dKB\n" \
 //ÊÖ±ú			    "Mirroring : %s\nSRAM : %s\n4 Screen : %s\nTrainer : %s\n",
 //ÊÖ±ú			    MapperNo, NesHeader.byRomSize * 16, NesHeader.byVRomSize * 8,
 //ÊÖ±ú			    ( ROM_Mirroring ? "V" : "H" ), ( ROM_SRAM ? "Yes" : "No" ), 
@@ -334,8 +338,8 @@ void main(void)
 
 //ÊÖ±ú    case 'v':
 //ÊÖ±ú    case 'V':
-//ÊÖ±ú      /* Version Infomation */
-//ÊÖ±ú      InfoNES_MessageBox( "%s\nA fast and portable NES emulator\n"
+//ÊÖ±ú      /* Version SLmation */
+//ÊÖ±ú      SLNES_MessageBox( "%s\nA fast and portable NES emulator\n"
 //ÊÖ±ú			  "Copyright (c) 1999-2003 Jay's Factory <jays_factory@excite.co.jp>",
 //ÊÖ±ú			  VERSION );
 //ÊÖ±ú      break;
@@ -419,7 +423,7 @@ void start_application( char *filename )
   strcpy( szRomName, filename );
 
   /* Load cassette */
-  if ( InfoNES_Load ( szRomName ) == 0 )
+  if ( SLNES_Load ( szRomName ) == 0 )
   { 
     /* Load SRAM */
 //lizheng     LoadSRAM();
@@ -427,7 +431,7 @@ void start_application( char *filename )
     /* Create Emulation Thread */
     bThread = TRUE;
 //lizheng     pthread_create( &emulation_tid, NULL, emulation_thread, NULL );
-    InfoNES_Main();
+    SLNES_Main();
   }
 }
 
@@ -497,7 +501,7 @@ void reset_application( void )
 //lizheng     SaveSRAM();
 
     /* Load cassette */
-    if ( InfoNES_Load ( szRomName ) == 0 )
+    if ( SLNES_Load ( szRomName ) == 0 )
     { 
       /* Load SRAM */
 //lizheng       LoadSRAM();
@@ -505,7 +509,7 @@ void reset_application( void )
       /* Create Emulation Thread */
       bThread = TRUE;
 //lizheng       pthread_create( &emulation_tid, NULL, emulation_thread, NULL );
-      InfoNES_Main();
+      SLNES_Main();
     }
   }
 }
@@ -706,17 +710,17 @@ void reset_application( void )
 
 /*===================================================================*/
 /*                                                                   */
-/*                  InfoNES_Menu() : Menu screen                     */
+/*                  SLNES_Menu() : Menu screen                     */
 /*                                                                   */
 /*===================================================================*/
-int InfoNES_Menu()
+int SLNES_Menu()
 {
 /*
  *  Menu screen
  *
  *  Return values
  *     0 : Normally
- *    -1 : Exit InfoNES
+ *    -1 : Exit SLNES
  */
 
   /* If terminated */
@@ -731,10 +735,10 @@ int InfoNES_Menu()
 
 /*===================================================================*/
 /*                                                                   */
-/*               InfoNES_ReadRom() : Read ROM image file             */
+/*               SLNES_ReadRom() : Read ROM image file             */
 /*                                                                   */
 /*===================================================================*/
-int InfoNES_ReadRom( const char *pszFileName )
+int SLNES_ReadRom( const char *pszFileName )
 {
 /*
  *  Read ROM image file
@@ -767,16 +771,16 @@ int InfoNES_ReadRom( const char *pszFileName )
     return -1;
   }
 
-  /* Clear SRAM */
-  memset( SRAM, 0, SRAM_SIZE );
-
-  /* If trainer presents Read Triner at 0x7000-0x71ff */
-  if ( NesHeader.byInfo1 & 4 )
-  {
-//Ìæ»»GccBugFunc     fread( &SRAM[ 0x1000 ], 512, 1, fp );
-    memcpy( &SRAM[ 0x1000 ], fp, 512 );
-    fp += 512;
-  }
+//  /* Clear SRAM */
+//  memset( SRAM, 0, SRAM_SIZE );
+//
+//  /* If trainer presents Read Triner at 0x7000-0x71ff */
+//  if ( NesHeader.bySL1 & 4 )
+//  {
+////Ìæ»»GccBugFunc     fread( &SRAM[ 0x1000 ], 512, 1, fp );
+//    memcpy( &SRAM[ 0x1000 ], fp, 512 );
+//    fp += 512;
+//  }
 
   /* Allocate Memory for ROM Image */
   ROM = (BYTE *)malloc( NesHeader.byRomSize * 0x4000 );
@@ -805,10 +809,10 @@ int InfoNES_ReadRom( const char *pszFileName )
 
 /*===================================================================*/
 /*                                                                   */
-/*           InfoNES_ReleaseRom() : Release a memory for ROM         */
+/*           SLNES_ReleaseRom() : Release a memory for ROM         */
 /*                                                                   */
 /*===================================================================*/
-void InfoNES_ReleaseRom()
+void SLNES_ReleaseRom()
 {
 /*
  *  Release a memory for ROM
@@ -830,10 +834,10 @@ void InfoNES_ReleaseRom()
 
 /*===================================================================*/
 /*                                                                   */
-/*             InfoNES_MemoryCopy() : memcpy                         */
+/*             SLNES_MemoryCopy() : memcpy                         */
 /*                                                                   */
 /*===================================================================*/
-void *InfoNES_MemoryCopy( void *dest, const void *src, int count )
+void *SLNES_MemoryCopy( void *dest, const void *src, int count )
 {
 /*
  *  memcpy
@@ -858,10 +862,10 @@ void *InfoNES_MemoryCopy( void *dest, const void *src, int count )
 
 /*===================================================================*/
 /*                                                                   */
-/*             InfoNES_MemorySet() : memset                          */
+/*             SLNES_MemorySet() : memset                          */
 /*                                                                   */
 /*===================================================================*/
-void *InfoNES_MemorySet( void *dest, int c, int count )
+void *SLNES_MemorySet( void *dest, int c, int count )
 {
 /*
  *  memset
@@ -886,11 +890,11 @@ void *InfoNES_MemorySet( void *dest, int c, int count )
 
 /*===================================================================*/
 /*                                                                   */
-/*      InfoNES_LoadFrame() :                                        */
+/*      SLNES_LoadFrame() :                                        */
 /*           Transfer the contents of work frame on the screen       */
 /*                                                                   */
 /*===================================================================*/
-void InfoNES_LoadFrame()
+void SLNES_LoadFrame()
 {
 /*
  *  Transfer the contents of work frame on the screen
@@ -1005,10 +1009,10 @@ if( FrameCount++ > 32)
 
 /*===================================================================*/
 /*                                                                   */
-/*             InfoNES_PadState() : Get a joypad state               */
+/*             SLNES_PadState() : Get a joypad state               */
 /*                                                                   */
 /*===================================================================*/
-void InfoNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
+void SLNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
 {
 /*
  *  Get a joypad state
@@ -1021,7 +1025,7 @@ void InfoNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
  *      Joypad 2 State
  *
  *    DWORD *pdwSystem                 (Write)
- *      Input for InfoNES
+ *      Input for SLNES
  *
  */
 
@@ -1037,20 +1041,20 @@ void InfoNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
 
 /*===================================================================*/
 /*                                                                   */
-/*        InfoNES_SoundInit() : Sound Emulation Initialize           */
+/*        SLNES_SoundInit() : Sound Emulation Initialize           */
 /*                                                                   */
 /*===================================================================*/
-void InfoNES_SoundInit( void ) 
+void SLNES_SoundInit( void ) 
 {
 //ÒôÆµ   sound_fd = 0;
 }
 
 /*===================================================================*/
 /*                                                                   */
-/*        InfoNES_SoundOpen() : Sound Open                           */
+/*        SLNES_SoundOpen() : Sound Open                           */
 /*                                                                   */
 /*===================================================================*/
-int InfoNES_SoundOpen( int samples_per_sync, int sample_rate ) 
+int SLNES_SoundOpen( int samples_per_sync, int sample_rate ) 
 {
 //ÒôÆµ   int tmp;
 //ÒôÆµ   int result;
@@ -1064,7 +1068,7 @@ int InfoNES_SoundOpen( int samples_per_sync, int sample_rate )
 //ÒôÆµ   sound_fd = open( SOUND_DEVICE, O_WRONLY );
 //ÒôÆµ   if ( sound_fd < 0 ) 
 //ÒôÆµ   {
-//ÒôÆµ     InfoNES_MessageBox("opening "SOUND_DEVICE"...failed");
+//ÒôÆµ     SLNES_MessageBox("opening "SOUND_DEVICE"...failed");
 //ÒôÆµ     sound_fd = 0;
 //ÒôÆµ     return 0;
 //ÒôÆµ   } else {
@@ -1076,7 +1080,7 @@ int InfoNES_SoundOpen( int samples_per_sync, int sample_rate )
 //ÒôÆµ   result = ioctl(sound_fd, SNDCTL_DSP_SETFMT, &tmp);
 //ÒôÆµ   if ( result < 0 ) 
 //ÒôÆµ   {
-//ÒôÆµ     InfoNES_MessageBox("setting unsigned 8-bit format...failed");
+//ÒôÆµ     SLNES_MessageBox("setting unsigned 8-bit format...failed");
 //ÒôÆµ     close(sound_fd);
 //ÒôÆµ     sound_fd = 0;
 //ÒôÆµ     return 0;
@@ -1089,7 +1093,7 @@ int InfoNES_SoundOpen( int samples_per_sync, int sample_rate )
 //ÒôÆµ   result = ioctl(sound_fd, SNDCTL_DSP_STEREO, &tmp);
 //ÒôÆµ   if (result < 0) 
 //ÒôÆµ   {
-//ÒôÆµ     InfoNES_MessageBox("setting mono mode...failed");
+//ÒôÆµ     SLNES_MessageBox("setting mono mode...failed");
 //ÒôÆµ     close(sound_fd);
 //ÒôÆµ     sound_fd = 0;
 //ÒôÆµ     return 0;
@@ -1101,7 +1105,7 @@ int InfoNES_SoundOpen( int samples_per_sync, int sample_rate )
 //ÒôÆµ   result = ioctl(sound_fd, SNDCTL_DSP_SPEED, &sound_rate);
 //ÒôÆµ   if ( result < 0 ) 
 //ÒôÆµ   {
-//ÒôÆµ     InfoNES_MessageBox("setting sound rate...failed");
+//ÒôÆµ     SLNES_MessageBox("setting sound rate...failed");
 //ÒôÆµ     close(sound_fd);
 //ÒôÆµ     sound_fd = 0;
 //ÒôÆµ     return 0;
@@ -1114,7 +1118,7 @@ int InfoNES_SoundOpen( int samples_per_sync, int sample_rate )
 //ÒôÆµ   result = ioctl(sound_fd, SNDCTL_DSP_SETFRAGMENT, &sound_frag);
 //ÒôÆµ   if (result < 0) 
 //ÒôÆµ   {
-//ÒôÆµ     InfoNES_MessageBox("setting soundfrags...failed");
+//ÒôÆµ     SLNES_MessageBox("setting soundfrags...failed");
 //ÒôÆµ     close(sound_fd);
 //ÒôÆµ     sound_fd = 0;
 //ÒôÆµ     return 0;
@@ -1128,10 +1132,10 @@ int InfoNES_SoundOpen( int samples_per_sync, int sample_rate )
 
 /*===================================================================*/
 /*                                                                   */
-/*        InfoNES_SoundClose() : Sound Close                         */
+/*        SLNES_SoundClose() : Sound Close                         */
 /*                                                                   */
 /*===================================================================*/
-void InfoNES_SoundClose( void ) 
+void SLNES_SoundClose( void ) 
 {
 /*  if ( sound_fd ) 
   {
@@ -1141,10 +1145,10 @@ void InfoNES_SoundClose( void )
 
 /*===================================================================*/
 /*                                                                   */
-/*            InfoNES_SoundOutput() : Sound Output 5 Waves           */           
+/*            SLNES_SoundOutput() : Sound Output 5 Waves           */           
 /*                                                                   */
 /*===================================================================*/
-void InfoNES_SoundOutput( int samples, BYTE *wave1, BYTE *wave2, BYTE *wave3, BYTE *wave4, BYTE *wave5 )
+void SLNES_SoundOutput( int samples, BYTE *wave1, BYTE *wave2, BYTE *wave3, BYTE *wave4, BYTE *wave5 )
 {
 /*  int i;
 
@@ -1176,7 +1180,7 @@ void InfoNES_SoundOutput( int samples, BYTE *wave1, BYTE *wave2, BYTE *wave3, BY
     {
       if ( write( sound_fd, &final_wave[(wavflag - 1) << 10], 1024) < 1024 ) 
       {
-	InfoNES_MessageBox( "wrote less than 1024 bytes\n" );
+	SLNES_MessageBox( "wrote less than 1024 bytes\n" );
       }
       wavflag = 0;
     }
@@ -1185,17 +1189,17 @@ void InfoNES_SoundOutput( int samples, BYTE *wave1, BYTE *wave2, BYTE *wave3, BY
 
 /*===================================================================*/
 /*                                                                   */
-/*            InfoNES_Wait() : Wait Emulation if required            */
+/*            SLNES_Wait() : Wait Emulation if required            */
 /*                                                                   */
 /*===================================================================*/
-void InfoNES_Wait() {}
+void SLNES_Wait() {}
 
 /*===================================================================*/
 /*                                                                   */
-/*            InfoNES_MessageBox() : Print System Message            */
+/*            SLNES_MessageBox() : Print System Message            */
 /*                                                                   */
 /*===================================================================*/
-void InfoNES_MessageBox( char *pszMsg, ... )
+void SLNES_MessageBox( char *pszMsg, ... )
 {
 /*  char pszErr[ 1024 ];
   va_list args;
@@ -1250,5 +1254,5 @@ void closing_dialog( GtkWidget *widget, gpointer data )
 }
 
 /*
- * End of InfoNES_System_Linux.cpp
+ * End of SLNES_System_Linux.c
  */

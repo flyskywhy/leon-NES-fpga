@@ -29,10 +29,10 @@
 #include "InfoNES_pAPU.h"
 
 //nester
-#ifndef killstring
+//#ifndef LEON
 #include <string.h>
-#endif
 #include <stdlib.h> //DCR
+//#endif
 
 #if ( pAPU_QUALITY == 1 )
 BYTE wave_buffers[183];      /* 11025 / 60 = 183 samples per sync */	//设定每一桢中对APU发出的声音的采样次数，这是模拟APU的一种方法，不要和DMC中由游戏设定的游戏音乐的采样值混淆起来

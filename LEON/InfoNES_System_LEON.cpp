@@ -771,16 +771,16 @@ int InfoNES_ReadRom( const char *pszFileName )
     return -1;
   }
 
-  /* Clear SRAM */
-  memset( SRAM, 0, SRAM_SIZE );
-
-  /* If trainer presents Read Triner at 0x7000-0x71ff */
-  if ( NesHeader.byInfo1 & 4 )
-  {
-//Ìæ»»GccBugFunc     fread( &SRAM[ 0x1000 ], 512, 1, fp );
-    memcpy( &SRAM[ 0x1000 ], fp, 512 );
-    fp += 512;
-  }
+//  /* Clear SRAM */
+//  memset( SRAM, 0, SRAM_SIZE );
+//
+//  /* If trainer presents Read Triner at 0x7000-0x71ff */
+//  if ( NesHeader.byInfo1 & 4 )
+//  {
+////Ìæ»»GccBugFunc     fread( &SRAM[ 0x1000 ], 512, 1, fp );
+//    memcpy( &SRAM[ 0x1000 ], fp, 512 );
+//    fp += 512;
+//  }
 
   /* Allocate Memory for ROM Image */
   ROM = (BYTE *)malloc( NesHeader.byRomSize * 0x4000 );
@@ -965,12 +965,16 @@ if( FrameCount++ > 32)
 #endif /* PrintfFrameGraph */
 #else
 if( FrameCount++ > 32)
-  for ( register int y = 130; y < 210; y++ ) 
-    for ( register int x = 0; x < 190; x++ )
+{
+  register int x,y;
+
+  for ( y = 130; y < 210; y++ ) 
+    for ( x = 0; x < 190; x++ )
       if( x != 189 )
       	printf( "%c", (BYTE)WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] );
       else
       	printf( "\n" );
+}
 #endif /* LEON */
 
 

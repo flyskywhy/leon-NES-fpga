@@ -131,9 +131,6 @@
 				RelativePath="..\InfoNES.cpp">
 			</File>
 			<File
-				RelativePath="..\InfoNES_Mapper.cpp">
-			</File>
-			<File
 				RelativePath=".\InfoNES_Sound_Win.cpp">
 			</File>
 			<File
@@ -151,9 +148,6 @@
 			Filter="h;hpp;hxx;hm;inl">
 			<File
 				RelativePath="..\InfoNES.h">
-			</File>
-			<File
-				RelativePath="..\InfoNES_Mapper.h">
 			</File>
 			<File
 				RelativePath=".\InfoNES_Resource_Win.h">
