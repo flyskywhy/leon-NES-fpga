@@ -1,0 +1,35 @@
+6502+APU+PPU:
+
+7473358
+Àî»¶»¶ Ëµ:
+# => Reset (@37=0, @148=1) 
+# FrameClock: 0;	Frame: 0
+# FrameClock: 16745;	Frame: 1
+# FrameClock: 16386;	Frame: 2
+# FrameClock: 12935;	Frame: 3
+# FrameClock: 15506;	Frame: 4
+# FrameClock: 14447;	Frame: 5
+# FrameClock: 15247;	Frame: 6
+# FrameClock: 15253;	Frame: 7
+# FrameClock: 15242;	Frame: 8
+# FrameClock: 15293;	Frame: 9
+# FrameClock: 15431;	Frame: 10
+# FrameClock: 14683;	Frame: 11
+# FrameClock: 14465;	Frame: 12
+# FrameClock: 14470;	Frame: 13
+# FrameClock: 14469;	Frame: 14
+# FrameClock: 14468;	Frame: 15
+# FrameClock: 67410;	Frame: 16
+# FrameClock: 67409;	Frame: 17
+# FrameClock: 67411;	Frame: 18
+# FrameClock: 67410;	Frame: 19
+# FrameClock: 67406;	Frame: 20
+# FrameClock: 67415;	Frame: 21
+# FrameClock: 67400;	Frame: 22
+
+
+----------------------------------------------------------------
+
+
+
+6502+APU:

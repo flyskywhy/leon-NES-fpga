@@ -491,6 +491,10 @@ static inline void _2007W( BYTE byData )
 #endif /* killif */
 
 
+#ifdef readBIN
+BYTE gamefile[ 188416 ];
+#endif /* readBIN */
+
 
 /*-------------------------------------------------------------------*/
 /*  NES resources                                                    */
@@ -978,11 +982,13 @@ int InfoNES_Reset()
  *    Reset CPU.
  */
 
+#ifndef readBIN
   int nIdx;
 
   /*-------------------------------------------------------------------*/
   /*  Get information on the cassette                                  */
   /*-------------------------------------------------------------------*/
+
 
   // Get Mapper Number
   MapperNo = NesHeader.byInfo1 >> 4;
@@ -996,12 +1002,16 @@ int InfoNES_Reset()
     // Mapper Number is 8bits
     MapperNo |= ( NesHeader.byInfo2 & 0xf0 );
   }
+  if( MapperNo != 0 && MapperNo != 2 && MapperNo != 3 )
+	return -1;
 
   // Get information on the ROM
   ROM_Mirroring = NesHeader.byInfo1 & 1;
   ROM_SRAM = NesHeader.byInfo1 & 2;
   ROM_Trainer = NesHeader.byInfo1 & 4;
   ROM_FourScr = NesHeader.byInfo1 & 8;
+
+#endif /* readBIN */
 
   /*-------------------------------------------------------------------*/
   /*  Initialize resources                                             */
@@ -1526,16 +1536,22 @@ inline void NES_CompareSprites( register int DY )
 #include "AVSync.h"
 #endif /* VCD */
 
+#ifndef ITCM32K
 //#ifdef PrintfFrameGraph
 #include "./gamefile/mario.h"
 //#else
 //#include "./gamefile/contra.h"
 //#endif /* PrintfFrameGraph */
+#endif /* ITCM32K */
 DWORD FrameCount = 0;
 DWORD dwKeyPad1 = 0;
 DWORD dwKeyPad2 = 0;
 DWORD dwKeySystem = 0;
-void reset();
+
+#ifndef ITCM32K
+void InfoNES_Reset();
+#endif /* ITCM32K */
+
 #ifdef VCD
 extern BOOL CanSetAddr;
 #endif /* VCD */
@@ -1556,10 +1572,13 @@ int main()
 	EnableInterrupt(IRQ_TIMER1, LEVEL1);
 
 #endif /* TESTGRAPH */
-	
-	
+
+#ifdef ITCM32K
+	InfoNES_Init();
+#else /* ITCM32K */
+
 #ifdef killstring
-	if( gamefile[ 0 ] == 'N' && gamefile[ 1 ] == 'E' && gamefile[ 2 ] == 'S' )	//*.nes文件
+	if( gamefile[ 0 ] == 'N' && gamefile[ 1 ] == 'E' && gamefile[ 2 ] == 'S' && gamefile[ 3 ] == 0x1A )	//*.nes文件
 #else /* killstring */
 	if( memcmp( gamefile, "NES\x1a", 4 ) == 0 )	//*.nes文件
 #endif /* killstring */
@@ -1570,20 +1589,135 @@ int main()
 		ROM = gamefile + 16;
 		RomSize = gamefile[ 4 ];
 		VRomSize = gamefile[ 5 ];
-//乘法		VROM = ROM + gamefile[ 4 ] * 0x4000;
-		VROM = ROM + ( gamefile[ 4 ] << 14 );
 		ROM_Mirroring = gamefile[ 6 ] & 1;
-
 	}
-	//else										//*.bin文件
-	//{
-	//if( MapperNo == 0)
-	//	VROM = ROM + 0x8000
-	//}
+#ifdef killstring
+	else if( gamefile[ 0 ] == 0x3C && gamefile[ 1 ] == 0x08 && gamefile[ 2 ] == 0x40 && gamefile[ 3 ] == 0x02 )	//*.bin文件
+#else /* killstring */
+	else if( memcmp( gamefile, "\x3C\x08\x40\x02", 4 ) == 0 )	//*.bin文件
+#endif /* killstring */
+	{
+		BYTE b19A = *( gamefile + 0x19A );
+		if( b19A & 0x20 )
+		{
+			if( *( gamefile + 0x197 ) == 4 )
+			{
+				MapperNo = 2;
+				RomSize = 8;
+				VRomSize = 0;
+			}
+			else
+			{
+				MapperNo = 3;
+				RomSize = 2;
+				if( b19A & 0x40 )
+					VRomSize = 4;
+				else
+					VRomSize = 2;
+			}
+		}
+		else
+		{
+			MapperNo = 0;
+			RomSize = 2;
+			VRomSize = 1;
+		}
+
+#ifdef LSB_FIRST
+		if( *( (unsigned int *)( gamefile + 0x8694 ) ) == 0xC70182A3 || *( (unsigned int *)( gamefile + 0x88d4 ) ) == 0xC70182A3 || *( (unsigned int *)( gamefile + 0x8908 ) ) == 0xC70182A3 || *( (unsigned int *)( gamefile + 0x8a28 ) ) == 0xC70182A3 )
+#else /* LSB_FIRST */
+		if( *( (unsigned int *)( gamefile + 0x8694 ) ) == 0xA38201C7 || *( (unsigned int *)( gamefile + 0x88d4 ) ) == 0xA38201C7 || *( (unsigned int *)( gamefile + 0x8908 ) ) == 0xA38201C7 || *( (unsigned int *)( gamefile + 0x8a28 ) ) == 0xA38201C7 )
+#endif /* LSB_FIRST */
+			ROM_Mirroring = 0;
+		else
+			ROM_Mirroring = 1;
+
+		unsigned int CompTEMP1;
+		unsigned int CompTEMP2;
+		CompTEMP1 = b19A << 8;
+		CompTEMP1 |= *( gamefile + 0x19B );
+		CompTEMP1 &= 0xFFF;
+		CompTEMP1 += 0xC880;
+		ROM = gamefile + CompTEMP1;
+		CompTEMP1 = *( (unsigned int *)( ROM + 0x10 ) );
+		CompTEMP2 = *( (unsigned int *)( ROM + 0x14 ) );
+
+#ifdef LSB_FIRST
+		if( CompTEMP1 == 0x02ADEAEA  || CompTEMP1 == 0xB9F28580 || CompTEMP1 == 0x864320B1 || CompTEMP1 == 0xEB4C80DD )
+#else /* LSB_FIRST */
+		if( CompTEMP1 == 0xEAEAAD02  || CompTEMP1 == 0x8085F2B9 || CompTEMP1 == 0xB1204386 || CompTEMP1 == 0xDD804CEB )
+#endif /* LSB_FIRST */
+			ROM_Mirroring = 0;
+
+#ifdef LSB_FIRST
+        if( CompTEMP1 == 0xFF7F387C && CompTEMP2 == 0xFCFEFFFF )
+		{
+            unsigned int *pFixBin = (unsigned int *)( ROM + 0x1C0FC );
+			*pFixBin = 0x48A92002;
+			*( pFixBin + 1 ) = 0x691800A2;
+			*( pFixBin + 2 ) = 0xE8FB9002;
+		}
+		else if( CompTEMP1 == 0x2002ADFB  && CompTEMP2 == 0x06A9FB10 )
+		{
+            unsigned int *pFixBin = (unsigned int *)( ROM + 0x4118 );
+			*pFixBin = 0xA205A020;
+			*( pFixBin + 1 ) = 0xFDD0CAF4;
+			*( pFixBin + 2 ) = 0xA5F8D088;
+		}
+		else if( CompTEMP1 == 0x94F1209A  && CompTEMP2 == 0x02AD03A2 )
+		{
+            unsigned int *pFixBin = (unsigned int *)( ROM + 0x189C );
+			*pFixBin = 0xAE2060A0;
+			*( pFixBin + 1 ) = 0x8D36A598;
+		}
+		else if( CompTEMP1 == 0xA207FD8D  && CompTEMP2 == 0x02A09A3F )
+		{
+            unsigned int *pFixBin = (unsigned int *)( ROM + 0x1C0 );
+			*pFixBin = 0x28A02785;
+			*( pFixBin + 1 ) = 0xA5895120;
+		}
+#else /* LSB_FIRST */
+        if( CompTEMP1 == 0x7C387FFF && CompTEMP2 == 0xFFFFFEFC )
+		{
+            unsigned int *pFixBin = (unsigned int *)( ROM + 0x1C0FC );
+			*pFixBin = 0x0220A948;
+			*( pFixBin + 1 ) = 0xA2001869;
+			*( pFixBin + 2 ) = 0x0290FBE8;
+		}
+		else if( CompTEMP1 == 0xFBAD0220  && CompTEMP2 == 0x10FBA906 )
+		{
+            unsigned int *pFixBin = (unsigned int *)( ROM + 0x4118 );
+			*pFixBin = 0x20A005A2;
+			*( pFixBin + 1 ) = 0xF4CAD0FD;
+			*( pFixBin + 2 ) = 0x88D0F8A5;
+		}
+		else if( CompTEMP1 == 0x9A20F194  && CompTEMP2 == 0xA203AD02 )
+		{
+            unsigned int *pFixBin = (unsigned int *)( ROM + 0x189C );
+			*pFixBin = 0xA06020AE;
+			*( pFixBin + 1 ) = 0x98A5368D;
+		}
+		else if( CompTEMP1 == 0x8DFD07A2  && CompTEMP2 == 0x3F9AA002 )
+		{
+            unsigned int *pFixBin = (unsigned int *)( ROM + 0x1C0 );
+			*pFixBin = 0x8527A028;
+			*( pFixBin + 1 ) = 0x205189A5;
+		}
+#endif /* LSB_FIRST */
+	}
+	else
+		return -1;
+	
+//乘法		VROM = ROM + RomSize * 0x4000;
+	VROM = ROM + ( RomSize << 14 );
+
+#endif /* ITCM32K */
 
 #ifdef TESTGRAPH
 
-	reset();				//初始化模拟器里的各个参数
+	InfoNES_Reset();				//初始化模拟器里的各个参数
+
+
 	for(;;)
 	{
 #ifndef TGsim
@@ -1617,7 +1751,7 @@ int main()
 
 	for(;;)
 	{
-		reset();
+		InfoNES_Reset();				//初始化模拟器里的各个参数
 		do_frame();
 		//if()									//如果遥控器按的是退出键，就返回主控程序，否则就是reset键，重新进行游戏
 		//	break;
@@ -1628,7 +1762,9 @@ int main()
 	return 0;
 }
 
-void reset()
+#ifndef ITCM32K
+
+void InfoNES_Reset()
 {
 	/*-------------------------------------------------------------------*/
 	/*  Initialize resources                                             */
@@ -1852,10 +1988,14 @@ void reset()
 	return;
 }
 
+#endif /* ITCM32K */
+
+
 void InfoNES_LoadFrame()	//只用于测试打印游戏画面的一部分
 {
 #ifdef PrintfFrameGraph
 	register int x, y;
+	printf("Frame: %d\n", FrameCount++ );
 	if( FrameCount++ > 32)
 		for ( y = 130; y < 210; y++ ) 
 			for ( x = 0; x < 190; x++ )
@@ -1934,8 +2074,6 @@ void InfoNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
 
 
 #ifdef TESTGRAPH
-	int PPU_Scanline;
-	int NCURLINE;			//扫描线在一个NT内部的Y坐标
 
 void SLNES( BYTE *DisplayFrameBase)
 {
@@ -1943,6 +2081,8 @@ void SLNES( BYTE *DisplayFrameBase)
  *  模拟器的主循环
  *
  */
+	int PPU_Scanline;
+	int NCURLINE;			//扫描线在一个NT内部的Y坐标
 	int i;
 
 	//在非跳桢期间
@@ -1959,15 +2099,14 @@ void SLNES( BYTE *DisplayFrameBase)
 			if( NCURLINE == 0xF0 || NCURLINE == 0x00 )										//如果VT等于30，说明该垂直切换NT了；或者如果VT等于32，说明这是一个“负的卷轴值”，这不会垂直切换NT，这时需要将之前由于进位而切换的NT再切换回来
 				NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;										//切换垂直方向的NT，同时VT->FV计数器清零
 		}
-		//for( ; PPU_Scanline < 232; PPU_Scanline++ )											//显示在屏幕上的8-231共224条扫描线
-		for( PPU_Scanline = 8; PPU_Scanline < 240; PPU_Scanline++ )											//显示在屏幕上的8-231共224条扫描线
+		for( i = 0; PPU_Scanline < 232; PPU_Scanline++, i++ )											//显示在屏幕上的8-231共224条扫描线
 		{
 			//加速
 			//if( PPU_Scanline < 140 || PPU_Scanline > 201)		//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
 			K6502_Step( STEP_PER_SCANLINE );												//执行1条扫描线
 			NSCROLLX = ARX;
-//乘法			buf = DisplayFrameBase + PPU_Scanline * NES_BACKBUF_WIDTH + 8;				//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
-			buf = DisplayFrameBase + ( ( PPU_Scanline - 8 ) << 8 ) + ( ( PPU_Scanline - 8 ) << 4 ) + 8;		//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+//乘法			buf = DisplayFrameBase + i * NES_BACKBUF_WIDTH + 8;					//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
+			buf = DisplayFrameBase + ( i << 8 ) + ( i << 4 ) + 8;					//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
 
 			if( PPU_R1 & R1_SHOW_SP ) NES_CompareSprites( PPU_Scanline );
 			if( InfoNES_DrawLine( PPU_Scanline, NSCROLLY ) )								//绘制1条扫描线到图形缓冲区数组
@@ -1999,7 +2138,7 @@ void SLNES( BYTE *DisplayFrameBase)
 	//InfoNES_PadState( &PAD1_Latch, &PAD2_Latch, &PAD_System );							//在非跳桢期间获取手柄输入信息
 	InfoNES_pAPUVsync();
 
-	//在非跳桢期间
+	//在跳桢期间
 	for ( i = 0; i < FRAME_SKIP; i++ )
 	{
 		K6502_Step( 25088 );																//在跳桢期间只执行224条扫描线而不绘制扫描线，当然也不刷新屏幕，112 * 224 = 25088
@@ -2233,7 +2372,7 @@ void do_frame()
 #endif /* PrintfFrameClock */
 
   for (;;)			//模拟器的主循环
-  {    
+  {
 	//此时，last_frame_time是做完上一次循环中的桢后所应该经过的时间（每一桢的标准时间是1/60秒，clock数是：LEON:1000000/60=16667；win32:1000/60=16.7；ARM:100/60=1.7）
 	//或者，last_frame_time是上一次循环开始时的时间的时间（LEON采取这种方式，为了加快速度）
 #ifdef LEON
@@ -2243,7 +2382,8 @@ void do_frame()
 #endif /* LEON */
 
 #ifdef PrintfFrameClock	//输出每桢的CLOCK数
-	printf("FrameClock: %d;	Frame: %d\n", temp - cur_time, Frame++ );
+	//printf("FrameClock: %d;	Frame: %d\n", temp - cur_time, Frame++ );
+	printf("%d	%d\n", temp - cur_time, Frame++ );
 	//if( temp > cur_time )
 	//	printf("FrameClock: %d;	Frame: %d;	temp: %x;	cur_time: %x\n", temp - cur_time, Frame++, temp, cur_time );
 	//else
@@ -2827,7 +2967,12 @@ inline int InfoNES_DrawLine( register int DY, register int SY )	//DY是当前的扫描
 
 #endif
 	register int D0, D1, X1, X2, Shift, Scr;
+
 	BYTE *ChrTab, *CT, *AT/*, *XPal*/;
+
+#ifdef debug
+	printf("p");
+#endif
 
 	P = buf;														//指向WorkFrame[]中相应的扫描线开始的地方
 

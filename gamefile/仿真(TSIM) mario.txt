@@ -1,0 +1,56 @@
+6502+APU+PPU:
+
+FrameClock: 2;  Frame: 0
+FrameClock: 17254;      Frame: 1
+FrameClock: 16960;      Frame: 2
+FrameClock: 13598;      Frame: 3
+FrameClock: 21512;      Frame: 4
+FrameClock: 15859;      Frame: 5
+FrameClock: 13690;      Frame: 6
+FrameClock: 13473;      Frame: 7
+FrameClock: 15355;      Frame: 8
+FrameClock: 22146;      Frame: 9
+FrameClock: 15838;      Frame: 10
+FrameClock: 15977;      Frame: 11
+FrameClock: 16226;      Frame: 12
+FrameClock: 15742;      Frame: 13
+FrameClock: 15824;      Frame: 14
+FrameClock: 17981;      Frame: 15
+FrameClock: 18709;      Frame: 16
+FrameClock: 18680;      Frame: 17
+FrameClock: 18651;      Frame: 18
+FrameClock: 18711;      Frame: 19
+FrameClock: 18707;      Frame: 20
+FrameClock: 18703;      Frame: 21
+FrameClock: 18707;      Frame: 22
+FrameClock: 18752;      Frame: 23
+FrameClock: 18717;      Frame: 24
+FrameClock: 18808;      Frame: 25
+FrameClock: 18789;      Frame: 26
+FrameClock: 16555;      Frame: 27
+FrameClock: 15877;      Frame: 28
+FrameClock: 15769;      Frame: 29
+FrameClock: 16497;      Frame: 30
+FrameClock: 17659;      Frame: 31
+FrameClock: 15750;      Frame: 32
+FrameClock: 15468;      Frame: 33
+FrameClock: 39296;      Frame: 34
+FrameClock: 39315;      Frame: 35
+FrameClock: 39925;      Frame: 36
+FrameClock: 39939;      Frame: 37
+FrameClock: 39928;      Frame: 38
+FrameClock: 39946;      Frame: 39
+FrameClock: 40040;      Frame: 40
+FrameClock: 39938;      Frame: 41
+FrameClock: 39939;      Frame: 42
+FrameClock: 39942;      Frame: 43
+FrameClock: 39934;      Frame: 44
+
+
+
+-------------------------------------------------------------
+
+
+
+6502+APU:
+

@@ -24,18 +24,10 @@
 #define ds_NUMCHANNELS      8
 #define ds_CHANSPERSAMPLE   1
 #define ds_BITSPERSAMPLE	  8
-#define Loops               20
+#define Loops               10
 
-#if ( pAPU_QUALITY == 1 )
-#define ds_SAMPLERATE 		  11025
-#define rec_freq            183
-#elif ( pAPU_QUALITY == 2 )
-#define ds_SAMPLERATE 		  22050
-#define rec_freq            367
-#else
-#define ds_SAMPLERATE 		  44100
-#define rec_freq            735
-#endif
+#define ds_SAMPLERATE		SAMPLE_PER_SEC
+#define rec_freq			SAMPLE_PER_FRAME
 
 /*-------------------------------------------------------------------*/
 /*  Class Definitions                                                */

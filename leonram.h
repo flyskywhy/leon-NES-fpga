@@ -23,4 +23,14 @@ extern unsigned char PTRAM[];			//只用于mapper2的代表VROM的8KB内存
 
 extern unsigned char SRAM[];		//待试	//代表6502RAM的0x6000-0x7FFF的8KB内存，经win32下的测试改为1个字节也没问题，事实上在游戏vcd光盘中它可能只用于两个游戏：俄罗斯方块（TETRIS）和花式撞球（Side Pocket），说是可能是因为网上下载的游戏不一定与VCD光盘上的一模一样
 
-#endif
+
+
+
+#ifdef ITCM32K
+int InfoNES_Init();
+void InfoNES_Reset();
+#endif /* ITCM32K */
+
+
+
+#endif /* leonram_H_INCLUDED */

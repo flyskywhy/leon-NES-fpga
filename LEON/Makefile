@@ -2,7 +2,7 @@ AS=sparc-rtems-as
 CC=sparc-rtems-gcc
 DUMP=sparc-rtems-objdump
 
-CFLAGS = -g -c -O2 -mv8 -mno-fpu -DLEON -Dkillsystem -DDTCM8K
+CFLAGS = -g -c -O2 -mv8 -mno-fpu -DLEON -DTSIM -Dkillsystem -DDTCM8K -Ddebug
 #CFLAGS = -g -c -O2 -mv8 -mno-fpu -DLEON -Dkillsystem -DDTCM8K -DTESTGRAPH
 #CFLAGS = -g -c -O2 -mv8 -mno-fpu -DLEON --verbose
 #ASFLAGS = -D -gstabs 

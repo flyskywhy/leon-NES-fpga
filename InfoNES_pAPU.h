@@ -24,6 +24,16 @@ extern writefunc APU_write_tbl[ 32 ];
 
 //nester
 #define pAPU_QUALITY 1	//模拟器发出的声音质量，1为11025，2为22050，3为44100
+#if ( pAPU_QUALITY == 1 )
+#define SAMPLE_PER_FRAME            184      /* 11025 / 60 = 184 samples per sync */	//设定每一桢中对APU发出的声音的采样次数，这是模拟APU的一种方法，不要和DMC中由游戏设定的游戏音乐的采样值混淆起来
+#define SAMPLE_PER_SEC            11025
+#elif ( pAPU_QUALITY == 2 )
+#define SAMPLE_PER_FRAME            367
+#define SAMPLE_PER_SEC            22050
+#else
+#define SAMPLE_PER_FRAME            735
+#define SAMPLE_PER_SEC            44100
+#endif
 
 #define INLINE static inline
 #define int8 char

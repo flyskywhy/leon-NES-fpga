@@ -1,0 +1,12 @@
+/*============================================================================*
+ *	file		: SimLeonLink
+ *	author	:	NorthWind
+ *	date		: 03/24/2005 13:53
+ *	changelog	: 
+ *	03/22/2005 18:44 
+ *		use variables to replace the region names in segment assignment 
+ *============================================================================*/
+
+boot_BasicWriteReg32 = dummy_BasicWriteReg32;
+SDRAM_OFFSET = 0x80000;
+/*DATA_AFTER_TEXT = 1;*/

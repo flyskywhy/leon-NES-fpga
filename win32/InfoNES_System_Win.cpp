@@ -906,51 +906,161 @@ int InfoNES_ReadRom( const char *pszFileName )
  *    -1 : Error
  */
 
-  FILE *fp;
+	FILE *fp;
 
-  /* Open ROM file */
-  fp = fopen( pszFileName, "rb" );
-  if ( fp == NULL )
-    return -1;
+	/* Open ROM file */
+	fp = fopen( pszFileName, "rb" );
+	if ( fp == NULL )
+		return -1;
 
-  /* Read ROM Header */
-  fread( &NesHeader, sizeof NesHeader, 1, fp );
-  if ( memcmp( NesHeader.byID, "NES\x1a", 4 ) != 0 )
-  {
-    /* not .nes file */
-    fclose( fp );
-    return -1;
-  }
+#ifdef readBIN
 
-  /* Clear SRAM */
-  memset( SRAM, 0, SRAM_SIZE );
+	fread( gamefile, 1, 188416, fp );
+#ifdef killstring
+	if( gamefile[ 0 ] == 'N' && gamefile[ 1 ] == 'E' && gamefile[ 2 ] == 'S' && gamefile[ 3 ] == 0x1A )	//*.nes文件
+#else /* killstring */
+	if( memcmp( gamefile, "NES\x1a", 4 ) == 0 )	//*.nes文件
+#endif /* killstring */
+	{
+		MapperNo = gamefile[ 6 ] >> 4;					//MapperNo，因为只支持mapper0、2、3，所以只要知道低4位信息就可以了
+		if( MapperNo != 0 && MapperNo != 2 && MapperNo != 3 )
+			return -1;
+		ROM = gamefile + 16;
+		NesHeader.byRomSize = gamefile[ 4 ];
+		NesHeader.byVRomSize = gamefile[ 5 ];
+		ROM_Mirroring = gamefile[ 6 ] & 1;
+	}
+#ifdef killstring
+	else if( gamefile[ 0 ] == 0x3C && gamefile[ 1 ] == 0x08 && gamefile[ 2 ] == 0x40 && gamefile[ 3 ] == 0x02 )	//*.bin文件
+#else /* killstring */
+	else if( memcmp( gamefile, "\x3C\x08\x40\x02", 4 ) == 0 )	//*.bin文件
+#endif /* killstring */
+	{
+		BYTE b19A = *( gamefile + 0x19A );
+		if( b19A & 0x20 )
+		{
+			if( *( gamefile + 0x197 ) == 4 )
+			{
+				MapperNo = 2;
+				NesHeader.byRomSize = 8;
+				NesHeader.byVRomSize = 0;
+			}
+			else
+			{
+				MapperNo = 3;
+				NesHeader.byRomSize = 2;
+				if( b19A & 0x40 )
+					NesHeader.byVRomSize = 4;
+				else
+					NesHeader.byVRomSize = 2;
+			}
+		}
+		else
+		{
+			MapperNo = 0;
+			NesHeader.byRomSize = 2;
+			NesHeader.byVRomSize = 1;
+		}
 
-  /* If trainer presents Read Triner at 0x7000-0x71ff */
-  if ( NesHeader.byInfo1 & 4 )
-  {
-    fread( &SRAM[ 0x1000 ], 512, 1, fp );
-  }
+		//如果移植到bigendian的机器上，需改为0xA38201C7
+		if( *( (unsigned int *)( gamefile + 0x8694 ) ) == 0xC70182A3 || *( (unsigned int *)( gamefile + 0x88d4 ) ) == 0xC70182A3 || *( (unsigned int *)( gamefile + 0x8908 ) ) == 0xC70182A3 || *( (unsigned int *)( gamefile + 0x8a28 ) ) == 0xC70182A3 )
+			ROM_Mirroring = 0;
+		else
+			ROM_Mirroring = 1;
 
-  /* Allocate Memory for ROM Image */
-  ROM = (BYTE *)malloc( NesHeader.byRomSize * 0x4000 );
+		unsigned int CompTEMP1;
+		unsigned int CompTEMP2;
+		CompTEMP1 = b19A << 8;
+		CompTEMP1 |= *( gamefile + 0x19B );
+		CompTEMP1 &= 0xFFF;
+		CompTEMP1 += 0xC880;
+		ROM = gamefile + CompTEMP1;
+		CompTEMP1 = *( (unsigned int *)( ROM + 0x10 ) );
+		CompTEMP2 = *( (unsigned int *)( ROM + 0x14 ) );
 
-  /* Read ROM Image */
-  fread( ROM, 0x4000, NesHeader.byRomSize, fp );
+		//如果移植到bigendian的机器上，需改为0xEAEAAD02、0x8085F2B9、0xB1204386、0xDD804CEB
+		if( CompTEMP1 == 0x02ADEAEA  || CompTEMP1 == 0xB9F28580 || CompTEMP1 == 0x864320B1 || CompTEMP1 == 0xEB4C80DD )
+			ROM_Mirroring = 0;
 
-  if ( NesHeader.byVRomSize > 0 )
-  {
-    /* Allocate Memory for VROM Image */
-    VROM = (BYTE *)malloc( NesHeader.byVRomSize * 0x2000 );
+        if( CompTEMP1 == 0xFF7F387C && CompTEMP2 == 0xFCFEFFFF )//如果移植到bigendian的机器上，需改为0x7C387FFF、0xFFFFFEFC
+		{
+            unsigned int *pFixBin = (unsigned int *)( ROM + 0x1C0FC );
+			*pFixBin = 0x48A92002;//如果移植到bigendian的机器上，需改为0x0220A948
+			*( pFixBin + 1 ) = 0x691800A2;//如果移植到bigendian的机器上，需改为0xA2001869
+			*( pFixBin + 2 ) = 0xE8FB9002;//如果移植到bigendian的机器上，需改为0x0290FBE8
+		}
+		else if( CompTEMP1 == 0x2002ADFB  && CompTEMP2 == 0x06A9FB10 )//如果移植到bigendian的机器上，需改为0xFBAD0220 、0x10FBA906
+		{
+            unsigned int *pFixBin = (unsigned int *)( ROM + 0x4118 );
+			*pFixBin = 0xA205A020;//如果移植到bigendian的机器上，需改为0x20A005A2
+			*( pFixBin + 1 ) = 0xFDD0CAF4;//如果移植到bigendian的机器上，需改为0xF4CAD0FD
+			*( pFixBin + 2 ) = 0xA5F8D088;//如果移植到bigendian的机器上，需改为0x88D0F8A5
+		}
+		else if( CompTEMP1 == 0x94F1209A  && CompTEMP2 == 0x02AD03A2 )//如果移植到bigendian的机器上，需改为0x9A20F194 、0xA203AD02
+		{
+            unsigned int *pFixBin = (unsigned int *)( ROM + 0x189C );
+			*pFixBin = 0xAE2060A0;//如果移植到bigendian的机器上，需改为0xA06020AE
+			*( pFixBin + 1 ) = 0x8D36A598;//如果移植到bigendian的机器上，需改为0x98A5368D
+		}
+		else if( CompTEMP1 == 0xA207FD8D  && CompTEMP2 == 0x02A09A3F )//如果移植到bigendian的机器上，需改为0x8DFD07A2 、0x3F9AA002
+		{
+            unsigned int *pFixBin = (unsigned int *)( ROM + 0x1C0 );
+			*pFixBin = 0x28A02785;//如果移植到bigendian的机器上，需改为0x8527A028
+			*( pFixBin + 1 ) = 0xA5895120;//如果移植到bigendian的机器上，需改为0x205189A5
+		}
+	}
+	else
+		return -1;
+	
+//乘法		VROM = ROM + NesHeader.byRomSize * 0x4000;
+	VROM = ROM + ( NesHeader.byRomSize << 14 );
+	ROM_SRAM = 0;
+	/* Clear SRAM */
+	memset( SRAM, 0, SRAM_SIZE );
 
-    /* Read VROM Image */
-    fread( VROM, 0x2000, NesHeader.byVRomSize, fp );
-  }
+#else /* readBIN */
 
-  /* File close */
-  fclose( fp );
+	/* Read ROM Header */
+	fread( &NesHeader, sizeof NesHeader, 1, fp );
 
-  /* Successful */
-  return 0;
+	if ( memcmp( NesHeader.byID, "NES\x1a", 4 ) != 0 )
+	{
+		/* not .nes file */
+		fclose( fp );
+		return -1;
+	}
+
+	/* Clear SRAM */
+	memset( SRAM, 0, SRAM_SIZE );
+
+	/* If trainer presents Read Triner at 0x7000-0x71ff */
+	if ( NesHeader.byInfo1 & 4 )
+	{
+		fread( &SRAM[ 0x1000 ], 512, 1, fp );
+	}
+
+	/* Allocate Memory for ROM Image */
+	ROM = (BYTE *)malloc( NesHeader.byRomSize * 0x4000 );
+
+	/* Read ROM Image */
+	fread( ROM, 0x4000, NesHeader.byRomSize, fp );
+
+	if ( NesHeader.byVRomSize > 0 )
+	{
+		/* Allocate Memory for VROM Image */
+		VROM = (BYTE *)malloc( NesHeader.byVRomSize * 0x2000 );
+
+		/* Read VROM Image */
+		fread( VROM, 0x2000, NesHeader.byVRomSize, fp );
+	}
+
+#endif /* readBIN */
+
+	/* File close */
+	fclose( fp );
+
+	/* Successful */
+	return 0;
 }
 
 /*===================================================================*/
@@ -964,18 +1074,27 @@ void InfoNES_ReleaseRom()
  *  Release a memory for ROM
  *
  */
+#ifdef readBIN
 
-  if ( ROM )
-  {
-    free( ROM );
-    ROM = NULL;
-  }
+	ROM = NULL;
+	VROM = NULL;
 
-  if ( VROM )
-  {
-    free( VROM );
-    VROM = NULL;
-  }
+#else /* readBIN */
+
+	if ( ROM )
+	{
+		free( ROM );
+		ROM = NULL;
+	}
+
+	if ( VROM )
+	{
+		free( VROM );
+		VROM = NULL;
+	}
+
+#endif /* readBIN */
+
 }
 
 /*===================================================================*/
