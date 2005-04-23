@@ -18,12 +18,7 @@
 /*-------------------------------------------------------------------*/
 /*  Palette data                                                     */
 /*-------------------------------------------------------------------*/
-
-//#ifdef killPALRAM
-//extern BYTE NesPalette[];
-//#else /* killPALRAM */
 extern WORD NesPalette[];
-//#endif /* killPALRAM */
 
 /*-------------------------------------------------------------------*/
 /*  Function prototypes                                              */
@@ -67,10 +62,8 @@ void InfoNES_SoundClose( void );
 
 /* Sound Output 5 Waves - 2 Pulse, 1 Triangle, 1 Noise, 1 DPCM */
 #if BITS_PER_SAMPLE == 8
-//void InfoNES_SoundOutput( int samples, BYTE *wave1, BYTE *wave2, BYTE *wave3, BYTE *wave4, BYTE *wave5 );
 void InfoNES_SoundOutput( int samples, BYTE *wave );
 #else /* BITS_PER_SAMPLE */
-//void InfoNES_SoundOutput( int samples, short *wave1, short *wave2, short *wave3, short *wave4, short *wave5 );
 void InfoNES_SoundOutput( int samples, short *wave );
 #endif /* BITS_PER_SAMPLE */
 

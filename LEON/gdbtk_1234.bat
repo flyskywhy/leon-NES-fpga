@@ -1,1 +1,0 @@
-sparc-rtems-gdbtk --command=initgdb_1234

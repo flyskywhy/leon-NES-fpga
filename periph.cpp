@@ -48,7 +48,7 @@ int /*类型 BasicReadReg32 */BasicReadReg32_lb(int address, int *data)
 ***********************************************************************/
 int /*类型 BasicWriteReg32 */BasicWriteReg32_lb(int address, int data)
 {
-	*(char*)address = data;
+	*(int*)address = data;
 	return 1;
 }
 

@@ -225,6 +225,14 @@ int InfoNES_Init()
 	return 0;
 
 }
+void _2000W( BYTE byData );
+void _2001W( BYTE byData );
+void _2002W( BYTE byData );
+void _2003W( BYTE byData );
+void _2004W( BYTE byData );
+void _2005W( BYTE byData );
+void _2006W( BYTE byData );
+void _2007W( BYTE byData );
 
 void InfoNES_Reset()
 {
@@ -350,7 +358,7 @@ void InfoNES_Reset()
 	PPU_R0 = PPU_R1 = PPU_R2 = PPU_R3 = PPU_R7 = 0;	//待优化  // Reset PPU Register
 	/*PPU_R4 = */PPU_R5 = PPU_R6 = 0;					//待优化
 	PPU_Latch_Flag = 0;
-	PPU_UpDown_Clip = 0;								//待优化
+	//PPU_UpDown_Clip = 0;
 
 	PPU_Addr = 0;										// Reset PPU address
 #ifdef INES
@@ -451,3 +459,4 @@ void InfoNES_Reset()
 }
 
 #endif /* ITCM32K */
+

@@ -13,28 +13,6 @@
 /*  Type definition                                                  */
 /*-------------------------------------------------------------------*/
 
-//#ifdef killif
-//
-//#ifndef read6502
-//typedef /*static inline*/ BYTE ( *read6502 )( WORD wAddr );
-//#endif
-//
-//#ifndef readfunc
-//typedef /*static inline*/ BYTE ( *readfunc )( void );
-//#endif
-//
-//#ifndef write6502
-//typedef /*static inline*/ void ( *write6502 )( WORD wAddr, BYTE byData );
-//#endif
-//
-//#ifndef writefunc
-//typedef /*static inline*/ void ( *writefunc )( BYTE byData );
-//#endif
-//
-//#endif /* killif */
-
-
-
 #ifndef DWORD
 typedef unsigned long  DWORD;
 #endif /* !DWORD */

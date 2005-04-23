@@ -1,3 +1,0 @@
-file InfoNES.elf
-target extended-remote : 1234
-lo

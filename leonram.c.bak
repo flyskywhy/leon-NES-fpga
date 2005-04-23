@@ -225,7 +225,15 @@ int InfoNES_Init()
 	return 0;
 
 }
-static inline void _2000W( BYTE byData );
+void _2000W( BYTE byData );
+void _2001W( BYTE byData );
+void _2002W( BYTE byData );
+void _2003W( BYTE byData );
+void _2004W( BYTE byData );
+void _2005W( BYTE byData );
+void _2006W( BYTE byData );
+void _2007W( BYTE byData );
+
 void InfoNES_Reset()
 {
 	/*-------------------------------------------------------------------*/
@@ -274,36 +282,36 @@ void InfoNES_Reset()
 	/*-------------------------------------------------------------------*/
 	/*  Initialize PPU                                                   */
 	/*-------------------------------------------------------------------*/
-//#ifdef killwif
+#ifdef killwif
 	PPU_write_tbl[ 0 ] = _2000W;	//$2000
-//	PPU_write_tbl[ 1 ] = _2001W;	//$2001
-//	PPU_write_tbl[ 2 ] = _2002W;	//$2002
-//	PPU_write_tbl[ 3 ] = _2003W;	//$2003
-//	PPU_write_tbl[ 4 ] = _2004W;	//$2004
-//	PPU_write_tbl[ 5 ] = _2005W;	//$2005
-//	PPU_write_tbl[ 6 ] = _2006W;	//$2006
-//	PPU_write_tbl[ 7 ] = _2007W;	//$2007
-//#endif /* killwif */
-//
-//#ifdef killif
-//	PPU_read_tbl[ 0 ] = empty_PPU_R;	//$2000
-//	PPU_read_tbl[ 1 ] = empty_PPU_R;	//$2001
-//	PPU_read_tbl[ 2 ] = _2002R;			//$2002
-//	PPU_read_tbl[ 3 ] = empty_PPU_R;	//$2003
-//	PPU_read_tbl[ 4 ] = empty_PPU_R;	//$2004
-//	PPU_read_tbl[ 5 ] = empty_PPU_R;	//$2005
-//	PPU_read_tbl[ 6 ] = empty_PPU_R;	//$2006
-//	PPU_read_tbl[ 7 ] = _2007R;			//$2007
-//
-//	PPU_write_tbl[ 0 ] = _2000W;	//$2000
-//	PPU_write_tbl[ 1 ] = _2001W;	//$2001
-//	PPU_write_tbl[ 2 ] = _2002W;	//$2002
-//	PPU_write_tbl[ 3 ] = _2003W;	//$2003
-//	PPU_write_tbl[ 4 ] = _2004W;	//$2004
-//	PPU_write_tbl[ 5 ] = _2005W;	//$2005
-//	PPU_write_tbl[ 6 ] = _2006W;	//$2006
-//	PPU_write_tbl[ 7 ] = _2007W;	//$2007
-//#endif /* killif */
+	PPU_write_tbl[ 1 ] = _2001W;	//$2001
+	PPU_write_tbl[ 2 ] = _2002W;	//$2002
+	PPU_write_tbl[ 3 ] = _2003W;	//$2003
+	PPU_write_tbl[ 4 ] = _2004W;	//$2004
+	PPU_write_tbl[ 5 ] = _2005W;	//$2005
+	PPU_write_tbl[ 6 ] = _2006W;	//$2006
+	PPU_write_tbl[ 7 ] = _2007W;	//$2007
+#endif /* killwif */
+
+#ifdef killif
+	PPU_read_tbl[ 0 ] = empty_PPU_R;	//$2000
+	PPU_read_tbl[ 1 ] = empty_PPU_R;	//$2001
+	PPU_read_tbl[ 2 ] = _2002R;			//$2002
+	PPU_read_tbl[ 3 ] = empty_PPU_R;	//$2003
+	PPU_read_tbl[ 4 ] = empty_PPU_R;	//$2004
+	PPU_read_tbl[ 5 ] = empty_PPU_R;	//$2005
+	PPU_read_tbl[ 6 ] = empty_PPU_R;	//$2006
+	PPU_read_tbl[ 7 ] = _2007R;			//$2007
+
+	PPU_write_tbl[ 0 ] = _2000W;	//$2000
+	PPU_write_tbl[ 1 ] = _2001W;	//$2001
+	PPU_write_tbl[ 2 ] = _2002W;	//$2002
+	PPU_write_tbl[ 3 ] = _2003W;	//$2003
+	PPU_write_tbl[ 4 ] = _2004W;	//$2004
+	PPU_write_tbl[ 5 ] = _2005W;	//$2005
+	PPU_write_tbl[ 6 ] = _2006W;	//$2006
+	PPU_write_tbl[ 7 ] = _2007W;	//$2007
+#endif /* killif */
 
 	// Clear PPU and Sprite Memory
 #ifdef splitPPURAM
@@ -350,7 +358,7 @@ void InfoNES_Reset()
 	PPU_R0 = PPU_R1 = PPU_R2 = PPU_R3 = PPU_R7 = 0;	//待优化  // Reset PPU Register
 	/*PPU_R4 = */PPU_R5 = PPU_R6 = 0;					//待优化
 	PPU_Latch_Flag = 0;
-	PPU_UpDown_Clip = 0;								//待优化
+	//PPU_UpDown_Clip = 0;
 
 	PPU_Addr = 0;										// Reset PPU address
 #ifdef INES
@@ -451,3 +459,185 @@ void InfoNES_Reset()
 }
 
 #endif /* ITCM32K */
+
+#ifdef move6502reset
+
+void K6502_Reset()
+{
+/*
+ *  Reset a CPU
+ *
+ */
+  /*-------------------------------------------------------------------*/
+  /*  Initialize Mapper                                                */
+  /*-------------------------------------------------------------------*/
+  int nPage;
+
+  if( MapperNo == 0 )
+  {
+	  /* Write to Mapper */
+	  MapperWrite = Map0_Write;
+
+	  /* Set ROM Banks */
+#ifdef killsystem
+	  if ( RomSize > 1 )
+#else
+	  if ( NesHeader.byRomSize > 1 )
+#endif
+	  {
+		  ROMBANK0 = ROMPAGE( 0 );
+		  ROMBANK1 = ROMPAGE( 1 );
+		  ROMBANK2 = ROMPAGE( 2 );
+		  ROMBANK3 = ROMPAGE( 3 );
+	  }
+#ifdef killsystem
+	  else if ( RomSize > 0 )
+#else
+	  else if ( NesHeader.byRomSize > 0 )
+#endif
+	  {
+		  ROMBANK0 = ROMPAGE( 0 );
+		  ROMBANK1 = ROMPAGE( 1 );
+		  ROMBANK2 = ROMPAGE( 0 );
+		  ROMBANK3 = ROMPAGE( 1 );
+	  } else {
+		  ROMBANK0 = ROMPAGE( 0 );
+		  ROMBANK1 = ROMPAGE( 0 );
+		  ROMBANK2 = ROMPAGE( 0 );
+		  ROMBANK3 = ROMPAGE( 0 );
+	  }
+
+	  /* Set PPU Banks */
+	  for ( nPage = 0; nPage < 8; ++nPage )
+		  PPUBANK[ nPage ] = VROMPAGE( nPage );
+  }
+  else if( MapperNo == 2 )
+  {
+	  /* Write to Mapper */
+	  MapperWrite = Map2_Write;
+
+	  /* Set ROM Banks */
+	  ROMBANK0 = ROM;
+	  ROMBANK1 = ROM + 0x2000;
+	  ROMBANK2 = ROM + 0x1C000;
+	  ROMBANK3 = ROM + 0x1E000;
+
+#ifdef splitPPURAM
+	  /* Set PPU Banks */
+	  for ( nPage = 0; nPage < 8; ++nPage )
+		  //PPUBANK[ nPage ] = &PTRAM[ nPage * 0x400 ];
+		  PPUBANK[ nPage ] = &PTRAM[ nPage << 10];
+#endif /* splitPPURAM */
+  }
+
+#ifdef killsystem
+  else
+#else
+  else if( MapperNo == 3 )
+#endif /* killsystem */
+  {
+	  /* Write to Mapper */
+	  MapperWrite = Map3_Write;
+
+	  /* Set ROM Banks */
+#ifdef killsystem
+	  if ( ( RomSize << 1 ) > 2 )
+#else
+	  if ( ( NesHeader.byRomSize << 1 ) > 2 )
+#endif /* killsystem */
+	  {
+		  ROMBANK0 = ROMPAGE( 0 );
+		  ROMBANK1 = ROMPAGE( 1 );
+		  ROMBANK2 = ROMPAGE( 2 );
+		  ROMBANK3 = ROMPAGE( 3 );    
+	  } else {
+		  ROMBANK0 = ROMPAGE( 0 );
+		  ROMBANK1 = ROMPAGE( 1 );
+		  ROMBANK2 = ROMPAGE( 0 );
+		  ROMBANK3 = ROMPAGE( 1 );
+	  }
+
+	  /* Set PPU Banks */
+	  for ( nPage = 0; nPage < 8; ++nPage )
+		  PPUBANK[ nPage ] = VROMPAGE( nPage );
+  }
+#ifndef killsystem
+  else
+  {
+    // Non support mapper
+    InfoNES_MessageBox( "Current mapper is unsupported.\n" );
+    //return -1;
+  }
+#endif /* killsystem */
+
+  // Reset Registers
+
+#if PocketNES == 1
+
+#ifdef killwif
+	writemem_tbl[ 0 ] = ram_W;		//$0000
+	writemem_tbl[ 1 ] = PPU_W;		//$2000
+	writemem_tbl[ 2 ] = APU_W;		//$4000
+	//writemem_tbl[ 3 ] = sram_W;	//$6000
+	writemem_tbl[ 4 ] = rom_W80;	//$8000
+	writemem_tbl[ 5 ] = rom_WA0;	//$A000
+	writemem_tbl[ 6 ] = rom_WC0;	//$C000
+	writemem_tbl[ 7 ] = rom_WE0;	//$E000
+#endif /* killwif */
+
+
+#ifdef killif
+	readmem_tbl[ 0 ] = ram_R;	//$0000
+	readmem_tbl[ 1 ] = PPU_R;	//$2000
+	readmem_tbl[ 2 ] = APU_R;	//$4000
+	//readmem_tbl[ 3 ] = sram_R;	//$6000
+	readmem_tbl[ 4 ] = rom_R80;	//$8000
+	readmem_tbl[ 5 ] = rom_RA0;	//$A000
+	readmem_tbl[ 6 ] = rom_RC0;	//$C000
+	readmem_tbl[ 7 ] = rom_RE0;	//$E000
+
+	writemem_tbl[ 0 ] = ram_W;		//$0000
+	writemem_tbl[ 1 ] = PPU_W;		//$2000
+	writemem_tbl[ 2 ] = APU_W;		//$4000
+	//writemem_tbl[ 3 ] = sram_W;	//$6000
+	writemem_tbl[ 4 ] = rom_W80;	//$8000
+	writemem_tbl[ 5 ] = rom_WA0;	//$A000
+	writemem_tbl[ 6 ] = rom_WC0;	//$C000
+	writemem_tbl[ 7 ] = rom_WE0;	//$E000
+#endif /* killif */
+
+#ifdef killif2
+	memmap_tbl[ 0 ] = RAM;
+#else /* killif2 */
+	//memmap_tbl[ 0 ] = RAM;
+#endif /* killif2 */
+
+	//memmap_tbl[ 1 ] = ( BYTE *)K6502_ReadIO;
+	//memmap_tbl[ 2 ] = ( BYTE *)K6502_ReadIO;
+	memmap_tbl[ 3 ] = SRAM;
+	memmap_tbl[ 4 ] = ROMBANK0 - 0x8000;		//这里- 0x8000是为了在encodePC中不用再做& 0x1FFF的运算了，下同
+	memmap_tbl[ 5 ] = ROMBANK1 - 0xA000;
+	memmap_tbl[ 6 ] = ROMBANK2 - 0xC000;
+	memmap_tbl[ 7 ] = ROMBANK3 - 0xE000;
+	nes_pc = (BYTE*)(ROMBANK3[ 0x1FFC ] | ROMBANK3[ 0x1FFD ] << 8);//加速K6502_ReadW( VECTOR_RESET );
+	encodePC;
+#else
+	PC = ROMBANK2[ 0x3FFC ] | ROMBANK2[ 0x3FFD ] << 8;//加速K6502_ReadW( VECTOR_RESET );
+#endif
+
+  nes_SP = 0xFF;
+  nes_A = nes_X = nes_Y = 0;
+  nes_F = FLAG_Z | FLAG_R | FLAG_I;
+
+  //// Set up the state of the Interrupt pin.
+  //NMI_State = NMI_Wiring;
+  //IRQ_State = IRQ_Wiring;
+
+  // Reset Passed Clocks
+  g_dwPassedClocks = 0;
+
+  //APU
+  total_cycles = 0;
+}
+
+#endif /* move6502reset */

@@ -19,7 +19,21 @@
 
 //#define TESTGRAPH			//测试画面是否正确，如果注释掉的话则可以使用开启#define PrintfFrameClock的方法来测试每桢的速度，定义在Makefile中
 
-#define FRAME_SKIP 5		//跳桢数，一般设为10以下
+#define SCALER_RELOAD 81 - 1	//只适用于FRAME_SKIP为6，SAMPLE_PER_FRAME为189的情况
+#define LEON_CLK 40		//LEON的频率（MHz）
+#if LEON_CLK == 27		//27MHz
+#define MICROSEC_PER_COUNT 3	//timer每计数一次相当于3微秒
+#define TIMER_RELOAD0 40000 - 1
+#elif LEON_CLK == 40		//40.5MHz
+#define MICROSEC_PER_COUNT 2	//timer每计数一次相当于2微秒
+#define TIMER_RELOAD0 60000 - 1
+#else				//81MHz
+#define MICROSEC_PER_COUNT 1	//timer每计数一次相当于1微秒
+#define TIMER_RELOAD0 120000 - 1
+#endif
+
+
+#define FRAME_SKIP 6		//跳桢数，一般设为10以下
 
 #ifdef TESTGRAPH
 //#define TGsim				//在sim时，单独测试VCD平台条件下将会使用Display模块的模拟器代码的正确性，而不调用Display模块的函数
@@ -52,12 +66,12 @@ extern BYTE gamefile[];
 //#define killsystem			//用于LEON，不用InfoNES_System_LEON.cpp文件，现在定义在Makefile中
 
 //#define DTCM8K				//使用8KB的DTCM，定义在Makefile中
-#define ITCM32K				//使用32KB的ITCM
+//#define ITCM32K				//使用32KB的ITCM，定义在Makefile中
 
 //#define nesterpad			//使用nester的手柄代码
 //#define HACKpad				//不处理写$4016的pad_strobe，不能用
 
-//#define killPALRAM			//不使用PALRAM[ 1024 ]，而只用PalTable[ 32 ]，这是为了要把DTCM中的7.5KB数据减少1KB以便在由DTCM转成锁定dcache方式时尽量提供更多的cache给其它应用
+#define killPALRAM			//不使用PALRAM[ 1024 ]，而只用PalTable[ 32 ]，这是为了要把DTCM中的7.5KB数据减少1KB以便在由DTCM转成锁定dcache方式时尽量提供更多的cache给其它应用
 #define killlut				//将decay_lut[ 16 ]、trilength_lut[ 128 ]转换为代码，这也是为了要把DTCM中的7.5KB数据减少0.5KB以便在由DTCM转成锁定dcache方式时尽量提供更多的cache给其它应用
 
 #define g2l					//尽可能多地将全局变量转为本地变量
@@ -65,6 +79,9 @@ extern BYTE gamefile[];
 #define killstring			//用于LEON，不使用string.h中提供的memcmp、memcpy和memset库函数。
 
 #define killtable			//用M6502中的代码的方式代替K6502中查找g_ASLTable、g_LSRTable、g_ROLTable、g_RORTable，目的是减少3KB的代码量
+#ifdef killsystem
+//#define move6502reset		//将K6502.cpp中的K6502_Reset函数移到leonram.cpp中，以便在ITCM中腾出1KB的空间放入6502的查找表或其它代码
+#endif /* killsystem */
 
 #define PocketNES 1			//以查找数组的方式获取指令
 
@@ -73,14 +90,15 @@ extern BYTE gamefile[];
 #define splitIO				//通过简化6502中的IO读写函数来提高速度
 
 #define killif2				//以查找数据指针数组的方式代替6502代码中的条件分支语句
+#define killif3
 
 #define writeIO				//设定使用K6502_WriteIO()代替K6502_WritePPU()K6502_WriteAPU()以减少Write6502RAM中的分支
 
-//#define splitPPURAM			//把PPURAM分割成几块内存，如果游戏测试通过的话，这样做会加快速度和减少内存需求
+#define splitPPURAM			//把PPURAM分割成几块内存，如果游戏测试通过的话，这样做会加快速度和减少内存需求
 
-#ifndef splitPPURAM
+//#ifndef splitPPURAM
 //#define killwif				//以查找函数指针数组的方式代替6502代码中Write6502RAM的条件分支语句	//速度会稍变慢，暂时不用
-#endif /* splitPPURAM */
+//#endif /* splitPPURAM */
 #ifdef killwif
 #ifndef writefunc
 typedef /*static inline*/ void ( *writefunc )( BYTE byData );
@@ -92,7 +110,7 @@ extern writefunc PPU_write_tbl[ 8 ];
 
 
 #ifndef splitPPURAM
-#define killif			//以查找函数指针数组的方式代替6502代码中的条件分支语句 //速度反而变慢，所以不用，速度变慢可能是由于新增的函数调用的开销引起的
+//#define killif			//以查找函数指针数组的方式代替6502代码中的条件分支语句 //速度反而变慢，所以不用，速度变慢可能是由于新增的函数调用的开销引起的
 #endif /* splitPPURAM */
 #ifdef killif
 
@@ -133,6 +151,7 @@ extern writefunc PPU_write_tbl[ 8 ];
 //#define Test6502APU		//在使用PrintfFrameClock测试每桢的微秒数时只测试6502+APU
 #endif /* PrintfFrameClock */
 
+#endif /* AFS */
 
 #ifdef LEON
 //#define CLOCKS_PER_SEC 1000000						//每个clock是1微秒
@@ -142,7 +161,6 @@ extern writefunc PPU_write_tbl[ 8 ];
 #define FRAME_PERIOD 17		/*40083333*/			//( CLOCKS_PER_SEC / 60 )		//每帧的时钟周期数
 #endif
 
-#endif /* AFS */
 
 #define ASSERT(expr) \
 	if(!(expr)) \
@@ -278,7 +296,7 @@ extern BYTE PPU_R6;
 //extern BYTE PPU_Scr_H_Bit;
 //extern BYTE PPU_Scr_H_Bit_Next;
 
-extern BYTE PPU_Latch_Flag;
+extern unsigned int PPU_Latch_Flag;
 
 #ifdef INES
   extern int PPU_Addr;
@@ -298,9 +316,9 @@ extern BYTE PPU_x;
 
 #endif /*INES*/
 
-extern WORD PPU_Increment;
+extern int PPU_Increment;
 
-extern BYTE PPU_UpDown_Clip;
+//extern BYTE PPU_UpDown_Clip;
 
 #define R0_NMI_VB      0x80
 #define R0_NMI_SP      0x40
@@ -473,7 +491,7 @@ extern WORD  spr_pattern_table_addr;
 #endif /* INES */
 
 /* Sprite Height */
-extern WORD PPU_SP_Height;
+extern int PPU_SP_Height;
 
 /* NES display size */
 #define NES_DISP_WIDTH      256
@@ -484,7 +502,7 @@ extern WORD PPU_SP_Height;
 //#define NES_BACKBUF_WIDTH	256		//NES_DISP_WIDTH，只有在使用分段绘制背景时才使用，需要修正InfoNES_LoadFrame()和InfoNES_DrawLine2()中和WorkFrame[]相关的语句
 
 /* VRAM Write Enable ( 0: Disable, 1: Enable ) */
-extern BYTE byVramWriteEnable;
+extern unsigned int byVramWriteEnable;
 
 ///* Frame IRQ ( 0: Disabled, 1: Enabled )*/
 //extern BYTE FrameIRQ_Enable;
@@ -554,7 +572,7 @@ extern WORD PalTable[ 32 ];
 /*  APU and Pad resources                                            */
 /*-------------------------------------------------------------------*/
 
-extern int APU_Mute;
+//extern int APU_Mute;
 
 extern DWORD pad_strobe;
 #ifdef nesterpad

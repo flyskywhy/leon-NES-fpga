@@ -16,7 +16,11 @@
 
 #include <stdio.h>
 
+#ifdef SimLEON
+#include "\Project\Reuse\Leon\SOFTWARE\include\leon.h"
+#else /* SimLEON */
 #include "leon.h"
+#endif /* SimLEON */
 #include "register.h"
 #include "InfoNES_Types.h"
 #include "AVSync.h"
@@ -29,7 +33,7 @@
   ======================== global variables define ====================
 ======================================================================*/
 // CPU registers group
-struct lregs *lr = (struct lregs *) PREGS;
+//struct lregs *lr = (struct lregs *) PREGS;
 
 FILE *AudioWriteFp, *AudioReadFp, *VideoWriteFp, *VideoReadFp, *SysFp;
 
@@ -390,7 +394,7 @@ void Msg(char* strMsg)
 ***********************************************************************/
 BOOL ReadRegister(int address, int *data)
 {
-	return BasicReadReg32(address, data);
+	return /*类型 BasicReadReg32 */BasicReadReg32_lb(address, data);
 }
 
 /***********************************************************************
@@ -403,7 +407,7 @@ BOOL ReadRegister(int address, int *data)
 ***********************************************************************/
 BOOL WriteRegister(int address, int data)
 {
-	return BasicWriteReg32(address, data);
+	return /*类型 BasicWriteReg32 */BasicWriteReg32_lb(address, data);
 }
 
 
@@ -1773,7 +1777,7 @@ void GameInit()
 	// Configure Display frame address for init picture.
 	SetTVMode(TRUE/*bGame*/, 0/*BarMode*/, TRUE/*bPAL*/, FALSE/*bSVideo*/,
 		      TRUE/*bPAL625*/, TRUE/*bMaster*/);
-	SetDisplayFrameBase(P1);
+	SetDisplayFrameBase((BYTE*)P1);
 	SetDisplayFrameTypeB(FALSE);
 
 	// set a invariable B frame addr for buffer status diagnos

@@ -132,6 +132,6 @@ void LevelInterrupt(int irq, int level)
 ***********************************************************************/
 void EnrollInterrupt(IntHandler handler)
 {
-	//catch_interrupt(handler, IRQ_AVSYNC);
-	//catch_interrupt(handler, IRQ_TIMER1);
+	catch_interrupt(handler, IRQ_AVSYNC);
+	catch_interrupt(handler, IRQ_TIMER1);
 }

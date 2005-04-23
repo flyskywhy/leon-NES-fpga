@@ -51,10 +51,13 @@
 //#define IRQ_REQ  IRQ_State = 0;
 
 // Emulator Operation
+#ifndef killsystem
 void K6502_Init();
+#endif /* killsystem */
+
 void K6502_Reset();
 //void K6502_Set_Int_Wiring( BYTE byNMI_Wiring, BYTE byIRQ_Wiring );
-void K6502_Step( register WORD wClocks );
+void K6502_Step( WORD wClocks );
 
 //nesterJ
 void K6502_NMI();
@@ -71,8 +74,8 @@ void K6502_NMI();
 
 //加速
 //static inline BYTE K6502_ReadPC( WORD wAddr );
-#ifndef killif
 
+#ifndef killif
 static inline BYTE K6502_ReadIO( WORD wAddr );
 
 #ifdef writeIO
@@ -100,8 +103,39 @@ static inline void K6502_WriteAPU( WORD wAddr, BYTE byData );
 //extern BYTE NMI_State;
 
 // The number of the clocks that it passed
-extern WORD g_wPassedClocks;
+extern unsigned int g_dwPassedClocks;
 
 extern DWORD total_cycles;
+
+
+#if PocketNES == 1
+/*register */extern BYTE *nes_pc;			//为了避免每次读取一个指令时就判断一次指令的位置，参考PocketNES中的汇编代码，引入指向指令的指针
+extern BYTE *lastbank;
+#define encodePC lastbank = memmap_tbl[ ((WORD)nes_pc) >> 13 ]; nes_pc = lastbank + (WORD)nes_pc
+#else
+extern WORD PC;
+#endif
+
+extern BYTE nes_SP;
+extern BYTE nes_F;
+extern int nes_A;
+extern BYTE nes_X;
+extern BYTE nes_Y;
+
+
+/* The address of 8Kbytes unit of the ROM */
+//#define ROMPAGE(a)     ( ROM + (a) * 0x2000 )
+#define ROMPAGE(a)     ( ROM + ( (a) << 13 ) )
+///* From behind the ROM, the address of 8kbytes unit */
+//#define ROMLASTPAGE(a) &ROM[ NesHeader.byRomSize * 0x4000 - ( (a) + 1 ) * 0x2000 ]
+/* The address of 1Kbytes unit of the VROM */
+//#define VROMPAGE(a)    ( VROM + (a) * 0x400 )
+#define VROMPAGE(a)    ( VROM + ( (a) << 10 ) )
+
+void Map0_Write( WORD wAddr, BYTE byData );
+void Map2_Write( WORD wAddr, BYTE byData );
+void Map3_Write( WORD wAddr, BYTE byData );
+
+
 
 #endif /* !K6502_H_INCLUDED */

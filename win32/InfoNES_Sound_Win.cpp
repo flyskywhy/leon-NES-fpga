@@ -25,7 +25,7 @@ DIRSOUND::DIRSOUND(HWND hwnd)
 	WORD x;
 
   // init variables
-  iCnt = Loops * 3 / 4;
+  iCnt = Loops * 2 / 4;
 
 	for ( x = 0;x < ds_NUMCHANNELS; x++ )
 	{

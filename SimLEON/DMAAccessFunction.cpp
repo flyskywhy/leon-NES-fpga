@@ -6,7 +6,7 @@ int GetDMAStatue(int RegAddr)
 {
 	int Statue;
 	BasicReadReg32(RegAddr, &Statue);
-	return (Statue&&0x00000001);
+	return (Statue&0x00000001);
 
 }
 
@@ -26,7 +26,7 @@ void DMAWriteData(int RegAddr, int Data)
 //Send a Command to Start Save Cache to Sdram
 void DMASaveCache(int RegAddr, int SDRAMAddr)
 {
-	int Data = 0x1000000|(SDRAMAddr&0xFFFFFF);
+	int Data = SDRAMAddr&0xFFFFFF;
 	BasicWriteReg32(RegAddr, Data);
 
 }

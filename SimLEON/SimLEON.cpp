@@ -7,6 +7,7 @@
 //#define LEON
 //#define killsystem
 //#define DTCM8K
+//#define ITCM32K
 //#define TESTGRAPH
 //#define DMA_SDRAM
 #include "..\InfoNES.h"
@@ -40,7 +41,8 @@ void ISRForTimer_Leon()
 	int temp;
 	// for Game
 	//SetCPUTimer(1, 40);
-	BasicWriteReg32( TRLD0 + PREGS, 40 * 405 - 1);
+	//BasicWriteReg32( TRLD0 + PREGS, 40 * 405 - 1);
+	BasicWriteReg32( TRLD0 + PREGS, 60000 - 1 );		//LEON频率是40.5MHz时是60000，如果是81MHz则为120000，只适用于FRAME_SKIP为6，SAMPLE_PER_FRAME为189的情况
 	BasicReadReg32( TCTRL1 + PREGS, &temp );
 	BasicWriteReg32( TCTRL1 + PREGS, temp | 0x4);		// load new value
 
@@ -97,8 +99,10 @@ int main(int argc, char* argv[])
 	BasicWriteReg32( ( DECODE_BASE_ADDR + TV_ONOFF ) * 4 + MEMIO, FALSE);
 
 	//InitTimer();
-	BasicWriteReg32( SCNT + PREGS, 0x63);
-	BasicWriteReg32( SRLD + PREGS, 0x63);		// system clock divide 1/1K
+	//BasicWriteReg32( SCNT + PREGS, 0x63);
+	BasicWriteReg32( SCNT + PREGS, 81 - 1 );		//只适用于FRAME_SKIP为6，SAMPLE_PER_FRAME为189的情况
+	//BasicWriteReg32( SRLD + PREGS, 0x63);		// system clock divide 1/1K
+	BasicWriteReg32( SRLD + PREGS, 81 - 1 );		//只适用于FRAME_SKIP为6，SAMPLE_PER_FRAME为189的情况
 	BasicWriteReg32( TCNT0 + PREGS, 0xffffff);
 	BasicWriteReg32( TRLD0 + PREGS, 0xffffff);
 	BasicWriteReg32( TCNT1 + PREGS, 0xffffff);
@@ -147,11 +151,14 @@ int main(int argc, char* argv[])
 	//SetCPUTimer(1, 40);
 	// 27648 <---> 1s
 	//   28  <---> 1ms
-	BasicWriteReg32( TRLD0 + PREGS, 40 * 405 -1);
+	//BasicWriteReg32( TRLD0 + PREGS, 40 * 405 -1);
+	BasicWriteReg32( TRLD0 + PREGS, 60000 - 1 );		//LEON频率是40.5MHz时是60000，如果是81MHz则为120000，只适用于FRAME_SKIP为6，SAMPLE_PER_FRAME为189的情况
+	//BasicWriteReg32( TCNT0 + PREGS, 0x01ffff);	//为避免在TSIM中发现的时间首次重载时发生过早重载的错误现象，经试验发现初始时设为此值即可
 	BasicReadReg32( TCTRL1 + PREGS, &temp );
 	BasicWriteReg32( TCTRL1 + PREGS, temp | 0x4);		// load new value
 	//EnableTimer(1, TRUE);
 	BasicWriteReg32( TCTRL0 + PREGS, 0x7 );
+	//BasicWriteReg32( TCTRL0 + PREGS, 0x3 );
 
 	//////////////////////////////////////////////////////////////////
 	//EnableInterrupt(IRQ_TIMER1, LEVEL1);
@@ -164,9 +171,67 @@ int main(int argc, char* argv[])
 	BasicWriteReg32( ( DECODE_BASE_ADDR + TV_ONOFF ) * 4 + MEMIO, TRUE);
 	//////////////////////////////////////////////////////////////////
 
+	unsigned int frame = 1;
+	int cur_time, last_frame_time;
+	int BaseTime;
+	//BaseTime = lr->timercnt1;
+	BasicReadReg32( TCNT0 + PREGS, &BaseTime );
+//3181
 	for(;;)
 	{
+		for(;;)
+		{
+			if(CanSetAddr)
+			{
+				//SetDisplayFrameBase( PPU0 );	//设置显示模块的基地址到PPU桢存0
+				BasicWriteReg32( (DECODE_BASE_ADDR+DISPLAY_FRAME_BASE_ADDR)*4 + MEMIO, 0x8000/*(int)( PPU0 )*/);
+				CanSetAddr = FALSE;
+				break;
+			}
+		}
+	//BasicReadReg32( TCNT0 + PREGS, &cur_time );
 		SLNES( (unsigned char *)0x18000/*PPU1*/ );					//调用模拟器写一桢数据到PPU桢存1
+	//BasicReadReg32( TCNT0 + PREGS, &last_frame_time );
+	//printf( "%d", cur_time - last_frame_time );
+	//last_frame_time = BaseTime - ( frame++ ) * ( FRAME_SKIP + 1 ) * SAMPLE_PER_FRAME * 1000000 / SAMPLE_PER_SEC;
+	//if( last_frame_time > 0 )
+	//{
+	//	BasicReadReg32( TCNT0 + PREGS, &cur_time );
+	//	if( cur_time - last_frame_time < 33334 )					//一般来说模拟器不可能慢两桢（16667 * 2 = 33334）
+	//		for(;;)
+	//		{
+	//			BasicReadReg32( TCNT0 + PREGS, &cur_time );
+	//			if( last_frame_time >= cur_time )
+	//				break;
+	//		}
+	//}
+	//else
+	//{
+	//	last_frame_time += /*lr->timerload1*/0xffffff;
+	//	BasicReadReg32( TCNT0 + PREGS, &cur_time );
+	//	if( last_frame_time <= cur_time )
+	//		for(;;)
+	//		{
+	//			BasicReadReg32( TCNT0 + PREGS, &cur_time );
+	//			if( last_frame_time >= cur_time )
+	//				break;
+	//		}
+	//	else
+	//		for(;;)
+	//		{
+	//			BasicReadReg32( TCNT0 + PREGS, &cur_time );
+	//			if( last_frame_time <= cur_time )
+	//			{
+	//				for(;;)
+	//				{
+	//					BasicReadReg32( TCNT0 + PREGS, &cur_time );
+	//					if( last_frame_time >= cur_time )
+	//						break;
+	//				}
+	//				break;
+	//			}
+	//		}
+	//}
 		for(;;)
 		{
 			if(CanSetAddr)
@@ -189,16 +254,6 @@ int main(int argc, char* argv[])
 			}
 		}
 		SLNES( (unsigned char *)0x8000/*PPU0*/ );					//调用模拟器写一桢数据到PPU桢存0
-		for(;;)
-		{
-			if(CanSetAddr)
-			{
-				//SetDisplayFrameBase( PPU0 );	//设置显示模块的基地址到PPU桢存0
-				BasicWriteReg32( (DECODE_BASE_ADDR+DISPLAY_FRAME_BASE_ADDR)*4 + MEMIO, 0x8000/*(int)( PPU0 )*/);
-				CanSetAddr = FALSE;
-				break;
-			}
-		}
 	}
 	return 0;
 }

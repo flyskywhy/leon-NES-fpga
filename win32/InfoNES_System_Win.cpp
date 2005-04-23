@@ -46,35 +46,6 @@ LOGPALETTE *plpal;
 BITMAPINFO *bmi;
 
 // Palette data
-
-//#ifdef killPALRAM
-//BYTE NesPalette[ 64 ] =
-//{
-//    0x7f,0x00,0x00,0x47,0x97,0xab,0xab,0x8b,0x53,0x00,
-//    0x00,0x00,0x00,0x00,0x00,0x00,0xbf,0x00,0x00,0x6b,
-//    0xdb,0xe7,0xf8,0xe7,0xaf,0x00,0x00,0x00,0x00,0x00,
-//    0x00,0x00,0xf8,0x3f,0x6b,0x98,0xf8,0xf8,0xf8,0xff,
-//    0xf8,0xb8,0x5b,0x58,0x00,0x78,0x00,0x00,0xff,0xa7,
-//    0xb8,0xd8,0xf8,0xfb,0xf0,0xff,0xfb,0xd8,0xb8,0xb8,
-//    0x00,0xf8,0x00,0x00
-//
-//    //0x7f,0x00,0x00,0x2b,0x00,0x00,0x13,0x17,0x30,0x78,
-//    //0x6b,0x5b,0x43,0x00,0x00,0x00,0xbf,0x78,0x58,0x47,
-//    //0x00,0x00,0x38,0x5f,0x7f,0xb8,0xab,0xab,0x8b,0x00,
-//    //0x00,0x00,0xf8,0xbf,0x88,0x78,0x78,0x58,0x78,0xa3,
-//    //0xb8,0xf8,0xdb,0xf8,0xeb,0x78,0x00,0x00,0xff,0xe7,
-//    //0xb8,0xb8,0xb8,0xa7,0xd0,0xe3,0xdb,0xf8,0xf8,0xf8,
-//    //0xff,0xd8,0x00,0x00 
-//
-//    //0x7f,0xff,0xbf,0xbf,0x87,0x23,0x00,0x00,0x00,0x00,
-//    //0x00,0x00,0x58,0x00,0x00,0x00,0xbf,0xF8,0xf8,0xff,
-//    //0xcd,0x5b,0x00,0x13,0x00,0x00,0x00,0x47,0x8b,0x00,
-//    //0x00,0x00,0xf8,0xff,0xff,0xf8,0xf8,0x98,0x58,0x47,
-//    //0x00,0x18,0x57,0x98,0xdb,0x78,0x00,0x00,0xff,0xff,
-//    //0xf8,0xf8,0xf8,0xc3,0xb0,0xab,0x7b,0x78,0xb8,0xd8,
-//    //0xff,0xf8,0x00,0x00 
-//}; 
-//#else /* killPALRAM */
 WORD NesPalette[ 64 ] =
 {
   0x39ce, 0x1071, 0x0015, 0x2013, 0x440e, 0x5402, 0x5000, 0x3c20,
@@ -86,7 +57,6 @@ WORD NesPalette[ 64 ] =
   0x7fff, 0x579f, 0x635f, 0x6b3f, 0x7f1f, 0x7f1b, 0x7ef6, 0x7f75,
   0x7f94, 0x73f4, 0x57d7, 0x5bf9, 0x4ffe, 0x0000, 0x0000, 0x0000
 };
-//#endif /* killPALRAM */
 
 // Screen Size Magnification
 WORD wScreenMagnification = 1;
@@ -477,15 +447,15 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
           /*-------------------------------------------------------------------*/
           /*  Screen Clip Up and Down button                                   */
           /*-------------------------------------------------------------------*/ 
-          PPU_UpDown_Clip = ( PPU_UpDown_Clip ? 0 : 1 );          
+          //PPU_UpDown_Clip = ( PPU_UpDown_Clip ? 0 : 1 );          
 
-          // Check or Uncheck it
-          if ( PPU_UpDown_Clip )
-          {
-            CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_CLIP_VERTICAL, MF_CHECKED );
-          } else {
-            CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_CLIP_VERTICAL, MF_UNCHECKED );          
-          }          
+          //// Check or Uncheck it
+          //if ( PPU_UpDown_Clip )
+          //{
+          //  CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_CLIP_VERTICAL, MF_CHECKED );
+          //} else {
+          //  CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_CLIP_VERTICAL, MF_UNCHECKED );          
+          //}          
           break;
 
 				case IDC_BTN_FRAMESKIP:
@@ -507,21 +477,21 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 					/*-------------------------------------------------------------------*/
           /*  APU Mute button                                                  */
           /*-------------------------------------------------------------------*/
-          APU_Mute = ( APU_Mute ? 0 : 1 );
+          //APU_Mute = ( APU_Mute ? 0 : 1 );
 
-          if (lpSndDevice != NULL && !lpSndDevice->SoundMute( APU_Mute ) )
-          {
-            InfoNES_MessageBox( "SoundMute() Failed." );
-            exit(0);
-          }
+          //if (lpSndDevice != NULL && !lpSndDevice->SoundMute( APU_Mute ) )
+          //{
+          //  InfoNES_MessageBox( "SoundMute() Failed." );
+          //  exit(0);
+          //}
 
-          // Check or Uncheck it
-          if ( APU_Mute )
-          {
-            CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_MUTE, MF_CHECKED );
-          } else {
-            CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_MUTE, MF_UNCHECKED );          
-          }                      
+          //// Check or Uncheck it
+          //if ( APU_Mute )
+          //{
+          //  CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_MUTE, MF_CHECKED );
+          //} else {
+          //  CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_MUTE, MF_UNCHECKED );          
+          //}                      
           break;
 
         case IDC_BTN_INFO:
@@ -640,11 +610,7 @@ int CreateScreen( HWND hWnd )
   bi.biHeight = NES_DISP_HEIGHT * -1;
   bi.biPlanes = 1;
 
-//#ifdef killPALRAM
-//  bi.biBitCount = 8;
-//#else /* killPALRAM */
   bi.biBitCount = 16;
-//#endif /* killPALRAM */
 
   bi.biCompression = BI_RGB;
   bi.biSizeImage = NES_DISP_WIDTH * NES_DISP_HEIGHT * 2;
@@ -1110,35 +1076,13 @@ void InfoNES_LoadFrame()
  *
  */
 
-  //// Set screen data
+  // Set screen data
   //memcpy( pScreenMem, WorkFrame, NES_DISP_WIDTH * NES_DISP_HEIGHT * 2 );
 
-//nesterJ
   for( int i = 0; i < NES_DISP_HEIGHT; i++ )
-
-#ifdef killPALRAM
     //memcpy( pScreenMem + i * NES_DISP_WIDTH, WorkFrame + i * NES_BACKBUF_WIDTH + 8 , NES_DISP_WIDTH );
 	for( int j = 0; j < NES_DISP_WIDTH; j++ )
 		*( (WORD*)pScreenMem + i * NES_DISP_WIDTH + j ) = NesPalette[ WorkFrame[ i * NES_BACKBUF_WIDTH + 8 + j ] ];
-#else /* killPALRAM */
-    memcpy( pScreenMem + i * NES_DISP_WIDTH * 2, WorkFrame + i * NES_BACKBUF_WIDTH + 8 , NES_DISP_WIDTH * 2 );
-#endif /* killPALRAM */
-
-
- // //ÑÕÉ«
-  //for( int i = 0; i < NES_DISP_HEIGHT; i++ )
-  //  memcpy( pScreenMem + i * NES_DISP_WIDTH * 2, WorkFrame + i * NES_BACKBUF_WIDTH + 8 , NES_DISP_WIDTH );
- // for ( register int y = 0; y < NES_DISP_HEIGHT; y++ ) 
- //   for ( register int x = 0; x < NES_DISP_WIDTH; x++ )
-	//{
- //     *(pScreenMem + x * y * 2 ) = BYTE( NesPalette[ WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] ] & 0x00FF );
- //     *(pScreenMem + x * y * 2 + 1 ) = BYTE( NesPalette[ WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] ] >> 8 ) | 0x80;
-	//}
-  //WORD RGBWorkFrame[ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
-  //for ( register int y = 0; y < NES_DISP_HEIGHT; y++ ) 
-  //  for ( register int x = 0; x < NES_DISP_WIDTH; x++ )
-  //    RGBWorkFrame[ x * y ] = NesPalette[ WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] ] | 0x8000;
-  //memcpy( pScreenMem, RGBWorkFrame, NES_DISP_WIDTH * NES_DISP_HEIGHT * 2 );
 
   // Screen update
   HDC hDC = GetDC( hWndMain );
@@ -1320,15 +1264,15 @@ int InfoNES_SoundOpen( int samples_per_sync, int sample_rate )
     exit(0);
   }
 
-  // if sound mute, stop sound
-  if ( APU_Mute )
-  {
-    if (!lpSndDevice->SoundMute( APU_Mute ) )
-    {
-      InfoNES_MessageBox( "SoundMute() Failed." );
-      exit(0);
-    }
-  }
+  //// if sound mute, stop sound
+  //if ( APU_Mute )
+  //{
+  //  if (!lpSndDevice->SoundMute( APU_Mute ) )
+  //  {
+  //    InfoNES_MessageBox( "SoundMute() Failed." );
+  //    exit(0);
+  //  }
+  //}
 
   return(TRUE);
 }
@@ -1351,23 +1295,11 @@ void InfoNES_SoundClose( void )
 /*                                                                   */
 /*===================================================================*/
 #if BITS_PER_SAMPLE == 8
-//void InfoNES_SoundOutput( int samples, BYTE *wave1, BYTE *wave2, BYTE *wave3, BYTE *wave4, BYTE *wave5 ) 
 void InfoNES_SoundOutput( int samples, BYTE *wave ) 
 #else /* BITS_PER_SAMPLE */
-//void InfoNES_SoundOutput( int samples, short *wave1, short *wave2, short *wave3, short *wave4, short *wave5 ) 
 void InfoNES_SoundOutput( int samples, short *wave ) 
 #endif /* BITS_PER_SAMPLE */
 {
-//#if BITS_PER_SAMPLE == 8
-//  BYTE wave[ rec_freq ];
-//#else /* BITS_PER_SAMPLE */
-//  short wave[ rec_freq ];
-//#endif /* BITS_PER_SAMPLE */
-//  
-//  for ( int i = 0; i < rec_freq; i++)
-//  {
-//    wave[i] = ( wave1[i] + wave2[i] + wave3[i] + wave4[i] + wave5[i] ) / 5;
-//  }
 #if 1
   if (!lpSndDevice->SoundOutput( samples, wave ) )
 #else

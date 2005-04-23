@@ -34,12 +34,19 @@
 /*-------------------------------------------------------------------*/
 /*  Include files                                                    */
 /*-------------------------------------------------------------------*/
+#ifdef DMA_SDRAM
+#include "./SimLEON/DMAAccessFunction.h"
+#endif /* DMA_SDRAM */
 
 #include "InfoNES.h"
 
 #ifdef TESTGRAPH
 #include "Int.h"
+#ifdef WIN32
+#include "/Project/Reuse/Leon/SOFTWARE/include/leon.h"
+#else /* WIN32 */
 #include "leon.h"
+#endif /* WIN32 */
 #endif /* TESTGRAPH */
 
 #ifdef killsystem
@@ -57,6 +64,10 @@
 #include "leonram.h"
 #endif
 
+#include "time.h"
+
+unsigned int Frame = 0;
+
 #ifdef AFS
 void do_frame();
 
@@ -69,7 +80,6 @@ struct lregs *lr = (struct lregs *)PREGS;
 
 unsigned int cur_time, last_frame_time;
 #else /* LEON */
-#include "time.h"
 clock_t cur_time, last_frame_time;
 #endif /* LEON */
 
@@ -88,7 +98,6 @@ unsigned int  temp;
 clock_t temp;
 #endif /* LEON */
 
-unsigned int Frame = 0;
 #endif /* PrintfFrameClock */
 
 #ifdef PrintfFrameGraph
@@ -243,7 +252,7 @@ unsigned int Frame = 0;
 
 writefunc PPU_write_tbl[ 8 ];
 
-static inline void _2000W( BYTE byData )
+ inline void _2000W( BYTE byData )
 {
 	PPU_R0 = byData;
 	PPU_Increment = ( PPU_R0 & R0_INC_ADDR ) ? 32 : 1;
@@ -253,22 +262,22 @@ static inline void _2000W( BYTE byData )
 	NES_SprGen = PPUBANK[ ( PPU_R0 & R0_SP_ADDR ) >> 1];
 	PPU_SP_Height = ( PPU_R0 & R0_SP_SIZE ) ? 16 : 8;
 }
-static inline void _2001W( BYTE byData )
+ inline void _2001W( BYTE byData )
 {
 	PPU_R1 = byData;
 }
-static inline void _2002W( BYTE byData )
+ inline void _2002W( BYTE byData )
 {
 }
-static inline void _2003W( BYTE byData )
+ inline void _2003W( BYTE byData )
 {
 	PPU_R3 = byData;				// Sprite RAM Address
 }
-static inline void _2004W( BYTE byData )
+ inline void _2004W( BYTE byData )
 {
 	SPRRAM[ PPU_R3++ ] = byData;	// Write data to Sprite RAM
 }
-static inline void _2005W( BYTE byData )
+ inline void _2005W( BYTE byData )
 {
 	//PPU_R5 = byData;
 	if ( PPU_Latch_Flag )	//2005µÚ¶ş´ÎĞ´Èë
@@ -277,7 +286,7 @@ static inline void _2005W( BYTE byData )
 		ARX = ( ARX & 0x0100 ) | byData;	// t:0000000000011111=d:11111000
 	PPU_Latch_Flag ^= 1;
 }
-static inline void _2006W( BYTE byData )
+ inline void _2006W( BYTE byData )
 {
 	//PPU_R6 = byData;
 	if ( PPU_Latch_Flag )	//2006µÚ¶ş´ÎĞ´Èë
@@ -295,58 +304,173 @@ static inline void _2006W( BYTE byData )
 	}
 	PPU_Latch_Flag ^= 1;
 }
-static inline void _2007W( BYTE byData )
+ inline void _2007W( BYTE byData )
 {
 	//PPU_R7 = byData;
 	//PPU_Addr = ( NSCROLLY & 0x0003 ) << 12 | ( NSCROLLY >> 8 ) << 11 | ( NSCROLLY & 0x00F8 ) << 2 | ( NSCROLLX >> 8 ) << 10 | ( NSCROLLX & 0x00F8 ) >> 3;
-	if( PPU_Addr >= 0x2000/*NSCROLLY & 0x0002*/ )	//2000-3FFF
-	{
-		if( PPU_Addr >= 0x3F00/*NSCROLLY & 0x0040*/)	//3F00-3FFF
-		{
-			byData &= 0x3F;
-			if(0x0000 == (PPU_Addr & 0x000F))		// is it THE 0 entry?
+#ifdef splitPPURAM
+
+			if( PPU_Addr >= 0x3C00 )
 			{
+					byData &= 0x3F;
+
+					if(0x0000 == (PPU_Addr & 0x000F)) // is it THE 0 entry?
+					{
 #ifdef LEON
-				PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
+
+#ifdef killPALRAM
+						PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
+#else /* killPALRAM */
+						PALRAM[ 0x300 ] = PALRAM[ 0x310 ] = PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
+#endif /* killPALRAM */
+
 #else
-				PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = byData;
-				PalTable[ 0x00 ] = PalTable[ 0x10 ] = NesPalette[ byData ] | 0x8000;
+
+#ifdef killPALRAM
+						PalTable[ 0x00 ] = PalTable[ 0x10 ] = /*NesPalette[*/ byData/*<<2*/ /*]*//* | 0x8000*/;
+#else /* killPALRAM */
+						PALRAM[ 0x300 ] = PALRAM[ 0x310 ] = byData;
+						PalTable[ 0x00 ] = PalTable[ 0x10 ] = NesPalette[ byData ] | 0x8000;
+#endif /* killPALRAM */
+
 #endif
+					}
+					else
+					{
+					//int iaddr = PPU_Addr & 0x001F;
+#ifdef LEON
+
+#ifdef killPALRAM
+						PalTable[ PPU_Addr & 0x001F ] = byData;
+#else /* killPALRAM */
+						PALRAM[ PPU_Addr & 0x3FF ] = PalTable[ PPU_Addr & 0x001F ] = byData;
+#endif /* killPALRAM */
+
+#else
+
+#ifdef killPALRAM
+						PalTable[ PPU_Addr & 0x001F ] = /*NesPalette[*/ byData/*<<2*/ /*]*/;
+#else /* killPALRAM */
+						PALRAM[ PPU_Addr & 0x3FF ] = byData;
+						PalTable[ PPU_Addr & 0x001F ] = NesPalette[ byData ];
+#endif /* killPALRAM */
+
+#endif
+					}
+					PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] = PalTable[ 0x10 ] = 
+						PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ]  = PalTable[ 0x00 ];
+					PPU_Addr += PPU_Increment;
+					//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+					//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+					return;
 			}
-			else if(0x0000 == (PPU_Addr & 0x0010))	// background palette
+			else if( byVramWriteEnable || PPU_Addr >= 0x2000 )
+				PPUBANK[ PPU_Addr >> 10 ][ PPU_Addr & 0x3ff ] = byData;
+
+#else /* splitPPURAM */
+
+			if( PPU_Addr >= 0x2000/*NSCROLLY & 0x0002*/ )	//2000-3FFF
 			{
+				if( PPU_Addr >= 0x3F00/*NSCROLLY & 0x0040*/)	//3F00-3FFF
+				{
+					byData &= 0x3F;
+
+					if(0x0000 == (PPU_Addr & 0x000F)) // is it THE 0 entry?
+					{
 #ifdef LEON
-				PPURAM[ PPU_Addr ] = PalTable[ PPU_Addr & 0x000F ] = byData;
+						PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
 #else
-				PPURAM[ PPU_Addr ] = byData;
-				PalTable[ PPU_Addr & 0x000F ] = NesPalette[ byData ];
+						PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = byData;
+						PalTable[ 0x00 ] = PalTable[ 0x10 ] = NesPalette[ byData ] | 0x8000;
 #endif
-			}
-			else									// sprite palette
-			{
+					}
+					else if(0x0000 == (PPU_Addr & 0x0010))
+					{
+						// background palette
 #ifdef LEON
-				PPURAM[ PPU_Addr/* & 0x000F*/ ] = PalTable[ PPU_Addr & 0x001F ] = byData; 
+						PPURAM[ PPU_Addr ] = PalTable[ PPU_Addr & 0x000F ] = byData;
 #else
-				PPURAM[ PPU_Addr/* & 0x000F*/ ] = byData;
-				PalTable[ PPU_Addr & 0x001F ] = NesPalette[ byData ]; 
+						PPURAM[ PPU_Addr ] = byData;
+						PalTable[ PPU_Addr & 0x000F ] = NesPalette[ byData ];
 #endif
+					}
+					else
+					{
+						// sprite palette
+#ifdef LEON
+						PPURAM[ PPU_Addr/* & 0x000F*/ ] = PalTable[ PPU_Addr & 0x001F ] = byData; 
+#else
+						PPURAM[ PPU_Addr/* & 0x000F*/ ] = byData;
+						PalTable[ PPU_Addr & 0x001F ] = NesPalette[ byData ]; 
+#endif
+					}
+					PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] = PalTable[ 0x10 ] = 
+						PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ]  = PalTable[ 0x00 ];
+					PPU_Addr += PPU_Increment;
+					//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+					//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+					return;
+				}
+				else						//2000-3EFF
+					//PPUBANK[ ( ( NSCROLLY & 0x100 ) >> 7 ) + ( ( NSCROLLX & 0x100 ) >> 8 ) + 8 ][ addr & 0x3ff ] = byData;
+					PPUBANK[ ( PPU_Addr & 0x2FFF ) >> 10 ][ PPU_Addr & 0x3ff ] = byData;
 			}
-			PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] = PalTable[ 0x10 ] = 
-				PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ]  = PalTable[ 0x00 ];
+			else if( byVramWriteEnable )	//0000-1FFF
+				PPUBANK[ PPU_Addr >> 10 ][ PPU_Addr & 0x3ff ] = byData;
+
+#endif /* splitPPURAM */
+
 			PPU_Addr += PPU_Increment;
 			//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
 			//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
-			return;
-		}
-		else						//2000-3EFF
-			//PPUBANK[ ( ( NSCROLLY & 0x100 ) >> 7 ) + ( ( NSCROLLX & 0x100 ) >> 8 ) + 8 ][ addr & 0x3ff ] = byData;
-			PPUBANK[ ( PPU_Addr & 0x2FFF ) >> 10 ][ PPU_Addr & 0x3ff ] = byData;
-	}
-	else if( byVramWriteEnable )	//0000-1FFF
-		PPUBANK[ PPU_Addr >> 10 ][ PPU_Addr & 0x3ff ] = byData;
-	PPU_Addr += PPU_Increment;
-	//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
-	//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+//	if( PPU_Addr >= 0x2000/*NSCROLLY & 0x0002*/ )	//2000-3FFF
+//	{
+//		if( PPU_Addr >= 0x3F00/*NSCROLLY & 0x0040*/)	//3F00-3FFF
+//		{
+//			byData &= 0x3F;
+//			if(0x0000 == (PPU_Addr & 0x000F))		// is it THE 0 entry?
+//			{
+//#ifdef LEON
+//				PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
+//#else
+//				PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = byData;
+//				PalTable[ 0x00 ] = PalTable[ 0x10 ] = NesPalette[ byData ] | 0x8000;
+//#endif
+//			}
+//			else if(0x0000 == (PPU_Addr & 0x0010))	// background palette
+//			{
+//#ifdef LEON
+//				PPURAM[ PPU_Addr ] = PalTable[ PPU_Addr & 0x000F ] = byData;
+//#else
+//				PPURAM[ PPU_Addr ] = byData;
+//				PalTable[ PPU_Addr & 0x000F ] = NesPalette[ byData ];
+//#endif
+//			}
+//			else									// sprite palette
+//			{
+//#ifdef LEON
+//				PPURAM[ PPU_Addr/* & 0x000F*/ ] = PalTable[ PPU_Addr & 0x001F ] = byData; 
+//#else
+//				PPURAM[ PPU_Addr/* & 0x000F*/ ] = byData;
+//				PalTable[ PPU_Addr & 0x001F ] = NesPalette[ byData ]; 
+//#endif
+//			}
+//			PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] = PalTable[ 0x10 ] = 
+//				PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ]  = PalTable[ 0x00 ];
+//			PPU_Addr += PPU_Increment;
+//			//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+//			//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
+//			return;
+//		}
+//		else						//2000-3EFF
+//			//PPUBANK[ ( ( NSCROLLY & 0x100 ) >> 7 ) + ( ( NSCROLLX & 0x100 ) >> 8 ) + 8 ][ addr & 0x3ff ] = byData;
+//			PPUBANK[ ( PPU_Addr & 0x2FFF ) >> 10 ][ PPU_Addr & 0x3ff ] = byData;
+//	}
+//	else if( byVramWriteEnable )	//0000-1FFF
+//		PPUBANK[ PPU_Addr >> 10 ][ PPU_Addr & 0x3ff ] = byData;
+//	PPU_Addr += PPU_Increment;
+//	//NSCROLLX = ( NSCROLLX & 0x7 ) | ( PPU_Addr & 0x1F ) << 3 | ( PPU_Addr & 0x0400 ) >> 2;
+//	//NSCROLLY = ( PPU_Addr & 0x3E0 ) >> 2 | ( PPU_Addr & 0x0800 ) >> 3 | ( PPU_Addr & 0x7000 ) >> 12;
 }
 #endif /* killwif */
 
@@ -617,7 +741,7 @@ BYTE PPU_x;
 #endif /*INES*/
 
 /* The increase value of the PPU Address */
-WORD PPU_Increment;
+int PPU_Increment;
 
 /* Current Scanline */
 #ifdef INES
@@ -649,22 +773,24 @@ WORD  bg_pattern_table_addr;
 //BYTE *PPU_SP_Base;
 
 //nesterJ
+#ifndef INES
 WORD  spr_pattern_table_addr;
+#endif /* INES */
 
 /* Sprite Height */
-WORD PPU_SP_Height;
+int PPU_SP_Height;
 
 ///* Sprite #0 Scanline Hit Position */
 //int SpriteJustHit;
 
 /* VRAM Write Enable ( 0: Disable, 1: Enable ) */
-BYTE byVramWriteEnable;
+unsigned int byVramWriteEnable;
 
 /* PPU Address and Scroll Latch Flag*/
-BYTE PPU_Latch_Flag;
+unsigned int PPU_Latch_Flag;
 
 /* Up and Down Clipping Flag ( 0: non-clip, 1: clip ) */ 
-BYTE PPU_UpDown_Clip;
+//BYTE PPU_UpDown_Clip;
 
 ///* Frame IRQ ( 0: Disabled, 1: Enabled )*/
 //BYTE FrameIRQ_Enable;
@@ -693,7 +819,7 @@ WORD FrameCnt;
 BYTE WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//Í¼ĞÎ»º³åÇøÊı×é£¬±£´æ6Î»µÄÑÕÉ«Ë÷ÒıÖµ
 #endif /* DTCM8K */
 
-#else
+#else /* LEON */
 
 #ifdef killPALRAM
 BYTE WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//Í¼ĞÎ»º³åÇøÊı×é£¬±£´æ6Î»µÄÑÕÉ«Ë÷ÒıÖµ
@@ -701,7 +827,7 @@ BYTE WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//Í¼ĞÎ»º³åÇøÊı×é£¬±£´æ6Î
 WORD WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//Í¼ĞÎ»º³åÇøÊı×é£¬±£´æRGBÖµ
 #endif /* killPALRAM */
 
-#endif
+#endif /* LEON */
 
 ////ÑÕÉ«
 //BYTE WorkFrame[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];		//Í¼ĞÎ»º³åÇøÊı×é£¬±£´æ4Î»ÑÕÉ«Ë÷ÒıÖµ
@@ -819,7 +945,7 @@ WORD PalTable[ 32 ];
 
 /* APU Mute ( 0:OFF, 1:ON ) */
 //ÒôÆµint APU_Mute = 1;
-int APU_Mute = 0;
+//int APU_Mute = 0;
 
 DWORD pad_strobe;
 #ifdef nesterpad
@@ -1022,7 +1148,7 @@ int InfoNES_Reset()
 
   // Reset frame skip and frame count
 //ÊÓÆµ   FrameSkip = 5;
-  FrameSkip = 0;
+  FrameSkip = 5;
   FrameCnt = 0;
 
 //#if 0
@@ -1119,7 +1245,7 @@ int InfoNES_Reset()
   PPU_Latch_Flag = 0;
 
   // Reset up and down clipping flag
-  PPU_UpDown_Clip = 0;
+  //PPU_UpDown_Clip = 0;
 
   //FrameStep = 0;
   //FrameIRQ_Enable = 0;
@@ -1448,8 +1574,14 @@ void InfoNES_Main()
   // Initialize InfoNES
   InfoNES_Init();
 
+#ifdef TESTGRAPH
+	unsigned int frame = 1;
+	long cur_time, last_frame_time;
+	long BaseTime = clock();
+#endif /* TESTGRAPH */
+
   // Main loop
-  while ( 1 )
+  for(;;)
   {
     /*-------------------------------------------------------------------*/
     /*  To the menu screen                                               */
@@ -1462,9 +1594,23 @@ void InfoNES_Main()
     /*-------------------------------------------------------------------*/
 #ifdef AFS
     do_frame();
-#else
+#else /* AFS */
+
+#ifdef TESTGRAPH
+	SLNES( WorkFrame );
+
+	last_frame_time = BaseTime + ( frame++ ) * ( FRAME_SKIP + 1 ) * SAMPLE_PER_FRAME * 1000 / SAMPLE_PER_SEC;
+	for(;;)
+	{
+		cur_time = clock();
+		if( last_frame_time <= cur_time )
+			break;
+	}
+#else /* TESTGRAPH */
     InfoNES_Cycle();
-#endif
+#endif /* TESTGRAPH */
+
+#endif /* AFS */
   }
 
   // Completion treatment
@@ -1534,6 +1680,8 @@ inline void NES_CompareSprites( register int DY )
 
 #ifdef VCD
 #include "AVSync.h"
+#include "register.h"
+extern BOOL CanSetAddr;
 #endif /* VCD */
 
 #ifndef ITCM32K
@@ -1543,7 +1691,9 @@ inline void NES_CompareSprites( register int DY )
 //#include "./gamefile/contra.h"
 //#endif /* PrintfFrameGraph */
 #endif /* ITCM32K */
+#ifdef PrintfFrameGraph
 DWORD FrameCount = 0;
+#endif /* PrintfFrameGraph */
 DWORD dwKeyPad1 = 0;
 DWORD dwKeyPad2 = 0;
 DWORD dwKeySystem = 0;
@@ -1556,20 +1706,103 @@ void InfoNES_Reset();
 extern BOOL CanSetAddr;
 #endif /* VCD */
 
+
+#ifndef SimLEON
+
+void ISRForTimer_Leon()
+{
+	int temp;
+	// for Game
+	//SetCPUTimer(1, 40);
+	//BasicWriteReg32( TRLD0 + PREGS, 40 * 405 - 1);
+#ifdef PrintfFrameClock
+	BasicWriteReg32_lb( TRLD0 + PREGS, 0xffffff );
+#else /* PrintfFrameClock */
+	BasicWriteReg32_lb( TRLD0 + PREGS, TIMER_RELOAD0 );		//Ö»ÊÊÓÃÓÚFRAME_SKIPÎª6£¬SAMPLE_PER_FRAMEÎª189µÄÇé¿ö
+#endif /* PrintfFrameClock */
+	BasicReadReg32_lb( TCTRL1 + PREGS, &temp );
+	BasicWriteReg32_lb( TCTRL1 + PREGS, temp | 0x4);		// load new value
+
+	CanSetAddr = TRUE;
+}
+
+void ISR_Leon(int IntNo)
+{
+	printf("Have got a %d interrupt.\r\n", IntNo);
+	if((1 << IRQ_TIMER1) == IntNo)
+	{
+		// clear interrupt
+		BasicWriteReg32_lb( ICLEAR + PREGS, ( 1 << IRQ_TIMER1 ) );
+		ISRForTimer_Leon();
+	}
+}
+
+int StartDisplay = 0;
+
 int main()
 {
 #ifdef TESTGRAPH
+	int temp;
 
 	EnrollInterrupt(ISR);
 
 #ifndef TGsim
-	GameInit();
+	/*GameInit();													*/
+
+	CanSetAddr = FALSE;
+
+	// Disable interrupt
+	//DisableAllInterrupt();
+	BasicWriteReg32_lb( IMASK + PREGS, 0);
+	BasicWriteReg32_lb( IMASK2 + PREGS, 0);
+
+#ifdef withMEMIO
+	//EnableDemux(FALSE);
+	BasicWriteReg32_lb( ( DEMUX_BASE_ADDR + DEMUX_ENABLE ) * 4 + MEMIO, FALSE );
+
+	//EnableTVEncoder(FALSE);
+	BasicWriteReg32_lb( ( DECODE_BASE_ADDR + TV_ONOFF ) * 4 + MEMIO, FALSE);
+#endif /* withMEMIO */
+
+	//InitTimer();
+	//BasicWriteReg32_lb( SCNT + PREGS, 0x63);
+	BasicWriteReg32_lb( SCNT + PREGS, SCALER_RELOAD );		//Ö»ÊÊÓÃÓÚFRAME_SKIPÎª6£¬SAMPLE_PER_FRAMEÎª189µÄÇé¿ö
+	//BasicWriteReg32_lb( SRLD + PREGS, 0x63);		// system clock divide 1/1K
+	BasicWriteReg32_lb( SRLD + PREGS, SCALER_RELOAD );		//Ö»ÊÊÓÃÓÚFRAME_SKIPÎª6£¬SAMPLE_PER_FRAMEÎª189µÄÇé¿ö
+	BasicWriteReg32_lb( TCNT0 + PREGS, 0xffffff);
+	BasicWriteReg32_lb( TRLD0 + PREGS, 0xffffff);
+	BasicWriteReg32_lb( TCNT1 + PREGS, 0xffffff);
+	BasicWriteReg32_lb( TRLD1 + PREGS, 0xffffff);
+
+	// init Sdram
+	//InitSdram();
+	//BasicWriteReg32_lb( ( HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR ) * 4 + MEMIO, 0x00);
+	//BasicWriteReg32_lb( ( HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR ) * 4 + MEMIO, 0x01);
+	//BasicWriteReg32_lb( ( HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR ) * 4 + MEMIO, 0x02);
+	//BasicWriteReg32_lb( ( HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR ) * 4 + MEMIO, 0x02);
+	//BasicWriteReg32_lb( ( HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR ) * 4 + MEMIO, 0x03);
+	//BasicWriteReg32_lb( ( HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR ) * 4 + MEMIO, 0x04);
+	//BasicWriteReg32_lb( ( HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR ) * 4 + MEMIO, 0x00);
+	//BasicWriteReg32_lb( ( HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR ) * 4 + MEMIO, 0x10);
+
+
+	/* Configure Display*/
+
+
+#ifdef withMEMIO
+	// Configure Display frame address for init picture.
+	//SetTVMode(TRUE/*bGame*/, 0/*BarMode*/, TRUE/*bPAL*/, FALSE/*bSVideo*/,
+	//	      TRUE/*bPAL625*/, TRUE/*bMaster*/);
+	BasicWriteReg32_lb( ( DECODE_BASE_ADDR + TV_MODE ) * 4 + MEMIO, ( 1 << 6 | 0 << 4 | 1 << 3 | 0 << 2 | 1 << 1 | 1 ) );
+	//SetDisplayFrameBase((BYTE*)P1);
+	BasicWriteReg32_lb( (DECODE_BASE_ADDR+DISPLAY_FRAME_BASE_ADDR)*4 + MEMIO, /*0x8000*/(int)( PPU0 )>>2);
+	//SetDisplayFrameTypeB(FALSE);
+	BasicWriteReg32_lb( ( DECODE_BASE_ADDR + DISPLAY_FRAME_B ) * 4 + MEMIO, FALSE );
+	// set a invariable B frame addr for buffer status diagnos
+	//WriteRegister(DECODE_BASE_ADDR+BFRAME_BASE_ADDR, P3/*0x1A900*/);
+	BasicWriteReg32_lb( ( DECODE_BASE_ADDR + BFRAME_BASE_ADDR ) * 4 + MEMIO, P3/*0x1A900*/);
+#endif /* withMEMIO */
 #endif /* TGsim */
-
-	SetCPUTimer(1, 20);
-	EnableTimer(1, TRUE);
-
-	EnableInterrupt(IRQ_TIMER1, LEVEL1);
 
 #endif /* TESTGRAPH */
 
@@ -1717,34 +1950,76 @@ int main()
 
 	InfoNES_Reset();				//³õÊ¼»¯Ä£ÄâÆ÷ÀïµÄ¸÷¸ö²ÎÊı
 
+	//SetCPUTimer(1, 40);
+	// 27648 <---> 1s
+	//   28  <---> 1ms
+	//BasicWriteReg32( TRLD0 + PREGS, 40 * 405 -1);
+#ifdef PrintfFrameClock
+	BasicWriteReg32_lb( TRLD0 + PREGS, 0xffffff );
+#else /* PrintfFrameClock */
+	BasicWriteReg32_lb( TRLD0 + PREGS, TIMER_RELOAD0 );		//Ö»ÊÊÓÃÓÚFRAME_SKIPÎª6£¬SAMPLE_PER_FRAMEÎª189µÄÇé¿ö
+#endif /* PrintfFrameClock */
+	//BasicWriteReg32_lb( TCNT0 + PREGS, 0x01ffff);	//Îª±ÜÃâÔÚTSIMÖĞ·¢ÏÖµÄÊ±¼äÊ×´ÎÖØÔØÊ±·¢Éú¹ıÔçÖØÔØµÄ´íÎóÏÖÏó£¬¾­ÊÔÑé·¢ÏÖ³õÊ¼Ê±ÉèÎª´ËÖµ¼´¿É
+	BasicReadReg32_lb( TCTRL1 + PREGS, &temp );
+	BasicWriteReg32_lb( TCTRL1 + PREGS, temp | 0x4);		// load new value
+	//EnableTimer(1, TRUE);
+	//BasicWriteReg32_lb( TCTRL0 + PREGS, 0x7 );
+	BasicWriteReg32_lb( TCTRL0 + PREGS, 0x3 );
 
+	//////////////////////////////////////////////////////////////////
+	//EnableInterrupt(IRQ_TIMER1, LEVEL1);
+	BasicWriteReg32_lb( ICLEAR + PREGS, ( 1 << IRQ_TIMER1 ) );
+	BasicReadReg32_lb( IMASK + PREGS, &temp );
+	BasicWriteReg32_lb( IMASK + PREGS, temp | ( 1 << IRQ_TIMER1 ) );
+	//////////////////////////////////////////////////////////////////
+
+#ifdef withMEMIO
+	//EnableTVEncoder(TRUE);
+	BasicWriteReg32_lb( ( DECODE_BASE_ADDR + TV_ONOFF ) * 4 + MEMIO, TRUE);
+	//////////////////////////////////////////////////////////////////
+#endif /* withMEMIO */
 	for(;;)
 	{
-#ifndef TGsim
-		for(;;)
-		{
-			if(CanSetAddr)
-			{
-				SetDisplayFrameBase( (BYTE *)IRAM );	//ÉèÖÃÏÔÊ¾Ä£¿éµÄ»ùµØÖ·µ½0x8000
-				CanSetAddr = FALSE;
-				break;
-			}
-		}
-#endif /* TGsim */
-		SLNES( (BYTE *)PRAM );			//µ÷ÓÃÄ£ÄâÆ÷Ğ´Ò»èåÊı¾İµ½»ùµØÖ·0x11480
+#ifdef withMEMIO
+		BasicWriteReg32_lb( (DECODE_BASE_ADDR+DISPLAY_FRAME_BASE_ADDR)*4 + MEMIO, /*0x8000*/( (int)PPU0 >> 2 & 0xFFFFFF ));
+#endif /* withMEMIO */
+		SLNES( PPU1 );
+#ifdef withMEMIO
+		BasicWriteReg32_lb( (DECODE_BASE_ADDR+DISPLAY_FRAME_BASE_ADDR)*4 + MEMIO, /*0x18000*/( (int)PPU1 >> 2 & 0xFFFFFF ));
+#endif /* withMEMIO */
+		SLNES( PPU2 );
+#ifdef withMEMIO
+		BasicWriteReg32_lb( (DECODE_BASE_ADDR+DISPLAY_FRAME_BASE_ADDR)*4 + MEMIO, /*0x28000*/( (int)PPU2 >> 2 & 0xFFFFFF ));
+#endif /* withMEMIO */
+		SLNES( PPU0 );
 		
-#ifndef TGsim
-		for(;;)
-		{
-			if(CanSetAddr)
-			{
-				SetDisplayFrameBase( (BYTE *)PRAM );	//ÉèÖÃÏÔÊ¾Ä£¿éµÄ»ùµØÖ·µ½0x11480
-				CanSetAddr = FALSE;
-				break;
-			}
-		}
-#endif /* TGsim */
-		SLNES( (BYTE *)IRAM );			//µ÷ÓÃÄ£ÄâÆ÷Ğ´Ò»èåÊı¾İµ½»ùµØÖ·0x8000
+//		SLNES( WorkFrame );
+
+//#ifndef TGsim
+//		for(;;)
+//		{
+//			if(CanSetAddr)
+//			{
+//				SetDisplayFrameBase( (BYTE *)IRAM );	//ÉèÖÃÏÔÊ¾Ä£¿éµÄ»ùµØÖ·µ½0x8000
+//				CanSetAddr = FALSE;
+//				break;
+//			}
+//		}
+//#endif /* TGsim */
+//		SLNES( (BYTE *)PRAM );			//µ÷ÓÃÄ£ÄâÆ÷Ğ´Ò»èåÊı¾İµ½»ùµØÖ·0x11480
+//		
+//#ifndef TGsim
+//		for(;;)
+//		{
+//			if(CanSetAddr)
+//			{
+//				SetDisplayFrameBase( (BYTE *)PRAM );	//ÉèÖÃÏÔÊ¾Ä£¿éµÄ»ùµØÖ·µ½0x11480
+//				CanSetAddr = FALSE;
+//				break;
+//			}
+//		}
+//#endif /* TGsim */
+//		SLNES( (BYTE *)IRAM );			//µ÷ÓÃÄ£ÄâÆ÷Ğ´Ò»èåÊı¾İµ½»ùµØÖ·0x8000
 	}
 
 #else /* TESTGRAPH */
@@ -1761,6 +2036,9 @@ int main()
 
 	return 0;
 }
+
+
+#endif /* SimLEON */
 
 #ifndef ITCM32K
 
@@ -1888,7 +2166,7 @@ void InfoNES_Reset()
 	PPU_R0 = PPU_R1 = PPU_R2 = PPU_R3 = PPU_R7 = 0;	//´ıÓÅ»¯  // Reset PPU Register
 	/*PPU_R4 = */PPU_R5 = PPU_R6 = 0;					//´ıÓÅ»¯
 	PPU_Latch_Flag = 0;
-	PPU_UpDown_Clip = 0;								//´ıÓÅ»¯
+	//PPU_UpDown_Clip = 0;
 
 	PPU_Addr = 0;										// Reset PPU address
 #ifdef INES
@@ -1991,20 +2269,29 @@ void InfoNES_Reset()
 #endif /* ITCM32K */
 
 
+#ifdef AFS
 void InfoNES_LoadFrame()	//Ö»ÓÃÓÚ²âÊÔ´òÓ¡ÓÎÏ·»­ÃæµÄÒ»²¿·Ö
 {
 #ifdef PrintfFrameGraph
 	register int x, y;
-	printf("Frame: %d\n", FrameCount++ );
-	if( FrameCount++ > 32)
+	printf("Frame: %d\n", FrameCount );
+	if( FrameCount == 1)
+	{
+	 printf("\n{\n");
+	 int i;
+	 for (i=0; i<64;i++) printf( "%x", i );
+	 printf("\n}\n");
+ 	}
+	if( FrameCount++ > 262 )
 		for ( y = 130; y < 210; y++ ) 
+		{	
 			for ( x = 0; x < 190; x++ )
-				if( x != 189 )
-					printf( "%c", WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] );
-				else
-					printf( "\n" );
+			printf( "%02x", WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] );
+			printf( "]\n" );
+		}
 #endif /* PrintfFrameGraph */
 }
+#endif /* AFS */
 
 /*int Get_GameKey(void)
 {
@@ -2075,15 +2362,64 @@ void InfoNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
 
 #ifdef TESTGRAPH
 
-void SLNES( BYTE *DisplayFrameBase)
+//#ifdef DMA_SDRAM
+unsigned char line_buffers[ 272 ];		//É¨ÃèÏß»º³åÇøÊı×é£¬±£´æ×ÅÒ»ÌõÉ¨ÃèÏßµÄÏñËØĞÅÏ¢
+//#endif /* DMA_SDRAM */
+#include "string.h"
+
+WriteDMA(int *Data, int Length, int MemBaseAddr)
+{
+	int i;
+	//Go on when DMACache Status is Idle
+	for (;;)
+	{
+		//if(GetDMAStatue(ReadBackStatus) == 0)
+		if(((*(volatile int*)(0x044*4 + 0x20000000)) & 1 ) == 0)
+		{
+			break;
+		}
+	}
+
+	//DMASaveCache(MemAddressToSDRam,MemBaseAddr);
+	*(volatile int*)(0x040*4 + 0x20000000) = MemBaseAddr&0xFFFFFF;
+	//DMAWriteCache(WriteReadCacheSetUp, 0, 0 ,Length);
+	*(volatile int*)(0x041*4 + 0x20000000) = Length & 0x3F;
+
+	for( i = 0 ; i < Length; i++)
+	{
+		//DMAWriteData(WriteDataToCache, *(Data + i));
+		*(volatile int*)(0x042*4 + 0x20000000) = *(Data + i);
+	}
+}
+
+#ifdef SimLEON
+#include "stdio.h"
+extern int StartDisplay;
+#endif /* SimLEON */
+
+void SLNES( unsigned char *DisplayFrameBase)
 {
 /*
- *  Ä£ÄâÆ÷µÄÖ÷Ñ­»·
+ *  Ä£ÄâÆ÷Ö÷ÒªµÄÄ£Äâº¯Êı£¬Ã¿Ä£ÄâÒ»´Î£¬Êä³öÒ»èåPPUèå´æ£¨»­Ãæ£©¼°£¨FRAME_SKIP + 1£©èåAPUèå´æ£¨ÉùÒô£©
  *
  */
 	int PPU_Scanline;
 	int NCURLINE;			//É¨ÃèÏßÔÚÒ»¸öNTÄÚ²¿µÄY×ø±ê
+//#ifdef PrintfFrameClock
+//	int LastHit = 24;		//mario
+//#else /* PrintfFrameClock */
+	int LastHit = 0;
+//#endif /* PrintfFrameClock */
 	int i;
+
+#ifdef PrintfFrameClock
+	long cur_time, old_time;
+	old_time = lr->timercnt1;
+#endif /* PrintfFrameClock */
+
+#if 1
+	unsigned char xxx[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+#endif
 
 	//ÔÚ·ÇÌøèåÆÚ¼ä
 	if ( ( PPU_R1 & R1_SHOW_SCR ) || ( PPU_R1 & R1_SHOW_SP ) )							//ÔÚÒ»èåĞÂµÄ»­Ãæ¿ªÊ¼Ê±£¬Èç¹û±³¾°»òSpriteÔÊĞíÏÔÊ¾£¬ÔòÖØÔØ¼ÆÊıÆ÷NSCROLLXºÍNSCROLLY
@@ -2105,19 +2441,66 @@ void SLNES( BYTE *DisplayFrameBase)
 			//if( PPU_Scanline < 140 || PPU_Scanline > 201)		//ÉÙÖ´ĞĞ¼¸ÌõÉ¨ÃèÏß£¬ÎªÁË¼Ó¿ìËÙ¶È£¬µ±È»Ç°ÌáÊÇ»­Ãæ²»ÄÜ³ö´í
 			K6502_Step( STEP_PER_SCANLINE );												//Ö´ĞĞ1ÌõÉ¨ÃèÏß
 			NSCROLLX = ARX;
-//³Ë·¨			buf = DisplayFrameBase + i * NES_BACKBUF_WIDTH + 8;					//½«Ö¸ÕëÖ¸ÏòÍ¼ĞÎ»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄµ±Ç°É¨ÃèÏßµÄ¿ªÊ¼µØÖ·
-			buf = DisplayFrameBase + ( i << 8 ) + ( i << 4 ) + 8;					//½«Ö¸ÕëÖ¸ÏòÍ¼ĞÎ»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄµ±Ç°É¨ÃèÏßµÄ¿ªÊ¼µØÖ·
+////³Ë·¨			buf = DisplayFrameBase + i * NES_BACKBUF_WIDTH + 8;					//½«Ö¸ÕëÖ¸ÏòÍ¼ĞÎ»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄµ±Ç°É¨ÃèÏßµÄ¿ªÊ¼µØÖ·
+//			buf = DisplayFrameBase + ( i << 8 ) + ( i << 4 ) + 8;					//½«Ö¸ÕëÖ¸ÏòÍ¼ĞÎ»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄµ±Ç°É¨ÃèÏßµÄ¿ªÊ¼µØÖ·
+			buf = line_buffers + 8;					//½«Ö¸ÕëÖ¸ÏòÉ¨ÃèÏß»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏ¿ªÊ¼µØÖ·
 
 			if( PPU_R1 & R1_SHOW_SP ) NES_CompareSprites( PPU_Scanline );
 			if( InfoNES_DrawLine( PPU_Scanline, NSCROLLY ) )								//»æÖÆ1ÌõÉ¨ÃèÏßµ½Í¼ĞÎ»º³åÇøÊı×é
+			{
 				PPU_R2 |= R2_HIT_SP;															//ÉèÖÃSprite 0µã»÷±ê¼Ç
-			FirstSprite = -1;																//³õÊ¼»¯FirstSprite
+				LastHit = i;
+			}
 
+#if 1
+	WriteDMA( ( int *)( xxx ), 2, ((int)( DisplayFrameBase )>>2) + ( i << 6 ) + ( i << 2 ) + 0 );
+#endif
+
+//			int j,k;
+//			for (j=0;j<256;)
+//			{
+//				unsigned char ttt;
+//				ttt = *(line_buffers + 8 + j);
+//				*(line_buffers + 8 + j) = *(line_buffers + 8 + j + 3);
+//				*(line_buffers + 8 + j + 3) = ttt;
+//				
+//				ttt = *(line_buffers + 8 + j + 1);
+//				*(line_buffers + 8 + j + 1) = *(line_buffers + 8 + j + 2);
+//				*(line_buffers + 8 + j + 2) = ttt;
+//				
+//				j += 4;
+//			}
+
+#ifdef DMA_SDRAM
+			//WriteDataToSDRAM( ( int *)( line_buffers + 8 ), 32, (int)( DisplayFrameBase + ( i << 8 ) + ( i << 4 ) + 8 ) );		//»æÖÆPPUèå´æµ±Ç°É¨ÃèÏßµÄÇ°°ë¶Î
+			WriteDMA( ( int *)( line_buffers + 8 ), 32, ((int)( DisplayFrameBase )>>2) + ( i << 6 ) + ( i << 2 ) + 2 );		//»æÖÆPPUèå´æµ±Ç°É¨ÃèÏßµÄÇ°°ë¶Î
+#else /* DMA_SDRAM */
+			memcpy( DisplayFrameBase + /*272*8*/ + ( i << 8 ) + ( i << 4 ) + 8, line_buffers + 8, 256 );
+#endif /* DMA_SDRAM */
+
+			FirstSprite = -1;																//³õÊ¼»¯FirstSprite
 			NSCROLLY++;																		//NSCROLLY¼ÆÊıÆ÷+1
 			NCURLINE = NSCROLLY & 0xFF;														//Ê¹NSCROLLYÍÑÈ¥Î»8µÄV£¬Ïàµ±ÓÚVT->FV¼ÆÊıÆ÷£¬¼´NCURLINEµÈÓÚµ±Ç°É¨ÃèÏßÔÚµ±Ç°NTÖĞµÄY×ø±ê
 			if( NCURLINE == 0xF0 || NCURLINE == 0x00 )										//Èç¹ûVTµÈÓÚ30£¬ËµÃ÷¸Ã´¹Ö±ÇĞ»»NTÁË£»»òÕßÈç¹ûVTµÈÓÚ32£¬ËµÃ÷ÕâÊÇÒ»¸ö¡°¸ºµÄ¾íÖáÖµ¡±£¬Õâ²»»á´¹Ö±ÇĞ»»NT£¬ÕâÊ±ĞèÒª½«Ö®Ç°ÓÉÓÚ½øÎ»¶øÇĞ»»µÄNTÔÙÇĞ»»»ØÀ´
 				NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;										//ÇĞ»»´¹Ö±·½ÏòµÄNT£¬Í¬Ê±VT->FV¼ÆÊıÆ÷ÇåÁã
+
+			//WriteDataToSDRAM( ( int *)( line_buffers + 136 ), 32, (int)( DisplayFrameBase + ( i << 8 ) + ( i << 4 ) + 136 )  );	//»æÖÆPPUèå´æµ±Ç°É¨ÃèÏßµÄºó°ë¶Î
+			//printf( "adress:	%x\n\n", (int)( DisplayFrameBase ) + ( i << 6 ) + ( i << 2 ) + 34 );
+#ifdef DMA_SDRAM
+			WriteDMA( ( int *)( line_buffers + 136 ), 32, ((int)( DisplayFrameBase )>>2) + ( i << 6 ) + ( i << 2 ) + 34 );	//»æÖÆPPUèå´æµ±Ç°É¨ÃèÏßµÄºó°ë¶Î
+#endif /* DMA_SDRAM */
+
+#if 1
+	WriteDMA( ( int *)( xxx ), 2, ((int)( DisplayFrameBase )>>2) + ( i << 6 ) + ( i << 2 ) + 66 );
+#endif
+
 		}
+
+#ifdef SimLEON
+		StartDisplay = 1;
+		printf("framedone\n", PPU_Scanline);
+#endif /* SimLEON */
+
 	}
 	else
 	{
@@ -2138,11 +2521,51 @@ void SLNES( BYTE *DisplayFrameBase)
 	//InfoNES_PadState( &PAD1_Latch, &PAD2_Latch, &PAD_System );							//ÔÚ·ÇÌøèåÆÚ¼ä»ñÈ¡ÊÖ±úÊäÈëĞÅÏ¢
 	InfoNES_pAPUVsync();
 
+	InfoNES_PadState( &PAD1_Latch, &PAD2_Latch, &PAD_System );							//ÔÚ·ÇÌøèåÆÚ¼ä»ñÈ¡ÊÖ±úÊäÈëĞÅÏ¢
+#ifdef WIN32
+	InfoNES_LoadFrame();																//½«Í¼ĞÎ»º³åÇøÊı×éÀïµÄÄÚÈİË¢ĞÂµ½ÆÁÄ»ÉÏ
+#endif /* WIN32 */
+
+#ifdef PrintfFrameGraph
+{
+	register int x, y;
+//	printf("ReadBackStatus: %x\n", *(int*)(0x20000110) );
+	printf("Frame: %d\n", FrameCount * ( FRAME_SKIP + 1 ) );
+	if( FrameCount == 1)
+	{
+	 printf("\n{\n");
+	 int i;
+	 for (i=0; i<64;i++) printf( "%x", i );
+	 printf("\n}\n");
+ 	}
+	if( FrameCount++ > ( 262 / (FRAME_SKIP + 1)) )
+		for ( y = 130; y < 210; y++ ) 
+		{	
+			for ( x = 0; x < 190; x++ )
+			printf( "%02x", DisplayFrameBase[ y * NES_BACKBUF_WIDTH + 8 + x ] );
+			printf( "]\n" );
+		}
+}
+#endif /* PrintfFrameGraph */
+
+#ifdef PrintfFrameClock
+	cur_time = lr->timercnt1;
+	if( old_time > cur_time )
+		printf( "6+A+P: %d;	Frame: %d;\n", ( old_time - cur_time ) * MICROSEC_PER_COUNT, Frame++ );
+	else
+		printf( "6+A+P: %d;	Frame: %d;\n", ( lr->timerload1 - cur_time + old_time ) * MICROSEC_PER_COUNT, Frame++ );
+#endif /* PrintfFrameClock */
+
 	//ÔÚÌøèåÆÚ¼ä
 	for ( i = 0; i < FRAME_SKIP; i++ )
 	{
-		K6502_Step( 25088 );																//ÔÚÌøèåÆÚ¼äÖ»Ö´ĞĞ224ÌõÉ¨ÃèÏß¶ø²»»æÖÆÉ¨ÃèÏß£¬µ±È»Ò²²»Ë¢ĞÂÆÁÄ»£¬112 * 224 = 25088
-		K6502_Step( STEP_PER_SCANLINE );													//Ö´ĞĞµÚ240ÌõÉ¨ÃèÏß
+#ifdef PrintfFrameClock
+	old_time = lr->timercnt1;
+#endif /* PrintfFrameClock */
+		//K6502_Step( 25088 );																//ÔÚÌøèåÆÚ¼äÖ»Ö´ĞĞ224ÌõÉ¨ÃèÏß¶ø²»»æÖÆÉ¨ÃèÏß£¬µ±È»Ò²²»Ë¢ĞÂÆÁÄ»£¬112 * 224 = 25088
+		K6502_Step( STEP_PER_SCANLINE * LastHit );											//Ö´ĞĞSprite 0µã»÷±ê¼ÇÖ®Ç°µÄÉ¨ÃèÏß¶ø²»»æÖÆÉ¨ÃèÏß
+		PPU_R2 |= R2_HIT_SP;																//ÉèÖÃSprite 0µã»÷±ê¼Ç
+		K6502_Step( STEP_PER_SCANLINE * ( 225 - LastHit ) );								//Ö´ĞĞSprite 0µã»÷±ê¼ÇÖ®ºóµÄÉ¨ÃèÏß¶ø²»»æÖÆÉ¨ÃèÏß
 		PPU_R2 |= R2_IN_VBLANK;																//ÔÚVBlank¿ªÊ¼Ê±ÉèÖÃR2_IN_VBLANK±ê¼Ç
 		K6502_Step( 1 );																	//ÔÚR2_IN_VBLANK±ê¼ÇºÍNMIÖ®¼äÖ´ĞĞÒ»ÌõÖ¸Áî
 		if ( PPU_R0 & R0_NMI_VB )															//Èç¹ûR0_NMI_VB±ê¼Ç±»ÉèÖÃ
@@ -2153,6 +2576,13 @@ void SLNES( BYTE *DisplayFrameBase)
 		PPU_R2 &= 0x3F;//= 0;																//ÔÚVBlank½áÊøÊ±¸´Î»R2_IN_VBLANKºÍR2_HIT_SP±ê¼Ç£¬InfoNES²ÉÓÃµÄÊÇÈ«²¿¸´Î»
 		K6502_Step( STEP_PER_SCANLINE );													//Ö´ĞĞ×îºó1ÌõÉ¨ÃèÏß
 		InfoNES_pAPUVsync();
+#ifdef PrintfFrameClock
+	cur_time = lr->timercnt1;
+	if( old_time > cur_time )
+		printf( "6+A: %d;	Frame: %d;\n", ( old_time - cur_time ) * MICROSEC_PER_COUNT, Frame++ );
+	else
+		printf( "6+A: %d;	Frame: %d;\n", ( lr->timerload1 - cur_time + old_time ) * MICROSEC_PER_COUNT, Frame++ );
+#endif /* PrintfFrameClock */
 	}
 }
 
@@ -2160,12 +2590,13 @@ void SLNES( BYTE *DisplayFrameBase)
 
 
 #ifdef AFS
-void emulate_frame( boolean draw )
+void emulate_frame( /*ÀàĞÍ boolean */unsigned char draw )
 {
 
 #ifdef g2l
-int PPU_Scanline;
-int NCURLINE;			//Ó¦¸ÃÊÇÉ¨ÃèÏßÔÚÒ»¸öNTÄÚ²¿µÄY×ø±ê
+	int PPU_Scanline;
+	int NCURLINE;			//Ó¦¸ÃÊÇÉ¨ÃèÏßÔÚÒ»¸öNTÄÚ²¿µÄY×ø±ê
+	int LastHit = 0;
 #endif
 
 	//boolean retval = draw;
@@ -2189,87 +2620,87 @@ int NCURLINE;			//Ó¦¸ÃÊÇÉ¨ÃèÏßÔÚÒ»¸öNTÄÚ²¿µÄY×ø±ê
 			}
 
 
-#ifdef LH
-
-int LastHit = 7;
-int clock6502 = 0;
-			for( ; PPU_Scanline < 232; PPU_Scanline++ )					//ÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄ8-231¹²224ÌõÉ¨ÃèÏß
-			{
-				NSCROLLX = ARX;
-//³Ë·¨				buf = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8;	//½«Ö¸ÕëÖ¸ÏòÍ¼ĞÎ»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄµ±Ç°É¨ÃèÏßµÄ¿ªÊ¼µØÖ·
-				buf = &WorkFrame[ ( PPU_Scanline << 8 ) + ( PPU_Scanline << 4 ) ] + 8;	//½«Ö¸ÕëÖ¸ÏòÍ¼ĞÎ»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄµ±Ç°É¨ÃèÏßµÄ¿ªÊ¼µØÖ·
-
-				clock6502 += STEP_PER_SCANLINE;
-				if( PPU_R1 & R1_SHOW_SP ) NES_CompareSprites( PPU_Scanline );
-				if( InfoNES_DrawLine( PPU_Scanline, NSCROLLY ) == 1 )			//»æÖÆ1ÌõÉ¨ÃèÏßµ½Í¼ĞÎ»º³åÇøÊı×é
-					if( LastHit == 7 )
-					{
-						//¼ÓËÙ
-						//if( PPU_Scanline < 140 || PPU_Scanline > 201)	//ÉÙÖ´ĞĞ¼¸ÌõÉ¨ÃèÏß£¬ÎªÁË¼Ó¿ìËÙ¶È£¬µ±È»Ç°ÌáÊÇ»­Ãæ²»ÄÜ³ö´í
-						//K6502_Step( STEP_PER_SCANLINE * ( PPU_Scanline - 8 ));
-						K6502_Step( clock6502 );
-						//K6502_Step( STEP_PER_SCANLINE );							//Ö´ĞĞSprite 0µã»÷±ê¼Ç²úÉúµÄÄÇÌõÉ¨ÃèÏß
-						PPU_R2 |= R2_HIT_SP;										//ÉèÖÃSprite 0µã»÷±ê¼Ç
-						LastHit = PPU_Scanline;
-						//¼ÓËÙ
-						//if( PPU_Scanline < 140 || PPU_Scanline > 201)	//ÉÙÖ´ĞĞ¼¸ÌõÉ¨ÃèÏß£¬ÎªÁË¼Ó¿ìËÙ¶È£¬µ±È»Ç°ÌáÊÇ»­Ãæ²»ÄÜ³ö´í
-						//K6502_Step( STEP_PER_SCANLINE * ( 232 - PPU_Scanline ) );
-						K6502_Step( 25088 - clock6502 );	//STEP_PER_SCANLINE * 224 - 6502clock 
-					}
-
-				NSCROLLY++;													//NSCROLLY¼ÆÊıÆ÷+1
-				NCURLINE = NSCROLLY & 0xFF;									//Ê¹NSCROLLYÍÑÈ¥Î»8µÄV£¬Ïàµ±ÓÚVT->FV¼ÆÊıÆ÷£¬¼´NCURLINEµÈÓÚµ±Ç°É¨ÃèÏßÔÚµ±Ç°NTÖĞµÄY×ø±ê
-				if( NCURLINE == 0xF0 || NCURLINE == 0x00 )					//Èç¹ûVTµÈÓÚ30£¬ËµÃ÷¸Ã´¹Ö±ÇĞ»»NTÁË£»»òÕßÈç¹ûVTµÈÓÚ32£¬ËµÃ÷ÕâÊÇÒ»¸ö¡°¸ºµÄ¾íÖáÖµ¡±£¬Õâ²»»á´¹Ö±ÇĞ»»NT£¬ÕâÊ±ĞèÒª½«Ö®Ç°ÓÉÓÚ½øÎ»¶øÇĞ»»µÄNTÔÙÇĞ»»»ØÀ´
-					NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;					//ÇĞ»»´¹Ö±·½ÏòµÄNT£¬Í¬Ê±VT->FV¼ÆÊıÆ÷ÇåÁã
-			}
-			if( LastHit == 7 )
-				//¼ÓËÙ
-				//K6502_Step( STEP_PER_SCANLINE * 150 );	//ÉÙÖ´ĞĞ¼¸ÌõÉ¨ÃèÏß£¬ÎªÁË¼Ó¿ìËÙ¶È£¬µ±È»Ç°ÌáÊÇ»­Ãæ²»ÄÜ³ö´í
-				//K6502_Step( STEP_PER_SCANLINE * 224 );
-				K6502_Step( 25088 );
-
-
-//			//¼ÓËÙ
-//			//if( PPU_Scanline < 140 || PPU_Scanline > 201)	//ÉÙÖ´ĞĞ¼¸ÌõÉ¨ÃèÏß£¬ÎªÁË¼Ó¿ìËÙ¶È£¬µ±È»Ç°ÌáÊÇ»­Ãæ²»ÄÜ³ö´í
-//			K6502_Step( STEP_PER_SCANLINE * ( LastHit - 7 ) );							//Ö´ĞĞSprite 0µã»÷Ö®Ç°µÄÉ¨ÃèÏß
-//			for( ; PPU_Scanline <= LastHit; PPU_Scanline++ )					//ÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄ8-231¹²224ÌõÉ¨ÃèÏß
-//			{
-////³Ë·¨				buf = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8;	//½«Ö¸ÕëÖ¸ÏòÍ¼ĞÎ»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄµ±Ç°É¨ÃèÏßµÄ¿ªÊ¼µØÖ·
-//					buf = &WorkFrame[ ( PPU_Scanline << 8 ) + ( PPU_Scanline << 4 ) ] + 8;	//½«Ö¸ÕëÖ¸ÏòÍ¼ĞÎ»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄµ±Ç°É¨ÃèÏßµÄ¿ªÊ¼µØÖ·
+//#ifdef LH
 //
-//				if( PPU_R1 & R1_SHOW_SP ) NES_CompareSprites( PPU_Scanline );
-//				if( InfoNES_DrawLine( PPU_Scanline, NSCROLLY ) )			//»æÖÆ1ÌõÉ¨ÃèÏßµ½Í¼ĞÎ»º³åÇøÊı×é
-//				{
-//					PPU_R2 |= R2_HIT_SP;										//ÉèÖÃSprite 0µã»÷±ê¼Ç
-//					LastHit = PPU_Scanline;
-//				}
-//				FirstSprite = -1;											//³õÊ¼»¯FirstSprite
-//
-//				NSCROLLY++;													//NSCROLLY¼ÆÊıÆ÷+1
-//				NCURLINE = NSCROLLY & 0xFF;									//Ê¹NSCROLLYÍÑÈ¥Î»8µÄV£¬Ïàµ±ÓÚVT->FV¼ÆÊıÆ÷£¬¼´NCURLINEµÈÓÚµ±Ç°É¨ÃèÏßÔÚµ±Ç°NTÖĞµÄY×ø±ê
-//				if( NCURLINE == 0xF0 || NCURLINE == 0x00 )					//Èç¹ûVTµÈÓÚ30£¬ËµÃ÷¸Ã´¹Ö±ÇĞ»»NTÁË£»»òÕßÈç¹ûVTµÈÓÚ32£¬ËµÃ÷ÕâÊÇÒ»¸ö¡°¸ºµÄ¾íÖáÖµ¡±£¬Õâ²»»á´¹Ö±ÇĞ»»NT£¬ÕâÊ±ĞèÒª½«Ö®Ç°ÓÉÓÚ½øÎ»¶øÇĞ»»µÄNTÔÙÇĞ»»»ØÀ´
-//					NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;					//ÇĞ»»´¹Ö±·½ÏòµÄNT£¬Í¬Ê±VT->FV¼ÆÊıÆ÷ÇåÁã
-//			}
-//			//¼ÓËÙ
-//			//if( PPU_Scanline < 140 || PPU_Scanline > 201)	//ÉÙÖ´ĞĞ¼¸ÌõÉ¨ÃèÏß£¬ÎªÁË¼Ó¿ìËÙ¶È£¬µ±È»Ç°ÌáÊÇ»­Ãæ²»ÄÜ³ö´í
-//			K6502_Step( STEP_PER_SCANLINE * ( 231 - LastHit ) );							//Ö´ĞĞSprite 0µã»÷Ö®ºóµÄÉ¨ÃèÏß
+//int LastHit = 7;
+//int clock6502 = 0;
 //			for( ; PPU_Scanline < 232; PPU_Scanline++ )					//ÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄ8-231¹²224ÌõÉ¨ÃèÏß
 //			{
 //				NSCROLLX = ARX;
 ////³Ë·¨				buf = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8;	//½«Ö¸ÕëÖ¸ÏòÍ¼ĞÎ»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄµ±Ç°É¨ÃèÏßµÄ¿ªÊ¼µØÖ·
-//					buf = &WorkFrame[ ( PPU_Scanline << 8 ) + ( PPU_Scanline << 4 ) ] + 8;	//½«Ö¸ÕëÖ¸ÏòÍ¼ĞÎ»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄµ±Ç°É¨ÃèÏßµÄ¿ªÊ¼µØÖ·
+//				buf = &WorkFrame[ ( PPU_Scanline << 8 ) + ( PPU_Scanline << 4 ) ] + 8;	//½«Ö¸ÕëÖ¸ÏòÍ¼ĞÎ»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄµ±Ç°É¨ÃèÏßµÄ¿ªÊ¼µØÖ·
 //
+//				clock6502 += STEP_PER_SCANLINE;
 //				if( PPU_R1 & R1_SHOW_SP ) NES_CompareSprites( PPU_Scanline );
-//				InfoNES_DrawLine( PPU_Scanline, NSCROLLY );			//»æÖÆ1ÌõÉ¨ÃèÏßµ½Í¼ĞÎ»º³åÇøÊı×é
-//				FirstSprite = -1;											//³õÊ¼»¯FirstSprite
+//				if( InfoNES_DrawLine( PPU_Scanline, NSCROLLY ) == 1 )			//»æÖÆ1ÌõÉ¨ÃèÏßµ½Í¼ĞÎ»º³åÇøÊı×é
+//					if( LastHit == 7 )
+//					{
+//						//¼ÓËÙ
+//						//if( PPU_Scanline < 140 || PPU_Scanline > 201)	//ÉÙÖ´ĞĞ¼¸ÌõÉ¨ÃèÏß£¬ÎªÁË¼Ó¿ìËÙ¶È£¬µ±È»Ç°ÌáÊÇ»­Ãæ²»ÄÜ³ö´í
+//						//K6502_Step( STEP_PER_SCANLINE * ( PPU_Scanline - 8 ));
+//						K6502_Step( clock6502 );
+//						//K6502_Step( STEP_PER_SCANLINE );							//Ö´ĞĞSprite 0µã»÷±ê¼Ç²úÉúµÄÄÇÌõÉ¨ÃèÏß
+//						PPU_R2 |= R2_HIT_SP;										//ÉèÖÃSprite 0µã»÷±ê¼Ç
+//						LastHit = PPU_Scanline;
+//						//¼ÓËÙ
+//						//if( PPU_Scanline < 140 || PPU_Scanline > 201)	//ÉÙÖ´ĞĞ¼¸ÌõÉ¨ÃèÏß£¬ÎªÁË¼Ó¿ìËÙ¶È£¬µ±È»Ç°ÌáÊÇ»­Ãæ²»ÄÜ³ö´í
+//						//K6502_Step( STEP_PER_SCANLINE * ( 232 - PPU_Scanline ) );
+//						K6502_Step( 25088 - clock6502 );	//STEP_PER_SCANLINE * 224 - 6502clock 
+//					}
 //
 //				NSCROLLY++;													//NSCROLLY¼ÆÊıÆ÷+1
 //				NCURLINE = NSCROLLY & 0xFF;									//Ê¹NSCROLLYÍÑÈ¥Î»8µÄV£¬Ïàµ±ÓÚVT->FV¼ÆÊıÆ÷£¬¼´NCURLINEµÈÓÚµ±Ç°É¨ÃèÏßÔÚµ±Ç°NTÖĞµÄY×ø±ê
 //				if( NCURLINE == 0xF0 || NCURLINE == 0x00 )					//Èç¹ûVTµÈÓÚ30£¬ËµÃ÷¸Ã´¹Ö±ÇĞ»»NTÁË£»»òÕßÈç¹ûVTµÈÓÚ32£¬ËµÃ÷ÕâÊÇÒ»¸ö¡°¸ºµÄ¾íÖáÖµ¡±£¬Õâ²»»á´¹Ö±ÇĞ»»NT£¬ÕâÊ±ĞèÒª½«Ö®Ç°ÓÉÓÚ½øÎ»¶øÇĞ»»µÄNTÔÙÇĞ»»»ØÀ´
 //					NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;					//ÇĞ»»´¹Ö±·½ÏòµÄNT£¬Í¬Ê±VT->FV¼ÆÊıÆ÷ÇåÁã
 //			}
-
-#else /* LH */
+//			if( LastHit == 7 )
+//				//¼ÓËÙ
+//				//K6502_Step( STEP_PER_SCANLINE * 150 );	//ÉÙÖ´ĞĞ¼¸ÌõÉ¨ÃèÏß£¬ÎªÁË¼Ó¿ìËÙ¶È£¬µ±È»Ç°ÌáÊÇ»­Ãæ²»ÄÜ³ö´í
+//				//K6502_Step( STEP_PER_SCANLINE * 224 );
+//				K6502_Step( 25088 );
+//
+//
+////			//¼ÓËÙ
+////			//if( PPU_Scanline < 140 || PPU_Scanline > 201)	//ÉÙÖ´ĞĞ¼¸ÌõÉ¨ÃèÏß£¬ÎªÁË¼Ó¿ìËÙ¶È£¬µ±È»Ç°ÌáÊÇ»­Ãæ²»ÄÜ³ö´í
+////			K6502_Step( STEP_PER_SCANLINE * ( LastHit - 7 ) );							//Ö´ĞĞSprite 0µã»÷Ö®Ç°µÄÉ¨ÃèÏß
+////			for( ; PPU_Scanline <= LastHit; PPU_Scanline++ )					//ÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄ8-231¹²224ÌõÉ¨ÃèÏß
+////			{
+//////³Ë·¨				buf = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8;	//½«Ö¸ÕëÖ¸ÏòÍ¼ĞÎ»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄµ±Ç°É¨ÃèÏßµÄ¿ªÊ¼µØÖ·
+////					buf = &WorkFrame[ ( PPU_Scanline << 8 ) + ( PPU_Scanline << 4 ) ] + 8;	//½«Ö¸ÕëÖ¸ÏòÍ¼ĞÎ»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄµ±Ç°É¨ÃèÏßµÄ¿ªÊ¼µØÖ·
+////
+////				if( PPU_R1 & R1_SHOW_SP ) NES_CompareSprites( PPU_Scanline );
+////				if( InfoNES_DrawLine( PPU_Scanline, NSCROLLY ) )			//»æÖÆ1ÌõÉ¨ÃèÏßµ½Í¼ĞÎ»º³åÇøÊı×é
+////				{
+////					PPU_R2 |= R2_HIT_SP;										//ÉèÖÃSprite 0µã»÷±ê¼Ç
+////					LastHit = PPU_Scanline;
+////				}
+////				FirstSprite = -1;											//³õÊ¼»¯FirstSprite
+////
+////				NSCROLLY++;													//NSCROLLY¼ÆÊıÆ÷+1
+////				NCURLINE = NSCROLLY & 0xFF;									//Ê¹NSCROLLYÍÑÈ¥Î»8µÄV£¬Ïàµ±ÓÚVT->FV¼ÆÊıÆ÷£¬¼´NCURLINEµÈÓÚµ±Ç°É¨ÃèÏßÔÚµ±Ç°NTÖĞµÄY×ø±ê
+////				if( NCURLINE == 0xF0 || NCURLINE == 0x00 )					//Èç¹ûVTµÈÓÚ30£¬ËµÃ÷¸Ã´¹Ö±ÇĞ»»NTÁË£»»òÕßÈç¹ûVTµÈÓÚ32£¬ËµÃ÷ÕâÊÇÒ»¸ö¡°¸ºµÄ¾íÖáÖµ¡±£¬Õâ²»»á´¹Ö±ÇĞ»»NT£¬ÕâÊ±ĞèÒª½«Ö®Ç°ÓÉÓÚ½øÎ»¶øÇĞ»»µÄNTÔÙÇĞ»»»ØÀ´
+////					NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;					//ÇĞ»»´¹Ö±·½ÏòµÄNT£¬Í¬Ê±VT->FV¼ÆÊıÆ÷ÇåÁã
+////			}
+////			//¼ÓËÙ
+////			//if( PPU_Scanline < 140 || PPU_Scanline > 201)	//ÉÙÖ´ĞĞ¼¸ÌõÉ¨ÃèÏß£¬ÎªÁË¼Ó¿ìËÙ¶È£¬µ±È»Ç°ÌáÊÇ»­Ãæ²»ÄÜ³ö´í
+////			K6502_Step( STEP_PER_SCANLINE * ( 231 - LastHit ) );							//Ö´ĞĞSprite 0µã»÷Ö®ºóµÄÉ¨ÃèÏß
+////			for( ; PPU_Scanline < 232; PPU_Scanline++ )					//ÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄ8-231¹²224ÌõÉ¨ÃèÏß
+////			{
+////				NSCROLLX = ARX;
+//////³Ë·¨				buf = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8;	//½«Ö¸ÕëÖ¸ÏòÍ¼ĞÎ»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄµ±Ç°É¨ÃèÏßµÄ¿ªÊ¼µØÖ·
+////					buf = &WorkFrame[ ( PPU_Scanline << 8 ) + ( PPU_Scanline << 4 ) ] + 8;	//½«Ö¸ÕëÖ¸ÏòÍ¼ĞÎ»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄµ±Ç°É¨ÃèÏßµÄ¿ªÊ¼µØÖ·
+////
+////				if( PPU_R1 & R1_SHOW_SP ) NES_CompareSprites( PPU_Scanline );
+////				InfoNES_DrawLine( PPU_Scanline, NSCROLLY );			//»æÖÆ1ÌõÉ¨ÃèÏßµ½Í¼ĞÎ»º³åÇøÊı×é
+////				FirstSprite = -1;											//³õÊ¼»¯FirstSprite
+////
+////				NSCROLLY++;													//NSCROLLY¼ÆÊıÆ÷+1
+////				NCURLINE = NSCROLLY & 0xFF;									//Ê¹NSCROLLYÍÑÈ¥Î»8µÄV£¬Ïàµ±ÓÚVT->FV¼ÆÊıÆ÷£¬¼´NCURLINEµÈÓÚµ±Ç°É¨ÃèÏßÔÚµ±Ç°NTÖĞµÄY×ø±ê
+////				if( NCURLINE == 0xF0 || NCURLINE == 0x00 )					//Èç¹ûVTµÈÓÚ30£¬ËµÃ÷¸Ã´¹Ö±ÇĞ»»NTÁË£»»òÕßÈç¹ûVTµÈÓÚ32£¬ËµÃ÷ÕâÊÇÒ»¸ö¡°¸ºµÄ¾íÖáÖµ¡±£¬Õâ²»»á´¹Ö±ÇĞ»»NT£¬ÕâÊ±ĞèÒª½«Ö®Ç°ÓÉÓÚ½øÎ»¶øÇĞ»»µÄNTÔÙÇĞ»»»ØÀ´
+////					NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;					//ÇĞ»»´¹Ö±·½ÏòµÄNT£¬Í¬Ê±VT->FV¼ÆÊıÆ÷ÇåÁã
+////			}
+//
+//#else /* LH */
 
 			for( ; PPU_Scanline < 232; PPU_Scanline++ )					//ÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄ8-231¹²224ÌõÉ¨ÃèÏß
 			{
@@ -2278,11 +2709,18 @@ int clock6502 = 0;
 				K6502_Step( STEP_PER_SCANLINE );							//Ö´ĞĞ1ÌõÉ¨ÃèÏß
 				NSCROLLX = ARX;
 //³Ë·¨				buf = &WorkFrame[ PPU_Scanline * NES_BACKBUF_WIDTH ] + 8;	//½«Ö¸ÕëÖ¸ÏòÍ¼ĞÎ»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄµ±Ç°É¨ÃèÏßµÄ¿ªÊ¼µØÖ·
+#ifdef FPGA128KB
+					buf = WorkFrame + 8;	         //½«Ö¸ÕëÖ¸ÏòÒ»ÌõÉ¨ÃèÏßµÄ¿ªÊ¼µØÖ·
+#else /* FPGA128KB */
 					buf = &WorkFrame[ ( PPU_Scanline << 8 ) + ( PPU_Scanline << 4 ) ] + 8;	//½«Ö¸ÕëÖ¸ÏòÍ¼ĞÎ»º³åÇøÊı×éÖĞ½«»áÏÔÊ¾ÔÚÆÁÄ»ÉÏµÄµ±Ç°É¨ÃèÏßµÄ¿ªÊ¼µØÖ·
+#endif /* FPGA128KB */
 
 				if( PPU_R1 & R1_SHOW_SP ) NES_CompareSprites( PPU_Scanline );
 				if( InfoNES_DrawLine( PPU_Scanline, NSCROLLY ) )			//»æÖÆ1ÌõÉ¨ÃèÏßµ½Í¼ĞÎ»º³åÇøÊı×é
-					PPU_R2 |= R2_HIT_SP;										//ÉèÖÃSprite 0µã»÷±ê¼Ç
+				{
+					PPU_R2 |= R2_HIT_SP;															//ÉèÖÃSprite 0µã»÷±ê¼Ç
+					LastHit = PPU_Scanline - 8;
+				}
 				FirstSprite = -1;											//³õÊ¼»¯FirstSprite
 
 				NSCROLLY++;													//NSCROLLY¼ÆÊıÆ÷+1
@@ -2291,7 +2729,7 @@ int clock6502 = 0;
 					NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;					//ÇĞ»»´¹Ö±·½ÏòµÄNT£¬Í¬Ê±VT->FV¼ÆÊıÆ÷ÇåÁã
 			}
 
-#endif /* LH */
+//#endif /* LH */
 
 		}
 		else
@@ -2303,15 +2741,18 @@ int clock6502 = 0;
 	}
 	else														//Èç¹ûÔÚÌøèåÆÚ¼ä
 		//K6502_Step( STEP_PER_SCANLINE * NES_DISP_HEIGHT );		//Ö»Ö´ĞĞ240ÌõÉ¨ÃèÏß¶ø²»»æÖÆÉ¨ÃèÏß£¬µ±È»Ò²²»Ë¢ĞÂÆÁÄ»
-		K6502_Step( 25088 );										//Ö»Ö´ĞĞ224ÌõÉ¨ÃèÏß¶ø²»»æÖÆÉ¨ÃèÏß£¬µ±È»Ò²²»Ë¢ĞÂÆÁÄ»£¬112 * 224 = 25088
+		//K6502_Step( 25088 );										//Ö»Ö´ĞĞ224ÌõÉ¨ÃèÏß¶ø²»»æÖÆÉ¨ÃèÏß£¬µ±È»Ò²²»Ë¢ĞÂÆÁÄ»£¬112 * 224 = 25088
+		K6502_Step( STEP_PER_SCANLINE * LastHit );											//Ö´ĞĞSprite 0µã»÷±ê¼ÇÖ®Ç°µÄÉ¨ÃèÏß¶ø²»»æÖÆÉ¨ÃèÏß
+		PPU_R2 |= R2_HIT_SP;																//ÉèÖÃSprite 0µã»÷±ê¼Ç
+		K6502_Step( STEP_PER_SCANLINE * ( 224 - LastHit ) );								//Ö´ĞĞSprite 0µã»÷±ê¼ÇÖ®ºóµÄÉ¨ÃèÏß¶ø²»»æÖÆÉ¨ÃèÏß
 
 //#ifdef LEON
 //time2 = clock();
 //#endif
 
-#ifndef LH
+//#ifndef LH
 	K6502_Step( STEP_PER_SCANLINE );							//Ö´ĞĞµÚ240ÌõÉ¨ÃèÏß
-#endif /* LH */
+//#endif /* LH */
 
 	//PPU_Scanline = 241;
 	PPU_R2 |= R2_IN_VBLANK;										//ÔÚVBlank¿ªÊ¼Ê±ÉèÖÃR2_IN_VBLANK±ê¼Ç
@@ -2333,7 +2774,7 @@ int clock6502 = 0;
 	InfoNES_pAPUVsync();
 }
 
-#ifdef THROTTLE_SPEED	//ÏŞËÙ£¬ÔÚLEONÖĞÓÃ²»×Å£¬¼ÓËÙ»¹À´²»¼°ÄØ:)
+#ifdef THROTTLE_SPEED	//ÏŞËÙ
 static inline void SleepUntil(long time)
 {
   long timeleft;
@@ -2342,12 +2783,12 @@ static inline void SleepUntil(long time)
   {
     timeleft = time - (long)(clock());
     if(timeleft <= 0) break;
-    int i;
-    for(i = 0; i < 1000; i++)
-    {
-      i++;
-	  i--;
-    }
+   // int i;
+   // for(i = 0; i < 1000; i++)
+   // {
+   //   i++;
+	  //i--;
+   // }
   }
 }
 #endif
@@ -2371,6 +2812,11 @@ void do_frame()
 #endif /* LEON */
 #endif /* PrintfFrameClock */
 
+
+unsigned int frame = 1;
+unsigned int BaseTime = clock();
+
+
   for (;;)			//Ä£ÄâÆ÷µÄÖ÷Ñ­»·
   {
 	//´ËÊ±£¬last_frame_timeÊÇ×öÍêÉÏÒ»´ÎÑ­»·ÖĞµÄèåºóËùÓ¦¸Ã¾­¹ıµÄÊ±¼ä£¨Ã¿Ò»èåµÄ±ê×¼Ê±¼äÊÇ1/60Ãë£¬clockÊıÊÇ£ºLEON:1000000/60=16667£»win32:1000/60=16.7£»ARM:100/60=1.7£©
@@ -2383,7 +2829,7 @@ void do_frame()
 
 #ifdef PrintfFrameClock	//Êä³öÃ¿èåµÄCLOCKÊı
 	//printf("FrameClock: %d;	Frame: %d\n", temp - cur_time, Frame++ );
-	printf("%d	%d\n", temp - cur_time, Frame++ );
+	printf(" %d	%d\n", temp - cur_time, Frame++ );
 	//if( temp > cur_time )
 	//	printf("FrameClock: %d;	Frame: %d;	temp: %x;	cur_time: %x\n", temp - cur_time, Frame++, temp, cur_time );
 	//else
@@ -2468,7 +2914,7 @@ void do_frame()
 	emulate_frame( TRUE );																//ÔÚ·ÇÌøèåÆÚ¼äÄ£Äâ6502¡¢PPUºÍAPU
 #endif /* Test6502APU */
 
-#ifdef THROTTLE_SPEED	//ÏŞËÙ£¬ÔÚLEONÖĞÓÃ²»×Å£¬¼ÓËÙ»¹À´²»¼°ÄØ:)
+#ifdef THROTTLE_SPEED	//ÏŞËÙ
 	SleepUntil((long)(last_frame_time + FRAME_PERIOD));
 #endif
 
@@ -2489,7 +2935,8 @@ void do_frame()
 	//if(THROTTLE_SPEED)
 #ifdef THROTTLE_SPEED	//ÏŞËÙ£¬ÔÚLEONÖĞÓÃ²»×Å£¬¼ÓËÙ»¹À´²»¼°ÄØ:)
 	//{
-	last_frame_time += FRAME_PERIOD;
+	//last_frame_time += FRAME_PERIOD;
+	last_frame_time = BaseTime + ( frame++ ) * SAMPLE_PER_FRAME * 1000 / SAMPLE_PER_SEC;
 	//}
 	//else
 #else /* THROTTLE_SPEED */
@@ -2584,6 +3031,7 @@ void InfoNES_Cycle()
 #ifdef g2l
 int PPU_Scanline;
 int NCURLINE;			//Ó¦¸ÃÊÇÉ¨ÃèÏßÔÚÒ»¸öNTÄÚ²¿µÄY×ø±ê
+int LastHit = 0;
 #endif
 
 	if ( FrameCnt == 0 )																//Èç¹ûÔÚ·ÇÌøèåÆÚ¼ä
@@ -2613,7 +3061,10 @@ int NCURLINE;			//Ó¦¸ÃÊÇÉ¨ÃèÏßÔÚÒ»¸öNTÄÚ²¿µÄY×ø±ê
 
 				if( PPU_R1 & R1_SHOW_SP ) NES_CompareSprites( PPU_Scanline );
 				if( InfoNES_DrawLine( PPU_Scanline, NSCROLLY ) )								//»æÖÆ1ÌõÉ¨ÃèÏßµ½Í¼ĞÎ»º³åÇøÊı×é
+				{
 					PPU_R2 |= R2_HIT_SP;															//ÉèÖÃSprite 0µã»÷±ê¼Ç
+					LastHit = PPU_Scanline - 8;
+				}
 				FirstSprite = -1;											//³õÊ¼»¯FirstSprite
 
 				NSCROLLY++;																		//NSCROLLY¼ÆÊıÆ÷+1
@@ -2625,7 +3076,7 @@ int NCURLINE;			//Ó¦¸ÃÊÇÉ¨ÃèÏßÔÚÒ»¸öNTÄÚ²¿µÄY×ø±ê
 		}
 		else
 		{
-		K6502_Step( 25088 );																//Ö»Ö´ĞĞ224ÌõÉ¨ÃèÏß¶ø²»»æÖÆÉ¨ÃèÏß£¬µ±È»Ò²²»Ë¢ĞÂÆÁÄ»£¬112 * 224 = 25088
+			K6502_Step( 25088 );																//Ö»Ö´ĞĞ224ÌõÉ¨ÃèÏß¶ø²»»æÖÆÉ¨ÃèÏß£¬µ±È»Ò²²»Ë¢ĞÂÆÁÄ»£¬112 * 224 = 25088
 				//InfoNES_MemorySet( WorkFrame, 0, sizeof( WorkFrame ) );		//Çå¿ÕÆÁÄ»Ò²¾ÍÊÇºÚÆÁ£¬²»¹ıÕâÖÖÇé¿ö±È½ÏÉÙ¼û£¬¿ÉÒÔ¿¼ÂÇÈ¥³ı
 				FirstSprite = -1;											//³õÊ¼»¯FirstSprite
 			InfoNES_LoadFrame();																//½«Í¼ĞÎ»º³åÇøÊı×éÀïµÄÄÚÈİË¢ĞÂµ½ÆÁÄ»ÉÏ
@@ -2694,7 +3145,10 @@ int NCURLINE;			//Ó¦¸ÃÊÇÉ¨ÃèÏßÔÚÒ»¸öNTÄÚ²¿µÄY×ø±ê
 	}
 	else																				//Èç¹ûÔÚÌøèåÆÚ¼ä
 		//K6502_Step( STEP_PER_SCANLINE * NES_DISP_HEIGHT );								//Ö»Ö´ĞĞ240ÌõÉ¨ÃèÏß¶ø²»»æÖÆÉ¨ÃèÏß£¬µ±È»Ò²²»Ë¢ĞÂÆÁÄ»
-		K6502_Step( 25088 );																//Ö»Ö´ĞĞ224ÌõÉ¨ÃèÏß¶ø²»»æÖÆÉ¨ÃèÏß£¬µ±È»Ò²²»Ë¢ĞÂÆÁÄ»£¬112 * 224 = 25088
+		//K6502_Step( 25088 );																//Ö»Ö´ĞĞ224ÌõÉ¨ÃèÏß¶ø²»»æÖÆÉ¨ÃèÏß£¬µ±È»Ò²²»Ë¢ĞÂÆÁÄ»£¬112 * 224 = 25088
+		K6502_Step( STEP_PER_SCANLINE * LastHit );											//Ö´ĞĞSprite 0µã»÷±ê¼ÇÖ®Ç°µÄÉ¨ÃèÏß¶ø²»»æÖÆÉ¨ÃèÏß
+		PPU_R2 |= R2_HIT_SP;																//ÉèÖÃSprite 0µã»÷±ê¼Ç
+		K6502_Step( STEP_PER_SCANLINE * ( 224 - LastHit ) );								//Ö´ĞĞSprite 0µã»÷±ê¼ÇÖ®ºóµÄÉ¨ÃèÏß¶ø²»»æÖÆÉ¨ÃèÏß
 
 	FrameCnt = ( FrameCnt >= FrameSkip ) ? 0 : FrameCnt + 1;							//Ñ­»·Ìøèå×´Ì¬
 
@@ -2726,7 +3180,7 @@ int NCURLINE;			//Ó¦¸ÃÊÇÉ¨ÃèÏßÔÚÒ»¸öNTÄÚ²¿µÄY×ø±ê
 		InfoNES_PadState( &PAD1_Latch, &PAD2_Latch, &PAD_System );							//»ñÈ¡ÊÖ±úÊäÈëĞÅÏ¢
 	if ( PAD_PUSH( PAD_System, PAD_SYS_QUIT ) )												//Èç¹ûÊÖ±ú°´ÏÂÁËÍË³ö¼ü£¬ÔòÍË³öÄ£ÄâÆ÷£¬
 		return;
-	if ( !APU_Mute )																	//Èç¹ûÃ»ÓĞ½«Ä£ÄâÆ÷ÉèÎª¾²Òô×´Ì¬ÔòÊä³öÉùÒô
+	//if ( !APU_Mute )																	//Èç¹ûÃ»ÓĞ½«Ä£ÄâÆ÷ÉèÎª¾²Òô×´Ì¬ÔòÊä³öÉùÒô
 		InfoNES_pAPUVsync();
 	
 	//for( PPU_Scanline = 0; PPU_Scanline < 263/*/(FrameSkip+1)*/; PPU_Scanline++ )		//ÎªÁËÊ¹ÓÎÏ·ÔËĞĞËÙ¶È²»ÖÁÓÚ¹ı¿ì¶ø½øĞĞµÄÍ¬²½µÈ´ı
@@ -2817,7 +3271,7 @@ int NCURLINE;			//Ó¦¸ÃÊÇÉ¨ÃèÏßÔÚÒ»¸öNTÄÚ²¿µÄY×ø±ê
 	InfoNES_PadState( &PAD1_Latch, &PAD2_Latch, &PAD_System );		//»ñÈ¡ÊÖ±úÊäÈëĞÅÏ¢
 	if ( PAD_PUSH( PAD_System, PAD_SYS_QUIT ) )						//Èç¹ûÊÖ±ú°´ÏÂÁËÍË³ö¼ü£¬ÔòÍË³öÄ£ÄâÆ÷£¬
 		return;
-	if ( !APU_Mute )												//Èç¹ûÃ»ÓĞ½«Ä£ÄâÆ÷ÉèÎª¾²Òô×´Ì¬ÔòÊä³öÉùÒô
+	//if ( !APU_Mute )												//Èç¹ûÃ»ÓĞ½«Ä£ÄâÆ÷ÉèÎª¾²Òô×´Ì¬ÔòÊä³öÉùÒô
 		InfoNES_pAPUVsync();
 	
 	//for( PPU_Scanline = 0; PPU_Scanline < 263/*/(FrameSkip+1)*/; PPU_Scanline++ )		//ÎªÁËÊ¹ÓÎÏ·ÔËĞĞËÙ¶È²»ÖÁÓÚ¹ı¿ì¶ø½øĞĞµÄÍ¬²½µÈ´ı
@@ -2986,7 +3440,7 @@ inline int InfoNES_DrawLine( register int DY, register int SY )	//DYÊÇµ±Ç°µÄÉ¨Ãè
 #ifdef LEON
 			P[ 0 ] = P[ 1 ] = P[ 2 ] = P[ 3 ] = P[ 4 ] = P[ 5 ] = P[ 6 ] = P[ 7 ] = NES_BLACK;
 #else
-			P[ 0 ] = P[ 1 ] = P[ 2 ] = P[ 3 ] = P[ 4 ] = P[ 5 ] = P[ 6 ] = P[ 7 ] = NesPalette[ NES_BLACK ];
+			P[ 0 ] = P[ 1 ] = P[ 2 ] = P[ 3 ] = P[ 4 ] = P[ 5 ] = P[ 6 ] = P[ 7 ] = 0/*NesPalette[ NES_BLACK ]*/;
 #endif
 			ZBuf[ D0 ] = 0;
 		}
@@ -3025,6 +3479,14 @@ inline int InfoNES_DrawLine( register int DY, register int SY )	//DYÊÇµ±Ç°µÄÉ¨Ãè
 		/* Draw pixels */
 		D1 = (int)*( R + 8 ) << 1;										//D1µÈÓÚ´ú±íÑÕÉ«Ë÷ÒıÖµµÄ1Î»8¸öÏñËØµÄ×Ö½Ú£¬ÔÙ×óÒÆ1ÊÇÎªÁË·½±ã°ÑD0ºÍD1ºÏ²¢³É16Î»£¬ÇÒÏñËØµÄÅÅÁĞ·½Ê½ÊÇ02461357
 		D1 = ( D1 & 0xAAA ) | ( ( D1 & 0x555 ) << 7 ) | ( D0 & 0x55 ) | ( ( D0 & 0xAA ) << 7 );
+//		P[ 3 ] = C[ D1 >> 14 ];
+//		P[ 2 ] = C[ ( D1 & 0x00C0 ) >> 6 ];
+//		P[ 1 ] = C[ ( D1 & 0x3000 ) >> 12 ];
+//		P[ 0 ] = C[ ( D1 & 0x0030 ) >> 4 ];
+//		P[ 7 ] = C[ ( D1 & 0x0C00 ) >> 10 ];
+//		P[ 6 ] = C[ ( D1 & 0x000C ) >> 2 ];
+//		P[ 5 ] = C[ ( D1 & 0x0300 ) >> 8 ];
+//		P[ 4 ] = C[ D1 & 0x0003 ];
 		P[ 0 ] = C[ D1 >> 14 ];
 		P[ 1 ] = C[ ( D1 & 0x00C0 ) >> 6 ];
 		P[ 2 ] = C[ ( D1 & 0x3000 ) >> 12 ];
@@ -3117,6 +3579,14 @@ inline int NES_RefreshSprites( /*register int Y*/WORD *PP, register BYTE *Z )
 			{
 				P = buf + T[ 3 ];
 				C = Pal + ( ( T[ 2 ] & SPR_ATTR_COLOR ) << 2 );					//CµÈÓÚPal¼ÓÉÏspriteÊôĞÔ×Ö½ÚÖĞµÄµÍÁ½Î»£¬Ò²¾ÍÊÇspriteµ÷É«°åÑ¡ÔñÖµ0¡¢4¡¢8»òC
+//				if(D0=D1&0xC000) P[3]=C[D0>>14];
+//				if(D0=D1&0x00C0) P[2]=C[D0>>6];
+//				if(D0=D1&0x3000) P[1]=C[D0>>12];
+//				if(D0=D1&0x0030) P[0]=C[D0>>4];
+//				if(D0=D1&0x0C00) P[7]=C[D0>>10];
+//				if(D0=D1&0x000C) P[6]=C[D0>>2];
+//				if(D0=D1&0x0300) P[5]=C[D0>>8];
+//				if(D0=D1&0x0003) P[4]=C[D0];
 				if(D0=D1&0xC000) P[0]=C[D0>>14];
 				if(D0=D1&0x00C0) P[1]=C[D0>>6];
 				if(D0=D1&0x3000) P[2]=C[D0>>12];
