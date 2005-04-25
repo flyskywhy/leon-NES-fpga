@@ -17,9 +17,7 @@
 #endif
 
 
-#ifdef splitIO
 #include "InfoNES.h"
-#endif
 
 #ifdef killif
 #include "InfoNES.h"
@@ -38,23 +36,15 @@ void InfoNES_SoundOutput( int samples, short *wave );
 #endif /* BITS_PER_SAMPLE */
 #endif
 
-#ifndef killstring
-#include <string.h>
-#endif
 #include <stdlib.h>
 
-#ifdef DTCM8K
 #include "leonram.h"
-#else /* DTCM8K */
 
 #if BITS_PER_SAMPLE == 8
 BYTE wave_buffers[ SAMPLE_PER_FRAME ];
 #else /* BITS_PER_SAMPLE */
 int16 wave_buffers[ SAMPLE_PER_FRAME ];
 #endif /* BITS_PER_SAMPLE */
-
-#endif /* DTCM8K */
-
 
 #define  APU_VOLUME_DECAY(x)  ((x) -= ((x) >> 7))	//设定每过一个采样值的时间就衰减一部分音量，应该是用来模拟电平随时间的衰减，将它取消也没什么问题
 
@@ -875,31 +865,9 @@ void apu_write(uint32 address, uint8 value)
 
 	case 0x4016:  /* 0x4016 */
 		// Reset joypad
-#ifdef nesterpad
-		// bit 0 == joypad strobe
-
-#ifndef HACKpad
-		if( value & 0x01 )
-		{
-			pad_strobe = TRUE;
-		}
-		else
-		{
-			if(pad_strobe)
-			{
-				pad_strobe = FALSE;
-				// get input states
-				pad1_bits = PAD1_Latch;
-				pad2_bits = PAD2_Latch;
-			}
-		}
-#endif /* HACKpad */
-
-#else /* nesterpad */
-		if ( !( pad_strobe & 1 ) && ( value & 1 ) )
+		if ( ( pad_strobe & 1 ) && !( value & 1 ) )
 			PAD1_Bit = PAD2_Bit = 0;
 		pad_strobe = value;
-#endif /* nesterpad */
 		break;
 
 	case 0x4017:  /* 0x4017 */
@@ -989,9 +957,6 @@ void apu_reset(void)
 
 	apu->elapsed_cycles = 0;
 
-#ifdef LEON
-
-#ifdef killstring
 	int i;
 	apudata_t d;
 	d.timestamp = 0;
@@ -999,26 +964,6 @@ void apu_reset(void)
 	d.value = 0;
 	for( i = 0; i < APUQUEUE_SIZE; i++)
 		apu->queue[ i ] = d;
-#else /* killstring */
-	memset(&apu->queue, 0, APUQUEUE_SIZE * sizeof(apudata_t));
-#endif /* killstring */
-
-
-#else /* LEON */
-
-#ifdef killstring
-	int i;
-	apudata_t d;
-	d.timestamp = 0;
-	d.address = 0;
-	d.value = 0;
-	for( i = 0; i < APUQUEUE_SIZE; i++)
-		apu->queue[ i ] = d;
-#else /* killstring */
-	InfoNES_MemorySet(&apu->queue, 0, APUQUEUE_SIZE * sizeof(apudata_t));
-#endif /* killstring */
-
-#endif /* LEON */
 
 	apu->q_head = apu->q_tail = 0;
 
@@ -1080,16 +1025,6 @@ apu = &apu_t;
 
 	/* build various lookup tables for apu */
 	//apu_build_luts(apu->num_samples);
-#ifndef killlut
-	int i;
-
-	/* lut used for enveloping and frequency sweeps */
-	/*for (i = 0; i < 16; i++)
-		decay_lut[i] = apu->num_samples * (i + 1);*///乘法
-	decay_lut[ 0 ] = apu->num_samples;
-	for (i = 1; i < 16; i++)
-		decay_lut[ i ] = decay_lut[ i - 1 ] + apu->num_samples;
-#endif /* killlut */
 
 	/* used for note length, based on vblanks and size of audio buffer */
 	/*for (i = 0; i < 32; i++)
@@ -1099,36 +1034,14 @@ apu = &apu_t;
 	/*for (i = 0; i < 128; i++)
 		//trilength_lut[i] = (int) (0.25 * (i * num_samples));	//避免浮点运算，以免LEON的TSIM中软件仿真浮点运算出错
 		trilength_lut[i] = (i * apu->num_samples) >> 2;*///乘法
-#ifndef killlut
-	trilength_lut[ 0 ] = 0;
-	for (i = 1; i < 128; i++)
-		trilength_lut[ i ] = trilength_lut[ i - 1 ] + ( apu->num_samples >> 2 );
-#endif /* killlut */
 
 	//apu_setparams(sample_rate, refresh_rate, frag_size, sample_bits);
 	apu_reset(); //DCR
 
-//#ifdef LEON
-//
-//#ifdef killstring
 //	int i;
 //	for( i = 0; i < apu->num_samples; i++)
 //		wave_buffers[ i ] = 0;
-//#else /* killstring */
-//	memset( (void *)wave_buffers, 0, apu->num_samples );  
-//#endif /* killstring */
-//
-//#else/* LEON */
-//
-//#ifdef killstring
-//	int i;
-//	for( i = 0; i < apu->num_samples; i++)
-//		wave_buffers[ i ] = 0;
-//#else /* killstring */
-//	InfoNES_MemorySet( (void *)wave_buffers, 0, apu->num_samples );  
-//#endif /* killstring */
-//
-//#endif /* LEON */
+
 
 #ifndef killsystem
 #if BITS_PER_SAMPLE == 8

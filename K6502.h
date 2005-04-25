@@ -33,8 +33,6 @@
 
 void K6502_Reset();
 void K6502_Step( WORD wClocks );
-
-//nesterJ
 void K6502_NMI();
 
 static inline BYTE K6502_ReadIO( WORD wAddr );

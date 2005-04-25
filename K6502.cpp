@@ -19,17 +19,14 @@
 
 #include "K6502.h"
 
+
 #ifndef killsystem
 #include "InfoNES_System.h"
 #endif
 
-#ifdef DTCM8K
 #include "leonram.h"
-#endif
 
-#ifdef splitIO
 #include "InfoNES_pAPU.h"
-#endif
 
 // Clock Op.
 #define CLK(a)   g_dwPassedClocks += (a); total_cycles += (a);
@@ -123,21 +120,19 @@
 #define ROR		M_ROR(byD0)
 
 //作用于ASL LSR ROL ROR四类对6502RAM进行位操作的指令
-#ifdef HACK
-#define Bit6502RAM(a)  byD0 = RAM[ wA0 ]; WriteZp( wA0, a )				//稍微不能确定，需测遍所有的游戏
-#else /* HACK */
-#define Bit6502RAM(a)  \
-		if( wA0 < 0x2000 ) \
-			{ byD0 = RAM[ wA0 ]; WriteZp( wA0, a ); } \
-		else if( wA0 < 0x4000 ) \
-			{ byD0 = K6502_ReadIO( wA0 ); K6502_WritePPU( wA0, a ); } \
-		else if( wA0 < 0x8000 ) \
-			{ byD0 = K6502_ReadIO( wA0 ); K6502_WriteAPU( wA0, a ); } \
-		else if( wA0 < 0xC000 ) \
-			{ byD0 = ROMBANK0[ wA0 & 0x3fff ]; MapperWrite( wA0, a ); } \
-		else \
-			{ byD0 = ROMBANK2[ wA0 & 0x3fff ]; MapperWrite( wA0, a ); }
-#endif /* HACK */
+//将各种可能只从RAM中读取的代码简化为只从RAM中读取，测遍VCD游戏光盘上所有的游戏后都没问题
+#define Bit6502RAM(a)  byD0 = RAM[ wA0 ]; WriteZp( wA0, a )
+//#define Bit6502RAM(a)  \
+//		if( wA0 < 0x2000 ) \
+//			{ byD0 = RAM[ wA0 ]; WriteZp( wA0, a ); } \
+//		else if( wA0 < 0x4000 ) \
+//			{ byD0 = K6502_ReadIO( wA0 ); K6502_WritePPU( wA0, a ); } \
+//		else if( wA0 < 0x8000 ) \
+//			{ byD0 = K6502_ReadIO( wA0 ); K6502_WriteAPU( wA0, a ); } \
+//		else if( wA0 < 0xC000 ) \
+//			{ byD0 = ROMBANK0[ wA0 & 0x3fff ]; MapperWrite( wA0, a ); } \
+//		else \
+//			{ byD0 = ROMBANK2[ wA0 & 0x3fff ]; MapperWrite( wA0, a ); }
 
 // Math Op. (nes_A D flag isn't being supported.)
 //作用于对6502RAM进行减一操作的DEC指令
@@ -207,8 +202,6 @@ const BYTE g_byTestTable[ 256 ] = {
 /* The address of 8Kbytes unit of the ROM */
 //#define ROMPAGE(a)     ( ROM + (a) * 0x2000 )
 #define ROMPAGE(a)     ( ROM + ( (a) << 13 ) )
-///* From behind the ROM, the address of 8kbytes unit */
-//#define ROMLASTPAGE(a) &ROM[ NesHeader.byRomSize * 0x4000 - ( (a) + 1 ) * 0x2000 ]
 /* The address of 1Kbytes unit of the VROM */
 //#define VROMPAGE(a)    ( VROM + (a) * 0x400 )
 #define VROMPAGE(a)    ( VROM + ( (a) << 10 ) )
@@ -222,17 +215,8 @@ void Map0_Write( WORD wAddr, BYTE byData )
 void Map2_Write( WORD wAddr, BYTE byData )
 {
 	/* Set ROM Banks */
-#ifdef HACK
-	//ROMBANK0 = ROM + byData * 0x4000;
 	ROMBANK0 = ROM + ( byData << 14 );
 	ROMBANK1 = ROMBANK0 + 0x2000;
-#else
-	byData &= 7;
-	byData <<= 1;
-
-	ROMBANK0 = ROMPAGE( byData );
-	ROMBANK1 = ROMPAGE( byData + 1 );
-#endif
 
 	memmap_tbl[ 4 ] = ROMBANK0 - 0x8000;		//这里- 0x8000是为了在encodePC中不用再做& 0x1FFF的运算了，下同
 	memmap_tbl[ 5 ] = ROMBANK1 - 0xA000;
@@ -243,11 +227,7 @@ void Map3_Write( WORD wAddr, BYTE byData )
 	DWORD dwBase;
 
 	/* Set PPU Banks */
-#ifdef killsystem
     byData &= VRomSize - 1;
-#else
-    byData &= NesHeader.byVRomSize - 1;
-#endif
 	dwBase = ( (DWORD)byData ) << 3;
 
 	PPUBANK[ 0 ] = VROMPAGE( dwBase + 0 );
@@ -285,22 +265,14 @@ void K6502_Reset()
 	  MapperWrite = Map0_Write;
 
 	  /* Set ROM Banks */
-#ifdef killsystem
 	  if ( RomSize > 1 )
-#else
-	  if ( NesHeader.byRomSize > 1 )
-#endif
 	  {
 		  ROMBANK0 = ROMPAGE( 0 );
 		  ROMBANK1 = ROMPAGE( 1 );
 		  ROMBANK2 = ROMPAGE( 2 );
 		  ROMBANK3 = ROMPAGE( 3 );
 	  }
-#ifdef killsystem
 	  else if ( RomSize > 0 )
-#else
-	  else if ( NesHeader.byRomSize > 0 )
-#endif
 	  {
 		  ROMBANK0 = ROMPAGE( 0 );
 		  ROMBANK1 = ROMPAGE( 1 );
@@ -344,11 +316,7 @@ void K6502_Reset()
 	  MapperWrite = Map3_Write;
 
 	  /* Set ROM Banks */
-#ifdef killsystem
 	  if ( ( RomSize << 1 ) > 2 )
-#else
-	  if ( ( NesHeader.byRomSize << 1 ) > 2 )
-#endif /* killsystem */
 	  {
 		  ROMBANK0 = ROMPAGE( 0 );
 		  ROMBANK1 = ROMPAGE( 1 );

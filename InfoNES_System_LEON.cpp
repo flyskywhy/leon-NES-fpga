@@ -18,12 +18,7 @@
 #include "InfoNES_System.h"
 #include "InfoNES_pAPU.h"
 
-#ifdef PrintfFrameGraph
-#include "./gamefile/mario.h"
-DWORD FrameCount = 0;
-#else
-#include "./gamefile/contra.h"
-#endif /* PrintfFrameGraph */
+#include "../leonram.h"
 
 
 /* Pad state */
@@ -42,40 +37,61 @@ void main(void)
 {                                  
 }
 
-void InfoNES_LoadFrame()
+/*===================================================================*/
+/*                                                                   */
+/*               InfoNES_ReadRom() : Read ROM image file             */
+/*                                                                   */
+/*===================================================================*/
+int InfoNES_ReadRom( const char *pszFileName )
 {
 /*
- *  Transfer the contents of work frame on the screen
+ *  Read ROM image file
  *
+ *  Parameters
+ *    const char *pszFileName          (Read)
+ *
+ *  Return values
+ *     0 : Normally
+ *    -1 : Error
  */
 
+	//FILE *fp;
 
-//用printf()模拟打印出游戏画面的一部分
-#ifdef LEON
-#ifdef PrintfFrameGraph
-if( FrameCount++ > 32)
-  for ( register int y = 130; y < 210; y++ ) 
-    for ( register int x = 0; x < 190; x++ )
-      if( x != 189 )
-      	printf( "%c", WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] );
-      else
-      	printf( "\n" );
-#endif /* PrintfFrameGraph */
-#else
-if( FrameCount++ > 32)
+	///* Open ROM file */
+	//fp = fopen( pszFileName, "rb" );
+	//if ( fp == NULL )
+	//	return -1;
+
+
+	//fread( gamefile, 1, 188416, fp );
+	if(InfoNES_Init() == -1)
+		return -1;
+
+	//ROM_SRAM = 0;
+	///* Clear SRAM */
+	//memset( SRAM, 0, SRAM_SIZE );
+
+	///* File close */
+	//fclose( fp );
+
+	/* Successful */
+	return 0;
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*           InfoNES_ReleaseRom() : Release a memory for ROM         */
+/*                                                                   */
+/*===================================================================*/
+void InfoNES_ReleaseRom()
 {
-  register int x,y;
-
-  for ( y = 130; y < 210; y++ ) 
-    for ( x = 0; x < 190; x++ )
-      if( x != 189 )
-      	printf( "%c", (BYTE)WorkFrame[ y * NES_BACKBUF_WIDTH + 8 + x ] );
-      else
-      	printf( "\n" );
+/*
+ *  Release a memory for ROM
+ *
+ */
+	ROM = NULL;
+	VROM = NULL;
 }
-#endif /* LEON */
-}
-
 
 /*===================================================================*/
 /*                                                                   */
@@ -109,13 +125,24 @@ void InfoNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
   *pdwSystem = dwKeySystem;
 }
 
+/*===================================================================*/
+/*                                                                   */
+/*                  InfoNES_Menu() : Menu screen                     */
+/*                                                                   */
+/*===================================================================*/
+int InfoNES_Menu()
+{
+/*
+ *  Menu screen
+ *
+ *  Return values
+ *     0 : Normally
+ *    -1 : Exit InfoNES
+ */
 
-/*===================================================================*/
-/*                                                                   */
-/*            InfoNES_Wait() : Wait Emulation if required            */
-/*                                                                   */
-/*===================================================================*/
-void InfoNES_Wait() {}
+	// Nothing to do here
+  return 0;
+}
 
 /*
  * End of InfoNES_System_LEON.c

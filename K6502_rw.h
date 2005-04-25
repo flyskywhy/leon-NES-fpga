@@ -50,39 +50,11 @@ static inline BYTE K6502_ReadIO( WORD wAddr )
 		return apu_read4015();
 
 	case 0x4016:   // Set Joypad1 data
-#ifdef nesterpad
-
-#ifdef HACKpad
-		byRet = PAD1_Latch & 0x01;
-		PAD1_Latch >>= 1;
-#else /* HACKpad */
-		byRet = pad1_bits & 0x01;
-		pad1_bits >>= 1;
-#endif /* HACKpad */
-
-#else /* nesterpad */
 		byRet = (BYTE)( ( PAD1_Latch >> ( PAD1_Bit++ ) ) & 1 )/* | 0x40*/;
-		//PAD1_Bit = ( PAD1_Bit == 23 ) ? 0 : ( PAD1_Bit + 1 );
-		//PAD1_Bit = ( PAD1_Bit == 7 ) ? 0 : ( PAD1_Bit + 1 );
-#endif /* nesterpad */
 		return byRet;
 
 	case 0x4017:   // Set Joypad2 data
-#ifdef nesterpad
-
-#ifdef HACKpad
-		byRet = PAD2_Latch & 0x01;
-		PAD2_Latch >>= 1;
-#else /* HACKpad */
-		byRet = pad2_bits & 0x01;
-		pad2_bits >>= 1;
-#endif /* HACKpad */
-
-#else /* nesterpad */
 		byRet = (BYTE)( ( PAD2_Latch >> ( PAD2_Bit++) ) & 1 )/* | 0x40*/;
-		//PAD2_Bit = ( PAD2_Bit == 23 ) ? 0 : ( PAD2_Bit + 1 );
-		//PAD2_Bit = ( PAD2_Bit == 7 ) ? 0 : ( PAD2_Bit + 1 );
-#endif /* nesterpad */
 		return byRet;
 	}
 
@@ -152,19 +124,11 @@ static inline void K6502_WriteIO( WORD wAddr, BYTE byData )
 
 					if(0x0000 == (PPU_Addr & 0x000F)) // is it THE 0 entry?
 					{
-#ifdef LEON
 						PalTable[ 0x00 ] = PalTable[ 0x10 ] = byData;
-#else /* LEON */
-						PalTable[ 0x00 ] = PalTable[ 0x10 ] = /*NesPalette[*/ byData/*<<2*/ /*]*//* | 0x8000*/;
-#endif /* LEON */
 					}
 					else
 					{
-#ifdef LEON
 						PalTable[ PPU_Addr & 0x001F ] = byData;
-#else /* LEON */
-						PalTable[ PPU_Addr & 0x001F ] = /*NesPalette[*/ byData/*<<2*/ /*]*/;
-#endif /* LEON */
 					}
 					PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] = PalTable[ 0x10 ] = 
 						PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ]  = PalTable[ 0x00 ];

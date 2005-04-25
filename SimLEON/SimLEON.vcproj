@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;SimLEON;LEON;killsystem;DTCM8K;ITCM32K;TESTGRAPH;DMA_SDRAM"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;SimLEON;LSB_FIRST;killsystem;DMA_SDRAM"
 				MinimalRebuild="FALSE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="5"
@@ -130,9 +130,6 @@
 				RelativePath="SimLEON.cpp">
 			</File>
 			<File
-				RelativePath="..\gamefile\contra.cpp">
-			</File>
-			<File
 				RelativePath="hostsim.cpp">
 			</File>
 			<File
@@ -168,9 +165,6 @@
 			</File>
 			<File
 				RelativePath="..\K6502_rw.h">
-			</File>
-			<File
-				RelativePath="..\gamefile\gamefile.h">
 			</File>
 			<File
 				RelativePath="hostsim.h">

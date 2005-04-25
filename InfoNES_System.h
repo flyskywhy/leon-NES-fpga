@@ -48,9 +48,6 @@ void *InfoNES_MemorySet( void *dest, int c, int count );
 /* Print debug message */
 void InfoNES_DebugPrint( char *pszMsg );
 
-/* Wait */
-void InfoNES_Wait();
-
 /* Sound Initialize */
 void InfoNES_SoundInit( void );
 

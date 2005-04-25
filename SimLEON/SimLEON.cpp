@@ -4,11 +4,7 @@
 #include "Time.h"
 
 //#define SimLEON
-//#define LEON
 //#define killsystem
-//#define DTCM8K
-//#define ITCM32K
-//#define TESTGRAPH
 //#define DMA_SDRAM
 #include "..\InfoNES.h"
 #include "..\InfoNES_pAPU.h"
@@ -28,8 +24,6 @@
 #endif /* SimLEON */
 #include "..\register.h"
 extern BOOL CanSetAddr;
-
-#include "../gamefile/gamefile.h"
 
 void /*类型 ISR */ISR_lf(int temp)
 {
@@ -138,7 +132,8 @@ int main(int argc, char* argv[])
 
 	//////////////////////////////////////////////////////////////////
 	
-	InfoNES_Init();
+	if(InfoNES_Init() == -1)
+		return -1;
 	InfoNES_Reset();				//初始化模拟器里的各个参数
 
 	for(;;)

@@ -20,6 +20,9 @@
 #include "../InfoNES.h"
 #include "../InfoNES_pAPU.h"
 #include "../InfoNES_System.h"
+
+#include "../leonram.h"
+
 #include "InfoNES_Resource_Win.h"
 #include "InfoNES_Sound_Win.h"
 
@@ -34,7 +37,7 @@ int nSRAM_SaveFlag;
 /*-------------------------------------------------------------------*/
 /*  Variables for Windows                                            */
 /*-------------------------------------------------------------------*/
-#define APP_NAME     "InfoNES v0.93J"
+#define APP_NAME     "SLNES v1.0"
  
 HWND hWndMain;
 WNDCLASS wc;
@@ -389,22 +392,13 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
           PostMessage(hWnd, WM_CLOSE, 0, 0);
 					break;
 
-       case IDC_BTN_FAST:
-          /*-------------------------------------------------------------------*/
-          /*  Fast & Slow button                                               */
-          /*-------------------------------------------------------------------*/
-			    // Increment Frameskip Counter
-				  FrameSkip++;
-				  break;
+				case IDC_BTN_FAST:
+					break;
 
-			  case IDC_BTN_SLOW:
-				  // Decrement Frameskip Counter
-          if (FrameSkip <= 0)
-            break;
-				  FrameSkip--;
-          break;
+				case IDC_BTN_SLOW:
+					break;
 
-        case IDC_BTN_SINGLE:
+				case IDC_BTN_SINGLE:
           /*-------------------------------------------------------------------*/
           /*  Screen Size x1, x2, x3 button                                    */
           /*-------------------------------------------------------------------*/  
@@ -415,8 +409,6 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
           CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_DOUBLE, MF_UNCHECKED );
           CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_TRIPLE, MF_UNCHECKED );
 
-          // Clear FrameSkip
-          FrameSkip = 0;
           break;
 
         case IDC_BTN_DOUBLE:
@@ -427,8 +419,6 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
           CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_DOUBLE, MF_CHECKED );
           CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_TRIPLE, MF_UNCHECKED );
 
-          // Clear FrameSkip
-          FrameSkip = 0;
           break;
 
         case IDC_BTN_TRIPLE:
@@ -439,8 +429,6 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
           CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_DOUBLE, MF_UNCHECKED );
           CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_TRIPLE, MF_CHECKED );
 
-          // Clear FrameSkip
-          FrameSkip = 0;
           break;
 
         case IDC_BTN_CLIP_VERTICAL:
@@ -502,10 +490,9 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
           {
             char pszInfo[1024];
             sprintf( pszInfo, "Mapper\t\t%d\nPRG ROM\t\t%dKB\nCHR ROM\t\t%dKB\n" \
-                              "Mirroring\t\t%s\nSRAM\t\t%s\n4 Screen\t\t%s\nTrainer\t\t%s",
-                              MapperNo, NesHeader.byRomSize * 16, NesHeader.byVRomSize * 8,
-                              ( ROM_Mirroring ? "V" : "H" ), ( ROM_SRAM ? "Yes" : "No" ), 
-                              ( ROM_FourScr ? "Yes" : "No" ), ( ROM_Trainer ? "Yes" : "No" ) );
+                              "Mirroring\t\t%s\nSRAM\t\t%s",
+                              MapperNo, RomSize * 16, VRomSize * 8,
+                              ( ROM_Mirroring ? "V" : "H" ), ( ROM_SRAM ? "Yes" : "No" ) );
             MessageBox( hWndMain, pszInfo, APP_NAME, MB_OK | MB_ICONINFORMATION );              
           } else {
             // Show Title Screen
@@ -513,25 +500,18 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
           }
           break;
 
-        case IDC_BTN_ABOUT:
-					/*-------------------------------------------------------------------*/
-          /*  About button                                                     */
-          /*-------------------------------------------------------------------*/
-//#if 0
-//          DialogBox(wc.hInstance, 
-//                    MAKEINTRESOURCE(IDD_DIALOG), 
-//                    hWndMain, 
-//                    (DLGPROC)AboutDlgProc);
-//#else
-          {
-            /* Version Infomation */
-            char pszInfo[1024];
-            sprintf( pszInfo, "%s\nA fast and portable NES emulator\n"
-			                        "Copyright (C) 1999-2004 Jay's Factory <jays_factory@excite.co.jp>",
-			                        APP_NAME );
-            MessageBox( hWndMain, pszInfo, APP_NAME, MB_OK | MB_ICONINFORMATION );   
-          }
-//#endif
+		case IDC_BTN_ABOUT:
+			/*-------------------------------------------------------------------*/
+			/*  About button                                                     */
+			/*-------------------------------------------------------------------*/
+			{
+				/* Version Infomation */
+				char pszInfo[1024];
+				sprintf( pszInfo, "%s\nA fast and portable NES emulator\n"
+					"Copyright (C) 2004-2005 Silan co. <www.silan.com.cn>",
+					APP_NAME );
+				MessageBox( hWndMain, pszInfo, APP_NAME, MB_OK | MB_ICONINFORMATION );   
+			}
           break;
       }
 			break;
@@ -541,31 +521,6 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
   }
   return 0;
 }
-
-//#if 0
-///*===================================================================*/
-///*                                                                   */
-///*           AboutDlgProc() : The About Dialog Box Procedure         */
-///*                                                                   */
-///*===================================================================*/
-//LRESULT CALLBACK AboutDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
-//{
-//  switch (uMsg)
-//  {
-//    case WM_INITDIALOG:
-//      return TRUE;
-//    case WM_COMMAND:
-//      switch ( LOWORD(wParam) )
-//      {
-//        case IDOK:
-//          EndDialog(hDlg, TRUE);
-//          return TRUE;
-//      }
-//      break;
-//    }
-//    return FALSE;
-//}
-//#endif
 
 /*===================================================================*/
 /*                                                                   */
@@ -879,148 +834,14 @@ int InfoNES_ReadRom( const char *pszFileName )
 	if ( fp == NULL )
 		return -1;
 
-#ifdef readBIN
 
 	fread( gamefile, 1, 188416, fp );
-#ifdef killstring
-	if( gamefile[ 0 ] == 'N' && gamefile[ 1 ] == 'E' && gamefile[ 2 ] == 'S' && gamefile[ 3 ] == 0x1A )	//*.nes文件
-#else /* killstring */
-	if( memcmp( gamefile, "NES\x1a", 4 ) == 0 )	//*.nes文件
-#endif /* killstring */
-	{
-		MapperNo = gamefile[ 6 ] >> 4;					//MapperNo，因为只支持mapper0、2、3，所以只要知道低4位信息就可以了
-		if( MapperNo != 0 && MapperNo != 2 && MapperNo != 3 )
-			return -1;
-		ROM = gamefile + 16;
-		NesHeader.byRomSize = gamefile[ 4 ];
-		NesHeader.byVRomSize = gamefile[ 5 ];
-		ROM_Mirroring = gamefile[ 6 ] & 1;
-	}
-#ifdef killstring
-	else if( gamefile[ 0 ] == 0x3C && gamefile[ 1 ] == 0x08 && gamefile[ 2 ] == 0x40 && gamefile[ 3 ] == 0x02 )	//*.bin文件
-#else /* killstring */
-	else if( memcmp( gamefile, "\x3C\x08\x40\x02", 4 ) == 0 )	//*.bin文件
-#endif /* killstring */
-	{
-		BYTE b19A = *( gamefile + 0x19A );
-		if( b19A & 0x20 )
-		{
-			if( *( gamefile + 0x197 ) == 4 )
-			{
-				MapperNo = 2;
-				NesHeader.byRomSize = 8;
-				NesHeader.byVRomSize = 0;
-			}
-			else
-			{
-				MapperNo = 3;
-				NesHeader.byRomSize = 2;
-				if( b19A & 0x40 )
-					NesHeader.byVRomSize = 4;
-				else
-					NesHeader.byVRomSize = 2;
-			}
-		}
-		else
-		{
-			MapperNo = 0;
-			NesHeader.byRomSize = 2;
-			NesHeader.byVRomSize = 1;
-		}
-
-		//如果移植到bigendian的机器上，需改为0xA38201C7
-		if( *( (unsigned int *)( gamefile + 0x8694 ) ) == 0xC70182A3 || *( (unsigned int *)( gamefile + 0x88d4 ) ) == 0xC70182A3 || *( (unsigned int *)( gamefile + 0x8908 ) ) == 0xC70182A3 || *( (unsigned int *)( gamefile + 0x8a28 ) ) == 0xC70182A3 )
-			ROM_Mirroring = 0;
-		else
-			ROM_Mirroring = 1;
-
-		unsigned int CompTEMP1;
-		unsigned int CompTEMP2;
-		CompTEMP1 = b19A << 8;
-		CompTEMP1 |= *( gamefile + 0x19B );
-		CompTEMP1 &= 0xFFF;
-		CompTEMP1 += 0xC880;
-		ROM = gamefile + CompTEMP1;
-		CompTEMP1 = *( (unsigned int *)( ROM + 0x10 ) );
-		CompTEMP2 = *( (unsigned int *)( ROM + 0x14 ) );
-
-		//如果移植到bigendian的机器上，需改为0xEAEAAD02、0x8085F2B9、0xB1204386、0xDD804CEB
-		if( CompTEMP1 == 0x02ADEAEA  || CompTEMP1 == 0xB9F28580 || CompTEMP1 == 0x864320B1 || CompTEMP1 == 0xEB4C80DD )
-			ROM_Mirroring = 0;
-
-        if( CompTEMP1 == 0xFF7F387C && CompTEMP2 == 0xFCFEFFFF )//如果移植到bigendian的机器上，需改为0x7C387FFF、0xFFFFFEFC
-		{
-            unsigned int *pFixBin = (unsigned int *)( ROM + 0x1C0FC );
-			*pFixBin = 0x48A92002;//如果移植到bigendian的机器上，需改为0x0220A948
-			*( pFixBin + 1 ) = 0x691800A2;//如果移植到bigendian的机器上，需改为0xA2001869
-			*( pFixBin + 2 ) = 0xE8FB9002;//如果移植到bigendian的机器上，需改为0x0290FBE8
-		}
-		else if( CompTEMP1 == 0x2002ADFB  && CompTEMP2 == 0x06A9FB10 )//如果移植到bigendian的机器上，需改为0xFBAD0220 、0x10FBA906
-		{
-            unsigned int *pFixBin = (unsigned int *)( ROM + 0x4118 );
-			*pFixBin = 0xA205A020;//如果移植到bigendian的机器上，需改为0x20A005A2
-			*( pFixBin + 1 ) = 0xFDD0CAF4;//如果移植到bigendian的机器上，需改为0xF4CAD0FD
-			*( pFixBin + 2 ) = 0xA5F8D088;//如果移植到bigendian的机器上，需改为0x88D0F8A5
-		}
-		else if( CompTEMP1 == 0x94F1209A  && CompTEMP2 == 0x02AD03A2 )//如果移植到bigendian的机器上，需改为0x9A20F194 、0xA203AD02
-		{
-            unsigned int *pFixBin = (unsigned int *)( ROM + 0x189C );
-			*pFixBin = 0xAE2060A0;//如果移植到bigendian的机器上，需改为0xA06020AE
-			*( pFixBin + 1 ) = 0x8D36A598;//如果移植到bigendian的机器上，需改为0x98A5368D
-		}
-		else if( CompTEMP1 == 0xA207FD8D  && CompTEMP2 == 0x02A09A3F )//如果移植到bigendian的机器上，需改为0x8DFD07A2 、0x3F9AA002
-		{
-            unsigned int *pFixBin = (unsigned int *)( ROM + 0x1C0 );
-			*pFixBin = 0x28A02785;//如果移植到bigendian的机器上，需改为0x8527A028
-			*( pFixBin + 1 ) = 0xA5895120;//如果移植到bigendian的机器上，需改为0x205189A5
-		}
-	}
-	else
+	if(InfoNES_Init() == -1)
 		return -1;
-	
-//乘法		VROM = ROM + NesHeader.byRomSize * 0x4000;
-	VROM = ROM + ( NesHeader.byRomSize << 14 );
+
 	ROM_SRAM = 0;
 	/* Clear SRAM */
 	memset( SRAM, 0, SRAM_SIZE );
-
-#else /* readBIN */
-
-	/* Read ROM Header */
-	fread( &NesHeader, sizeof NesHeader, 1, fp );
-
-	if ( memcmp( NesHeader.byID, "NES\x1a", 4 ) != 0 )
-	{
-		/* not .nes file */
-		fclose( fp );
-		return -1;
-	}
-
-	/* Clear SRAM */
-	memset( SRAM, 0, SRAM_SIZE );
-
-	/* If trainer presents Read Triner at 0x7000-0x71ff */
-	if ( NesHeader.byInfo1 & 4 )
-	{
-		fread( &SRAM[ 0x1000 ], 512, 1, fp );
-	}
-
-	/* Allocate Memory for ROM Image */
-	ROM = (BYTE *)malloc( NesHeader.byRomSize * 0x4000 );
-
-	/* Read ROM Image */
-	fread( ROM, 0x4000, NesHeader.byRomSize, fp );
-
-	if ( NesHeader.byVRomSize > 0 )
-	{
-		/* Allocate Memory for VROM Image */
-		VROM = (BYTE *)malloc( NesHeader.byVRomSize * 0x2000 );
-
-		/* Read VROM Image */
-		fread( VROM, 0x2000, NesHeader.byVRomSize, fp );
-	}
-
-#endif /* readBIN */
 
 	/* File close */
 	fclose( fp );
@@ -1040,27 +861,8 @@ void InfoNES_ReleaseRom()
  *  Release a memory for ROM
  *
  */
-#ifdef readBIN
-
 	ROM = NULL;
 	VROM = NULL;
-
-#else /* readBIN */
-
-	if ( ROM )
-	{
-		free( ROM );
-		ROM = NULL;
-	}
-
-	if ( VROM )
-	{
-		free( VROM );
-		VROM = NULL;
-	}
-
-#endif /* readBIN */
-
 }
 
 /*===================================================================*/
@@ -1077,12 +879,12 @@ void InfoNES_LoadFrame()
  */
 
   // Set screen data
-  //memcpy( pScreenMem, WorkFrame, NES_DISP_WIDTH * NES_DISP_HEIGHT * 2 );
+  //memcpy( pScreenMem, PPU0, NES_DISP_WIDTH * NES_DISP_HEIGHT * 2 );
 
   for( int i = 0; i < NES_DISP_HEIGHT; i++ )
-    //memcpy( pScreenMem + i * NES_DISP_WIDTH, WorkFrame + i * NES_BACKBUF_WIDTH + 8 , NES_DISP_WIDTH );
+    //memcpy( pScreenMem + i * NES_DISP_WIDTH, PPU0 + i * NES_BACKBUF_WIDTH + 8 , NES_DISP_WIDTH );
 	for( int j = 0; j < NES_DISP_WIDTH; j++ )
-		*( (WORD*)pScreenMem + i * NES_DISP_WIDTH + j ) = NesPalette[ WorkFrame[ i * NES_BACKBUF_WIDTH + 8 + j ] ];
+		*( (WORD*)pScreenMem + i * NES_DISP_WIDTH + j ) = NesPalette[ PPU0[ i * NES_BACKBUF_WIDTH + 8 + j ] ];
 
   // Screen update
   HDC hDC = GetDC( hWndMain );
@@ -1136,9 +938,7 @@ void InfoNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
              ( ( GetAsyncKeyState( 'S' )    < 0 ) << 6 ) |
              ( ( GetAsyncKeyState( 'F' )   < 0 ) << 7 );
 
-//#ifndef nesterpad
 //  *pdwPad1 = *pdwPad1 | ( *pdwPad1 << 8 );
-//#endif /* nesterpad */
 
   /* Joypad 2 */
   //*pdwPad2 = 0;
@@ -1151,9 +951,7 @@ void InfoNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
              ( ( GetAsyncKeyState( 'C' )    < 0 ) << 6 ) |
              ( ( GetAsyncKeyState( 'B' )   < 0 ) << 7 );
 
-//#ifndef nesterpad
 //  *pdwPad2 = *pdwPad2 | ( *pdwPad2 << 8 );
-//#endif /* nesterpad */
 
   /* Input for InfoNES */
   dwTemp = ( GetAsyncKeyState( VK_ESCAPE )  < 0 );
@@ -1371,49 +1169,6 @@ static void CALLBACK TimerFunc( UINT nID, UINT uMsg, DWORD dwUser, DWORD dw1, DW
   }
 }
 
-/*===================================================================*/
-/*                                                                   */
-/*            InfoNES_Wait() : Wait Emulation if required            */
-/*                                                                   */
-/*===================================================================*/
-void InfoNES_Wait()
-{
-  wLines++;
-  if ( wLines < wLinePerTimer )
-    return;
-  wLines = 0;
-
-  if ( bAutoFrameskip )
-  {
-    // Auto Frameskipping
-    if ( !bWaitFlag )
-    {
-      // Increment Frameskip Counter
-	    FrameSkip++;
-    } 
-#if 1
-    else {
-      // Decrement Frameskip Counter
-      if ( FrameSkip > 2 )
-      {
-		    FrameSkip--;  
-      }
-    }
-#endif
-  }
-
-  // Wait if bWaitFlag is TRUE
-  if ( bAutoFrameskip )
-  {
-    while ( bWaitFlag )
-      Sleep(0);
-  }
-
-  // set bWaitFlag is TRUE
-  EnterCriticalSection( &WaitFlagCriticalSection );
-  bWaitFlag = TRUE;
-  LeaveCriticalSection( &WaitFlagCriticalSection );
-}
 
 /*===================================================================*/
 /*                                                                   */
