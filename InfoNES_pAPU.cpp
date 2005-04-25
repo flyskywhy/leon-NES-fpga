@@ -27,14 +27,12 @@
 
 #include "InfoNES_pAPU.h"
 
-#ifndef killsystem
 #include "InfoNES_System.h"
 #if BITS_PER_SAMPLE == 8
 void InfoNES_SoundOutput( int samples, BYTE *wave );
 #else /* BITS_PER_SAMPLE */
 void InfoNES_SoundOutput( int samples, short *wave );
 #endif /* BITS_PER_SAMPLE */
-#endif
 
 #include <stdlib.h>
 
@@ -946,9 +944,30 @@ void InfoNES_pAPUVsync(void)
 	/* resync cycle counter */
 	apu->elapsed_cycles = total_cycles;							//在对该桢采完样后进行6502时钟周期总数的同步，以保证对下一桢进行采样时的精确性
 
-#ifndef killsystem
+#ifdef WIN32
 	InfoNES_SoundOutput(apu->num_samples, wave_buffers);						//将采样值输出到系统声音硬件的缓冲区中进行播放
-#endif /* killsystem */
+
+//#else /* WIN32 */
+//
+//#ifdef DMA_SDRAM
+//
+//#ifdef SimLEON
+//			WriteDataToSDRAM( ( int *)( line_buffers + 8 ), 32, (int)( DisplayFrameBase + ( i << 8 ) + ( i << 4 ) + 8 ) );		//绘制PPU桢存当前扫描线的前半段
+//#else /* SimLEON */
+//			WriteDMA( ( int *)( line_buffers + 8 ), 32, ((int)( DisplayFrameBase )>>2) + ( i << 6 ) + ( i << 2 ) + 2 );		//绘制PPU桢存当前扫描线的前半段
+//#endif /* SimLEON */
+//
+//#else /* DMA_SDRAM */
+//
+//#if BITS_PER_SAMPLE == 8
+//			memcpy( APU, wave_buffers, SAMPLE_PER_FRAME );
+//#else /* BITS_PER_SAMPLE */
+//			memcpy( APU  + ( i << 8 ) + ( i << 4 ) + 8, wave_buffers, SAMPLE_PER_FRAME * 2 );	//待优化
+//#endif /* BITS_PER_SAMPLE */
+//
+//#endif /* DMA_SDRAM */
+
+#endif /* WIN32 */
 }
 
 void apu_reset(void)
@@ -976,11 +995,6 @@ void apu_reset(void)
 
 void InfoNES_pAPUInit(void)
 {
-#ifndef killsystem
-	/* Sound Hardware Init */
-	InfoNES_SoundInit();
-#endif /* killsystem */
-
 	//apu_t *temp_apu;
 	//temp_apu = (apu_t *)malloc(sizeof(apu_t));
 apu = &apu_t;
@@ -1043,21 +1057,17 @@ apu = &apu_t;
 //		wave_buffers[ i ] = 0;
 
 
-#ifndef killsystem
 #if BITS_PER_SAMPLE == 8
 	InfoNES_SoundOpen( apu->num_samples, apu->sample_rate );
 #else /* BITS_PER_SAMPLE */
 	InfoNES_SoundOpen( apu->num_samples * 2, apu->sample_rate );
 #endif /* BITS_PER_SAMPLE */
-#endif /* killsystem */
 }
 
-#ifndef killsystem
 void InfoNES_pAPUDone(void)
 {
 	InfoNES_SoundClose();
 }
-#endif /* killsystem */
 
 
 /*

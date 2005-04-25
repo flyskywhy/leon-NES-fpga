@@ -3,6 +3,7 @@ SECTIONS
 {
 	.itcm :
 	{
+		InfoNES_System_LEON.o(.text)
 		InfoNES.o(.text)
 		InfoNES_pAPU.o(.text)
 		InfoNES_pAPU.o(.rodata)
@@ -13,6 +14,9 @@ SECTIONS
 
 	.dtcm :
 	{
+		InfoNES_System_LEON.o(.data)
+		InfoNES_System_LEON.o(.bss)
+		InfoNES_System_LEON.o(*COM*)
 		InfoNES.o(.data)
 		InfoNES_pAPU.o(.data)
 		K6502.o(.data)

@@ -4,10 +4,10 @@ SECTIONS
 	.itcm :
 	{
 		InfoNES.o(.text)
-		K6502.o(.text)			
-		K6502.o(.rodata)			
 		InfoNES_pAPU.o(.text)
 		InfoNES_pAPU.o(.rodata)
+		K6502.o(.text)			
+		K6502.o(.rodata)			
 		
 	}	> itcm
 

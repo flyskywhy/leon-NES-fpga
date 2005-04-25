@@ -23,16 +23,8 @@ void DMAWriteData(int RegAddr, int Data)
 	BasicWriteReg32(RegAddr, Data);
 }
 
-//Send a Command to Start Save Cache to Sdram
-void DMASaveCache(int RegAddr, int SDRAMAddr)
-{
-	int Data = SDRAMAddr&0xFFFFFF;
-	BasicWriteReg32(RegAddr, Data);
-
-}
-
-//Send Command to Start Load Cache
-void DMALoadCache(int RegAddr, int SDRAMAddr)
+//Set Sdram Address to DMA Cache
+void DMASetSDRAMAddr(int RegAddr, int SDRAMAddr)
 {
 	int Data = SDRAMAddr&0xFFFFFF;
 	BasicWriteReg32(RegAddr, Data);
@@ -49,15 +41,11 @@ int WriteDataToSDRAM(int *Data, int Length, int MemBaseAddr)
 {
 	int i;
 	//Go on when DMACache Status is Idle
-	while(1)
+	while(GetDMAStatue(ReadBackStatus) == 1)
 	{
-		if(GetDMAStatue(ReadBackStatus) == 0)
-		{
-			break;
-		}
 	}
 
-	DMASaveCache(MemAddressToSDRam,MemBaseAddr);
+	DMASetSDRAMAddr(MemAddressToSDRam,MemBaseAddr);
 	DMAWriteCache(WriteReadCacheSetUp, 0, 0 ,Length);
 
 	for( i = 0 ; i < Length; i++)
@@ -72,31 +60,22 @@ int WriteDataToSDRAM(int *Data, int Length, int MemBaseAddr)
 int ReadDataFromSDRAM(int *Data, int Length, int MemBaseAddr)
 {
 	int i;
-	while(1)
+	while(GetDMAStatue(ReadBackStatus) == 1)
 	{
-		if(GetDMAStatue(ReadBackStatus) == 0)
-		{
-			break;
-		}
 	}
 
-	DMASaveCache(MemAddressToSDRam,MemBaseAddr);
+	DMASetSDRAMAddr(MemAddressToSDRam,MemBaseAddr);
 	DMAWriteCache(WriteReadCacheSetUp, 1, 0 ,Length);
 	
 	 //Go on when DMACache Status is Idle
-	while(1)
+	while(GetDMAStatue(ReadBackStatus) == 1)
 	{
-		if(GetDMAStatue(ReadBackStatus) == 0)
-		{
-			break;
-		}
 	}
 	for(i = 0; i < Length; i ++)
 	{
 		DMAReadData(ReadDataFromCache , (Data + i));
 	}
 	return 1;
-	
 }
 
 unsigned char clamp(int i)

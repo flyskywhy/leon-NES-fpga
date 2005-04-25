@@ -12,9 +12,7 @@
 
 #include "InfoNES.h"
 
-#ifndef killsystem
 #include "InfoNES_System.h"
-#endif
 
 #include "InfoNES_pAPU.h"
 

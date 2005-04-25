@@ -19,11 +19,14 @@
 #include "InfoNES_pAPU.h"
 
 #include "leonram.h"
-#include "leon.h"
 
 #include "AVSync.h"
 #include "register.h"
 //extern BOOL CanSetAddr;
+
+#ifdef PrintfFrameGraph
+DWORD FrameCount = 0;
+#endif /* PrintfFrameGraph */
 
 /* Pad state */
 DWORD dwKeyPad1 = 0;

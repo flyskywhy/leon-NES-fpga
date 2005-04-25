@@ -17,6 +17,8 @@
 #include <crtdbg.h>
 #include <stdarg.h>
 
+#include <time.h>
+
 #include "../InfoNES.h"
 #include "../InfoNES_pAPU.h"
 #include "../InfoNES_System.h"
@@ -598,6 +600,49 @@ void DestroyScreen()
 
 /*===================================================================*/
 /*                                                                   */
+/*              InfoNES_Main() : The main loop of InfoNES            */
+/*                                                                   */
+/*===================================================================*/
+void InfoNES_Main()
+{
+	/*
+	*  The main loop of InfoNES
+	*
+	*/
+	unsigned int frame = 1;
+	long cur_time, last_frame_time;
+	long BaseTime = clock();
+
+	// Main loop
+	for(;;)
+	{
+		/*-------------------------------------------------------------------*/
+		/*  To the menu screen                                               */
+		/*-------------------------------------------------------------------*/
+		if ( InfoNES_Menu() == -1 )
+			break;  // Quit
+
+		/*-------------------------------------------------------------------*/
+		/*  Start a NES emulation                                            */
+		/*-------------------------------------------------------------------*/
+
+		SLNES( PPU0 );
+
+		last_frame_time = BaseTime + ( frame++ ) * ( FRAME_SKIP + 1 ) * SAMPLE_PER_FRAME * 1000 / SAMPLE_PER_SEC;
+		for(;;)
+		{
+			cur_time = clock();
+			if( last_frame_time <= cur_time )
+				break;
+		}
+	}
+
+	// Completion treatment
+	InfoNES_Fin();
+}
+
+/*===================================================================*/
+/*                                                                   */
 /*           LoadSRAM() : Load a SRAM                                */
 /*                                                                   */
 /*===================================================================*/
@@ -1039,13 +1084,6 @@ void InfoNES_DebugPrint( char *pszMsg )
 {
   _RPT0( _CRT_WARN, pszMsg );
 }
-
-/*===================================================================*/
-/*                                                                   */
-/*        InfoNES_SoundInit() : Sound Emulation Initialize           */
-/*                                                                   */
-/*===================================================================*/
-void InfoNES_SoundInit( void ) {}
 
 /*===================================================================*/
 /*                                                                   */

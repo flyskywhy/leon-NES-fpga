@@ -4,9 +4,9 @@
 #include "Time.h"
 
 //#define SimLEON
-//#define killsystem
 //#define DMA_SDRAM
 #include "..\InfoNES.h"
+#include "..\InfoNES_System.h"
 #include "..\InfoNES_pAPU.h"
 #include "..\K6502.h"
 #include "..\leonram.h"
@@ -251,4 +251,146 @@ int main(int argc, char* argv[])
 		SLNES( (unsigned char *)0x8000/*PPU0*/ );					//调用模拟器写一桢数据到PPU桢存0
 	}
 	return 0;
+}
+
+
+/*===================================================================*/
+/*                                                                   */
+/*               InfoNES_ReadRom() : Read ROM image file             */
+/*                                                                   */
+/*===================================================================*/
+int InfoNES_ReadRom( const char *pszFileName )
+{
+/*
+ *  Read ROM image file
+ *
+ *  Parameters
+ *    const char *pszFileName          (Read)
+ *
+ *  Return values
+ *     0 : Normally
+ *    -1 : Error
+ */
+
+	//FILE *fp;
+
+	///* Open ROM file */
+	//fp = fopen( pszFileName, "rb" );
+	//if ( fp == NULL )
+	//	return -1;
+
+
+	//fread( gamefile, 1, 188416, fp );
+	if(InfoNES_Init() == -1)
+		return -1;
+
+	//ROM_SRAM = 0;
+	///* Clear SRAM */
+	//memset( SRAM, 0, SRAM_SIZE );
+
+	///* File close */
+	//fclose( fp );
+
+	/* Successful */
+	return 0;
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*           InfoNES_ReleaseRom() : Release a memory for ROM         */
+/*                                                                   */
+/*===================================================================*/
+void InfoNES_ReleaseRom()
+{
+/*
+ *  Release a memory for ROM
+ *
+ */
+	ROM = NULL;
+	VROM = NULL;
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*             InfoNES_PadState() : Get a joypad state               */
+/*                                                                   */
+/*===================================================================*/
+void InfoNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
+{
+/*
+ *  Get a joypad state
+ *
+ *  Parameters
+ *    DWORD *pdwPad1                   (Write)
+ *      Joypad 1 State
+ *
+ *    DWORD *pdwPad2                   (Write)
+ *      Joypad 2 State
+ *
+ *    DWORD *pdwSystem                 (Write)
+ *      Input for InfoNES
+ *
+ */
+//    int i;
+//    //unsigned int tt, ret;
+//    *pdwPad1 = *pdwPad2 = 0 ;
+//#ifdef IR_GAMEPAD
+//	if( GB_ir_key )									//如果有遥控器按钮按钮按下则只处理遥控器动作
+//	{
+//		*pdwSystem = GB_ir_key ;
+//		return;
+//	}
+//#endif
+//
+//    SET_GM_LATCH0;									//向OUT端口送入高电平
+//    //risc_sleep_a_bit(262);
+//    CLEAR_GM_LATCH0;								//向OUT端口送入低电平
+//    //risc_sleep_a_bit(262);
+//    //TRI_GM_DATA0;
+//#ifdef GB_TWO_PAD
+//    //TRI_GM_DATA1;
+//#endif
+//	for( i = 0; i < 7; i++ )
+//	{
+//		CLEAR_GM_CLK0;									//向CLK端口送入低电平
+//		*pdwPad1 |= ( READ_GM_DATA0 < 0 ) << i;
+//#ifdef GB_TWO_PAD
+//		*pdwPad2 |= ( READ_GM_DATA1 < 0 ) << i;
+//#endif
+//		//risc_sleep_a_bit(262);
+//		SET_GM_CLK0;									//向CLK端口送入高电平
+//		//risc_sleep_a_bit(262);
+//	}
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*        InfoNES_SoundOpen() : Sound Emulation Initialize           */
+/*                                                                   */
+/*===================================================================*/
+int InfoNES_SoundOpen( int samples_per_sync, int sample_rate )
+{
+	return 0;
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*        InfoNES_SoundClose() : Sound Close                         */
+/*                                                                   */
+/*===================================================================*/
+void InfoNES_SoundClose( void ) 
+{
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*            InfoNES_SoundOutput() : Sound Output Waves             */           
+/*                                                                   */
+/*===================================================================*/
+#if BITS_PER_SAMPLE == 8
+void InfoNES_SoundOutput( int samples, BYTE *wave ) 
+#else /* BITS_PER_SAMPLE */
+void InfoNES_SoundOutput( int samples, short *wave ) 
+#endif /* BITS_PER_SAMPLE */
+{
 }

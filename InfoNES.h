@@ -15,10 +15,6 @@
 
 #include "InfoNES_Types.h"
 
-//#define LSB_FIRST			//如果移植到高位前置（bigendian）的处理器例如LEON上，则注释本语句，本定义对win32版本不起作用
-
-//#define TGsim				//在sim时，单独测试VCD平台条件下将会使用Display模块的模拟器代码的正确性，而不调用Display模块的函数，定义在Makefile中
-
 #define SCALER_RELOAD 81 - 1	//只适用于FRAME_SKIP为6，SAMPLE_PER_FRAME为189的情况
 #define LEON_CLK 40		//LEON的频率（MHz）
 #if LEON_CLK == 27		//27MHz
@@ -35,8 +31,6 @@
 #define FRAME_SKIP 6		//跳桢数，一般设为10以下
 
 #define damnBIN				//为了兼容.bin游戏代码中莫名其妙地与nes文件不同的地方（为了防止别人开发VCD游戏机？），使用一些非官方的指令，例如将FF看作4C，将MapperWrite范围由标准的8000-FFFF扩展为6000-FFFF
-
-//#define killsystem			//用于LEON，不用InfoNES_System_LEON.cpp文件，现在定义在Makefile中
 
 /*-------------------------------------------------------------------*/
 /*  NES resources                                                    */
@@ -203,17 +197,11 @@ extern BYTE ROM_SRAM;
 
 int InfoNES_Init();
 
-#ifndef killsystem
 /* Completion treatment */
 void InfoNES_Fin();
 
 /* Load a cassette */
 int InfoNES_Load( const char *pszFileName );
-
-
-/* The main loop of InfoNES */ 
-void InfoNES_Main();
-#endif /* killsystem */
 
 /* Reset InfoNES */
 void InfoNES_Reset();

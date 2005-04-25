@@ -19,10 +19,7 @@
 
 #include "K6502.h"
 
-
-#ifndef killsystem
 #include "InfoNES_System.h"
-#endif
 
 #include "leonram.h"
 
@@ -306,11 +303,8 @@ void K6502_Reset()
 		  PPUBANK[ nPage ] = &PTRAM[ nPage << 10];
   }
 
-#ifdef killsystem
   else
-#else
-  else if( MapperNo == 3 )
-#endif /* killsystem */
+  //else if( MapperNo == 3 )
   {
 	  /* Write to Mapper */
 	  MapperWrite = Map3_Write;
@@ -333,14 +327,12 @@ void K6502_Reset()
 	  for ( nPage = 0; nPage < 8; ++nPage )
 		  PPUBANK[ nPage ] = VROMPAGE( nPage );
   }
-#ifndef killsystem
-  else
-  {
-    // Non support mapper
-    InfoNES_MessageBox( "Current mapper is unsupported.\n" );
-    //return -1;
-  }
-#endif /* killsystem */
+  //else
+  //{
+  //  // Non support mapper
+  //  InfoNES_MessageBox( "Current mapper is unsupported.\n" );
+  //  //return -1;
+  //}
 
 	memmap_tbl[ 0 ] = RAM;
 	memmap_tbl[ 3 ] = SRAM;

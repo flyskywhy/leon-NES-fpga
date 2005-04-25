@@ -24,6 +24,9 @@ extern WORD NesPalette[];
 /*  Function prototypes                                              */
 /*-------------------------------------------------------------------*/
 
+/* The main loop of InfoNES */ 
+void InfoNES_Main();
+
 /* Menu screen */
 int InfoNES_Menu();
 
@@ -48,9 +51,6 @@ void *InfoNES_MemorySet( void *dest, int c, int count );
 /* Print debug message */
 void InfoNES_DebugPrint( char *pszMsg );
 
-/* Sound Initialize */
-void InfoNES_SoundInit( void );
-
 /* Sound Open */
 int InfoNES_SoundOpen( int samples_per_sync, int sample_rate );
 
@@ -66,5 +66,9 @@ void InfoNES_SoundOutput( int samples, short *wave );
 
 /* Print system message */
 void InfoNES_MessageBox( char *pszMsg, ... );
+
+#ifdef DMA_SDRAM
+void WriteDMA(int *Data, int Length, int MemBaseAddr);
+#endif /* DMA_SDRAM */
 
 #endif /* !InfoNES_SYSTEM_H_INCLUDED */

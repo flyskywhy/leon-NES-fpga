@@ -197,9 +197,7 @@ extern void apu_write(uint32 address, uint8 value);
 extern void InfoNES_pAPUInit(void);
 extern void InfoNES_pAPUVsync(void);
 
-#ifndef killsystem
 extern void InfoNES_pAPUDone(void);
-#endif /* killsystem */
 
 //#ifdef __cplusplus
 //}

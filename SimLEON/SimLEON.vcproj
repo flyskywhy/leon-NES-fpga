@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;SimLEON;LSB_FIRST;killsystem;DMA_SDRAM"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;SimLEON;LSB_FIRST;DMA_SDRAM"
 				MinimalRebuild="FALSE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="5"
@@ -150,6 +150,9 @@
 			</File>
 			<File
 				RelativePath="..\InfoNES.h">
+			</File>
+			<File
+				RelativePath="..\InfoNES_System.h">
 			</File>
 			<File
 				RelativePath="..\InfoNES_Types.h">
