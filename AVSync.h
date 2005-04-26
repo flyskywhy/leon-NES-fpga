@@ -39,7 +39,10 @@
 /***************************************************
 ********************* type define ******************
 ****************************************************/
-//typedef unsigned char BYTE;
+#ifndef BYTE
+#define BYTE unsigned char
+//typedef unsigned char  BYTE;
+#endif /* !BYTE */
 typedef unsigned int  UINT;
 //¿‡–Õ typedef int BOOL;
 #ifndef BOOL

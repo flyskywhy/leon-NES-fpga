@@ -3,9 +3,9 @@ LeonMakeRoot = ..\..\Project\Reuse\Leon\software
 vpath %.c gamefile
 ########################### Common Part ##############################
 # 指定program为要生成的目标exe的名字(无后缀)
-program = InfoNES
+program = SLNES
 # 指定modules为组成目标代码的模块名(实际是每个.S,.s,.C对应的.o,无后缀)
-modules = InfoNES_System_LEON K6502 InfoNES_pAPU InfoNES leonram AVSync Int periph
+modules = SLNES_System_LEON SLNES SLNES_Data AVSync Int periph
 
 UserLink = MyLink
 
@@ -17,11 +17,11 @@ include ${LeonMakeRoot}\script\LeonMake.mak
 #CFLAGS += -Ddebug -Ddebug6502asm
 #CFLAGS += -DwithMEMIO -DDMA_SDRAM
 #CFLAGS += -DPrintfFrameGraph
-CFLAGS += -DPrintfFrameGraph -DSLNES_SIM
+#CFLAGS += -DPrintfFrameGraph -DSLNES_SIM
 #CFLAGS += -DPrintfFrameGraph -DwithMEMIO
 #CFLAGS += -DPrintfFrameGraph -DwithMEMIO -DDMA_SDRAM
 #CFLAGS += -DPrintfFrameClock
-#CFLAGS += -DPrintfFrameClock -DSLNES_SIM
+CFLAGS += -DPrintfFrameClock -DSLNES_SIM
 #CFLAGS += -DPrintfFrameClock -DwithMEMIO
 #CFLAGS += -DPrintfFrameClock -DwithMEMIO -DDMA_SDRAM
 
@@ -43,15 +43,11 @@ CFLAGS += -DPrintfFrameGraph -DSLNES_SIM
 extra : ${RtlSimFile}
 
 ########################### THE END ##############################
-InfoNES_System_LEON.o: InfoNES_System_LEON.c InfoNES_System.h
+SLNES_System_LEON.o: SLNES_System_LEON.c SLNES_System.h SLNES.c SLNES_Data.h
 
-K6502.o: K6502.c K6502.h InfoNES_Types.h InfoNES.h K6502_rw.h InfoNES_pAPU.h InfoNES_System.h
+SLNES.o: SLNES.c SLNES.h SLNES_System.h SLNES_Data.h
 
-InfoNES_pAPU.o: InfoNES_pAPU.c K6502.h K6502_rw.h InfoNES.h InfoNES_Types.h InfoNES_pAPU.h InfoNES_System.h
-
-InfoNES.o: InfoNES.c InfoNES.h InfoNES_Types.h InfoNES_pAPU.h K6502.h InfoNES_System.h
-
-leonram.o: leonram.c leonram.h InfoNES.h InfoNES_pAPU.h K6502.h InfoNES_System.h
+SLNES_Data.o: SLNES_Data.c SLNES_Data.h SLNES.h SLNES_System.h
 
 AVSync.o: AVSync.c AVSync.h
 

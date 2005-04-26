@@ -5,11 +5,9 @@
 
 //#define SimLEON
 //#define DMA_SDRAM
-#include "..\InfoNES.h"
-#include "..\InfoNES_System.h"
-#include "..\InfoNES_pAPU.h"
-#include "..\K6502.h"
-#include "..\leonram.h"
+#include "..\SLNES.h"
+#include "..\SLNES.h"
+#include "..\SLNES_Data.h"
 #include "stdio.h"
 
 #include "DMAAccessFunction.h"
@@ -132,9 +130,9 @@ int main(int argc, char* argv[])
 
 	//////////////////////////////////////////////////////////////////
 	
-	if(InfoNES_Init() == -1)
+	if(SLNES_Init() == -1)
 		return -1;
-	InfoNES_Reset();				//初始化模拟器里的各个参数
+	SLNES_Reset();				//初始化模拟器里的各个参数
 
 	for(;;)
 	{
@@ -256,10 +254,10 @@ int main(int argc, char* argv[])
 
 /*===================================================================*/
 /*                                                                   */
-/*               InfoNES_ReadRom() : Read ROM image file             */
+/*               SLNES_ReadRom() : Read ROM image file             */
 /*                                                                   */
 /*===================================================================*/
-int InfoNES_ReadRom( const char *pszFileName )
+int SLNES_ReadRom( const char *pszFileName )
 {
 /*
  *  Read ROM image file
@@ -281,7 +279,7 @@ int InfoNES_ReadRom( const char *pszFileName )
 
 
 	//fread( gamefile, 1, 188416, fp );
-	if(InfoNES_Init() == -1)
+	if(SLNES_Init() == -1)
 		return -1;
 
 	//ROM_SRAM = 0;
@@ -297,10 +295,10 @@ int InfoNES_ReadRom( const char *pszFileName )
 
 /*===================================================================*/
 /*                                                                   */
-/*           InfoNES_ReleaseRom() : Release a memory for ROM         */
+/*           SLNES_ReleaseRom() : Release a memory for ROM         */
 /*                                                                   */
 /*===================================================================*/
-void InfoNES_ReleaseRom()
+void SLNES_ReleaseRom()
 {
 /*
  *  Release a memory for ROM
@@ -312,10 +310,10 @@ void InfoNES_ReleaseRom()
 
 /*===================================================================*/
 /*                                                                   */
-/*             InfoNES_PadState() : Get a joypad state               */
+/*             SLNES_PadState() : Get a joypad state               */
 /*                                                                   */
 /*===================================================================*/
-void InfoNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
+void SLNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
 {
 /*
  *  Get a joypad state
@@ -328,7 +326,7 @@ void InfoNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
  *      Joypad 2 State
  *
  *    DWORD *pdwSystem                 (Write)
- *      Input for InfoNES
+ *      Input for SLNES
  *
  */
 //    int i;
@@ -365,32 +363,51 @@ void InfoNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
 
 /*===================================================================*/
 /*                                                                   */
-/*        InfoNES_SoundOpen() : Sound Emulation Initialize           */
+/*        SLNES_SoundOpen() : Sound Emulation Initialize           */
 /*                                                                   */
 /*===================================================================*/
-int InfoNES_SoundOpen( int samples_per_sync, int sample_rate )
+int SLNES_SoundOpen( int samples_per_sync, int sample_rate )
 {
 	return 0;
 }
 
 /*===================================================================*/
 /*                                                                   */
-/*        InfoNES_SoundClose() : Sound Close                         */
+/*        SLNES_SoundClose() : Sound Close                         */
 /*                                                                   */
 /*===================================================================*/
-void InfoNES_SoundClose( void ) 
+void SLNES_SoundClose( void ) 
 {
 }
 
 /*===================================================================*/
 /*                                                                   */
-/*            InfoNES_SoundOutput() : Sound Output Waves             */           
+/*            SLNES_SoundOutput() : Sound Output Waves             */           
 /*                                                                   */
 /*===================================================================*/
 #if BITS_PER_SAMPLE == 8
-void InfoNES_SoundOutput( int samples, BYTE *wave ) 
+void SLNES_SoundOutput( int samples, BYTE *wave ) 
 #else /* BITS_PER_SAMPLE */
-void InfoNES_SoundOutput( int samples, short *wave ) 
+void SLNES_SoundOutput( int samples, short *wave ) 
 #endif /* BITS_PER_SAMPLE */
 {
+}
+
+void WriteDMA(int *Data, int Length, int MemBaseAddr)
+{
+	int i;
+
+	//Go on when DMACache Status is Idle
+	while(GetDMAStatue(ReadBackStatus) == 1)
+	{
+	}
+
+	DMASetSDRAMAddr(MemAddressToSDRam,MemBaseAddr);
+	DMAWriteCache(WriteReadCacheSetUp, 0, 0 ,Length);
+
+	for( i = 0 ; i < Length; i++)
+	{
+		
+		DMAWriteData(WriteDataToCache, *(Data + i));
+	}
 }

@@ -22,7 +22,6 @@
 #include "leon.h"
 #endif /* SimLEON */
 #include "register.h"
-#include "InfoNES_Types.h"
 #include "AVSync.h"
 #include "Int.h"
 #include "periph.h"

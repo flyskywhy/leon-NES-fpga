@@ -115,25 +115,19 @@
 				RelativePath="DMAAccessFunction.cpp">
 			</File>
 			<File
-				RelativePath="..\InfoNES.cpp">
-			</File>
-			<File
-				RelativePath="..\InfoNES_pAPU.cpp">
-			</File>
-			<File
 				RelativePath="..\Int.cpp">
 			</File>
 			<File
-				RelativePath="..\K6502.cpp">
+				RelativePath="..\SLNES.cpp">
+			</File>
+			<File
+				RelativePath="..\SLNES_Data.cpp">
 			</File>
 			<File
 				RelativePath="SimLEON.cpp">
 			</File>
 			<File
 				RelativePath="hostsim.cpp">
-			</File>
-			<File
-				RelativePath="..\leonram.cpp">
 			</File>
 			<File
 				RelativePath="..\periph.cpp">
@@ -149,34 +143,22 @@
 				RelativePath="DMAAccessFunction.h">
 			</File>
 			<File
-				RelativePath="..\InfoNES.h">
-			</File>
-			<File
-				RelativePath="..\InfoNES_System.h">
-			</File>
-			<File
-				RelativePath="..\InfoNES_Types.h">
-			</File>
-			<File
-				RelativePath="..\InfoNES_pAPU.h">
-			</File>
-			<File
 				RelativePath="..\Int.h">
 			</File>
 			<File
-				RelativePath="..\K6502.h">
+				RelativePath="..\SLNES.h">
 			</File>
 			<File
-				RelativePath="..\K6502_rw.h">
+				RelativePath="..\SLNES_Data.h">
+			</File>
+			<File
+				RelativePath="..\SLNES_System.h">
 			</File>
 			<File
 				RelativePath="hostsim.h">
 			</File>
 			<File
 				RelativePath="..\..\..\Project\Reuse\Leon\SOFTWARE\include\leon.h">
-			</File>
-			<File
-				RelativePath="..\leonram.h">
 			</File>
 			<File
 				RelativePath="..\periph.h">
