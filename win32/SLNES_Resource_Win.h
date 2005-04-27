@@ -1,10 +1,9 @@
 /*=================================================================*/
-/*                                                                   */
-/*  SLNES_Resource_Win.h : SLNES for Windows Resource            */
-/*                                                                   */
-/*  1999/11/03  Racoon  New preparation                              */
-/*  2000/05/14  SLNES Project                                      */
-/*                                                                   */
+/*                                                                 */
+/*  SLNES_Resource_Win.h : SLNES for Windows Resource              */
+/*                                                                 */
+/*  2004/07/28  SLNES Project                                      */
+/*                                                                 */
 /*=================================================================*/
 
 #define IDR_MENU                        102
@@ -16,15 +15,10 @@
 #define IDC_BTN_EXIT                    1002
 #define IDC_OK                          1003
 #define IDC_BTN_STOP                    40001
-#define IDC_BTN_FAST                    40002
-#define IDC_BTN_SLOW                    40003
 #define IDC_BTN_ABOUT                   40004
 #define IDC_BTN_SINGLE                  40006
 #define IDC_BTN_DOUBLE                  40007
 #define IDC_BTN_TRIPLE                  40008
-#define IDC_BTN_CLIP_VERTICAL           40010
-#define IDC_BTN_FRAMESKIP               40011
-#define IDC_BTN_MUTE                    40012
 #define IDC_BTN_INFO                    40013
 
 // Next default values for new objects

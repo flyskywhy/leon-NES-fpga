@@ -1,12 +1,19 @@
-//本文件定义了编译到SDRAM的数组或者说指向SDRAM的指针，以及一些初始化函数
+/*=================================================================*/
+/*                                                                 */
+/*  SLNES_Data.cpp : 编译到SDRAM的数组或者是指向SDRAM的指针        */
+/*                                                                 */
+/*  2004/07/28  SLNES Project                                      */
+/*                                                                 */
+/*=================================================================*/
+
 #include "SLNES.h"
 #include "SLNES_Data.h"
 
 #include ".\gamefile\contra.h"
 
-unsigned char PPU0[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
-unsigned char PPU1[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
-unsigned char PPU2[ NES_BACKBUF_WIDTH * NES_DISP_HEIGHT ];
+unsigned char PPU0[ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
+unsigned char PPU1[ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
+unsigned char PPU2[ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
 #if BITS_PER_SAMPLE == 8
 unsigned char APU0[ SAMPLE_PER_FRAME ];
 unsigned char APU1[ SAMPLE_PER_FRAME ];

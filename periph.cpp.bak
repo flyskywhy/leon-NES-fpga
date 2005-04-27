@@ -106,7 +106,7 @@ void SetCPUTimer(int timerNo, int time)
 	if(1 == timerNo)
 	{
 		lr->timerload1 = time*28;
-		lr->timerctrl1 |= 0x4;		// load new value
+		lr->timerctrl2 |= 0x4;		// load new value
 	}
 	else if(2 == timerNo)
 	{

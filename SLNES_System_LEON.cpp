@@ -1,14 +1,14 @@
 /*=================================================================*/
-/*                                                                   */
-/*  SLNES_System_LEON.c : LEON specific File                       */
-/*                                                                   */
-/*  2005/03/01                                                       */
-/*                                                                   */
+/*                                                                 */
+/*  SLNES_System_LEON.cpp : LEON specific File                     */
+/*                                                                 */
+/*  2004/07/28  SLNES Project                                      */
+/*                                                                 */
 /*=================================================================*/
 
-/*-------------------------------------------------------------------*/
-/*  Include files                                                    */
-/*-------------------------------------------------------------------*/
+/*-----------------------------------------------------------------*/
+/*  Include files                                                  */
+/*-----------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,7 +22,7 @@
 
 #include "AVSync.h"
 #include "register.h"
-//extern BOOL CanSetAddr;
+extern BOOL CanSetAddr;
 
 /* Pad state */
 DWORD dwKeyPad1 = 0;
@@ -56,8 +56,6 @@ DWORD dwKeySystem = 0;
 //		ISRForTimer_Leon();
 //	}
 //}
-//
-//int StartDisplay = 0;
 
 /*=================================================================*/
 /*                                                                   */
@@ -91,9 +89,9 @@ int main()
 
 	//InitTimer();
 	//BasicWriteReg32_lb( SCNT + PREGS, 0x63);
-	BasicWriteReg32_lb( SCNT + PREGS, SCALER_RELOAD );		//只适用于FRAME_SKIP为6，SAMPLE_PER_FRAME为189的情况
+	BasicWriteReg32_lb( SCNT + PREGS, SCALER_RELOAD );
 	//BasicWriteReg32_lb( SRLD + PREGS, 0x63);		// system clock divide 1/1K
-	BasicWriteReg32_lb( SRLD + PREGS, SCALER_RELOAD );		//只适用于FRAME_SKIP为6，SAMPLE_PER_FRAME为189的情况
+	BasicWriteReg32_lb( SRLD + PREGS, SCALER_RELOAD );
 	BasicWriteReg32_lb( TCNT0 + PREGS, 0xffffff);
 	BasicWriteReg32_lb( TRLD0 + PREGS, 0xffffff);
 	BasicWriteReg32_lb( TCNT1 + PREGS, 0xffffff);
@@ -180,12 +178,14 @@ int main()
 		BasicWriteReg32_lb( (DECODE_BASE_ADDR+DISPLAY_FRAME_BASE_ADDR)*4 + MEMIO, /*0x28000*/( (int)PPU2 >> 2 & 0xFFFFFF ));
 #endif /* withMEMIO */
 		SLNES( PPU0 );
+
+		//if()									//如果遥控器按的是退出键，就返回主控程序，否则就是reset键，重新进行游戏
+		//	return 0;
+		//else
+		//	break;
 	}
 
-
 		SLNES_Reset();
-		//if()									//如果遥控器按的是退出键，就返回主控程序，否则就是reset键，重新进行游戏
-		//	break;
 
 	// Disable interrupt
 	//DisableAllInterrupt();
@@ -260,10 +260,13 @@ void SLNES_ReleaseRom()
 }
 
 /*=================================================================*/
-/*                                                                   */
+/*                                                                 */
 /*             SLNES_PadState() : Get a joypad state               */
-/*                                                                   */
+/*                                                                 */
 /*=================================================================*/
+//#define SET_GM_LATCH0 lr->piodata |= 1
+//#define CLEAR_GM_LATCH0 lr->piodata &= 1
+
 void SLNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
 {
 /*

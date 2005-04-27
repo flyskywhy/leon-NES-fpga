@@ -52,6 +52,18 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
+#endif    // 日语 resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// 中文（中华人民共和国） resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -60,47 +72,24 @@ END
 
 IDR_MENU MENU 
 BEGIN
-    POPUP "抬操(&F)"
+    POPUP "文件(&F)"
     BEGIN
-        MENUITEM "奐偔(&O)",                    IDC_BTN_OPEN
-        MENUITEM "鼐(&R)",                    IDC_BTN_RESET
-        MENUITEM "掆巭(&S)",                    IDC_BTN_STOP
+        MENUITEM "打开(&O)",                    IDC_BTN_OPEN
+        MENUITEM "重置(&R)",                    IDC_BTN_RESET
+        MENUITEM "停止(&S)",                    IDC_BTN_STOP
         MENUITEM SEPARATOR
-        MENUITEM "廔椆(&X)",                    IDC_BTN_EXIT
+        MENUITEM "退出(&X)",                    IDC_BTN_EXIT
     END
-    POPUP "堤呒(&O)"
+    POPUP "画面尺寸(&S)"
     BEGIN
-        POPUP "腾把椒?&F)"
-        BEGIN
-            MENUITEM "蛋?&A)",                      IDC_BTN_FRAMESKIP
-            , CHECKED
-            MENUITEM "尭傜偡(&D)",                  IDC_BTN_SLOW
-            MENUITEM "憹傗偡(&I)",                  IDC_BTN_FAST
-        END
-        POPUP "夋柺(&V)"
-        BEGIN
-            POPUP "徊睫(&S)"
-            BEGIN
-                MENUITEM "1攞(&1)",                     IDC_BTN_SINGLE
-                , CHECKED
-                MENUITEM "2攞(&2)",                     IDC_BTN_DOUBLE
-                MENUITEM "3攞(&3)",                     IDC_BTN_TRIPLE
-            END
-            POPUP "肛?&C)"
-            BEGIN
-                MENUITEM "忋抂丒壓抂(&V)",              IDC_BTN_CLIP_VERTICAL
-
-            END
-        END
-        POPUP "怀菽?&S)"
-        BEGIN
-            MENUITEM "协澳(&M)",                    IDC_BTN_MUTE
-        END
+        MENUITEM "1倍(&1)",                     IDC_BTN_SINGLE, CHECKED
+        MENUITEM "2倍(&2)",                     IDC_BTN_DOUBLE
+        MENUITEM "3倍(&3)",                     IDC_BTN_TRIPLE
     END
-    POPUP "唾踢(&H)"
+    POPUP "帮助(&H)"
     BEGIN
-        MENUITEM "ROM忣曬(&I)",                 IDC_BTN_INFO
-        MENUITEM "兽凹忣曬(&A)",              IDC_BTN_ABOUT
+        MENUITEM "ROM信息(&I)",                 IDC_BTN_INFO
+        MENUITEM "版本信息(&A)",                IDC_BTN_ABOUT
     END
 END
 
@@ -110,15 +99,15 @@ END
 // Dialog
 //
 
-IDD_DIALOG DIALOG  0, 0, 95, 69
+IDD_DIALOG DIALOGEX 0, 0, 93, 60
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "僶乕僕儑儞忣曬"
-FONT 9, "俵俽 俹僑僔僢僋"
+CAPTION "版本信息"
+FONT 9, "宋体", 400, 0, 0x86
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,64,43,19,14
-    LTEXT           "SLNES v1.00\nCopyright (c) 2004-2005\nLi Zheng",
-                    IDC_STATIC,12,14,75,25
-    GROUPBOX        "",IDC_STATIC,4,1,87,63
+    DEFPUSHBUTTON   "OK",IDOK,64,35,19,14
+    LTEXT           "SLNES v1.00\nCopyright (c) 2004-2005\n李政",
+                    IDC_STATIC,12,14,52,36
+    GROUPBOX        "",IDC_STATIC,4,1,85,55
 END
 
 
@@ -133,7 +122,6 @@ BEGIN
     IDD_DIALOG, DIALOG
     BEGIN
         TOPMARGIN, 1
-        BOTTOMMARGIN, 68
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -144,7 +132,7 @@ END
 // Bitmap
 //
 
-IDB_BITMAP              BITMAP                  "bitmap1.bmp"
+IDB_BITMAP              BITMAP                  "SLNES.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -154,7 +142,7 @@ IDB_BITMAP              BITMAP                  "bitmap1.bmp"
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_ICON                ICON                    "SLNES.ico"
-#endif    // 日语 resources
+#endif    // 中文（中华人民共和国） resources
 /////////////////////////////////////////////////////////////////////////////
 
 

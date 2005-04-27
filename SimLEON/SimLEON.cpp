@@ -169,7 +169,7 @@ int main(int argc, char* argv[])
 	int BaseTime;
 	//BaseTime = lr->timercnt1;
 	BasicReadReg32( TCNT0 + PREGS, &BaseTime );
-//3181
+
 	for(;;)
 	{
 		for(;;)
