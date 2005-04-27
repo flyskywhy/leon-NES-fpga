@@ -867,10 +867,7 @@ void SLNES_LoadFrame()
  */
 
   // Set screen data
-  //memcpy( pScreenMem, PPU0, NES_DISP_WIDTH * NES_DISP_HEIGHT * 2 );
-
   for( int i = 0; i < NES_DISP_HEIGHT; i++ )
-    //memcpy( pScreenMem + i * NES_DISP_WIDTH, PPU0 + i * NES_BACKBUF_WIDTH + 8 , NES_DISP_WIDTH );
 	for( int j = 0; j < NES_DISP_WIDTH; j++ )
 		*( (WORD*)pScreenMem + i * NES_DISP_WIDTH + j ) = NesPalette[ PPU0[ i * NES_DISP_WIDTH + j ] ];
 

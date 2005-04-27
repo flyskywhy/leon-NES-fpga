@@ -185,7 +185,7 @@ BYTE *buf;
 BYTE *p;					//指向图形缓冲区数组中当前所绘像素地址的指针
 
 inline int PPU_DrawLine( register int DY, register int SY );
-inline int PPU_RefreshSprites( BYTE *P, BYTE *Z );
+inline int PPU_RefreshSprites( BYTE *Z );
 
 /* Palette Table */
 BYTE PalTable[ 32 ];
@@ -2402,6 +2402,7 @@ void SLNES_Reset()
 	ARX = NSCROLLX = 0;
 	ARY = NSCROLLY = 0;
 	FirstSprite = -1;									//初始化FirstSprite
+	buf = line_buffers + 8;					//将指针指向扫描线缓冲区数组中将会显示在屏幕上开始地址
 
 	// Reset information on PPU_R0
 	PPU_Increment = 1;
@@ -2591,9 +2592,6 @@ void SLNES( unsigned char *DisplayFrameBase)
 			//if( PPU_Scanline < 140 || PPU_Scanline > 201)		//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
 			CPU_Step( STEP_PER_SCANLINE );												//执行1条扫描线
 			NSCROLLX = ARX;
-			////乘法			buf = DisplayFrameBase + i * NES_BACKBUF_WIDTH + 8;					//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
-			//			buf = DisplayFrameBase + ( i << 8 ) + ( i << 4 ) + 8;					//将指针指向图形缓冲区数组中将会显示在屏幕上的当前扫描线的开始地址
-			buf = line_buffers + 8;					//将指针指向扫描线缓冲区数组中将会显示在屏幕上开始地址
 
 			if( PPU_R1 & R1_SHOW_SP ) PPU_CompareSprites( PPU_Scanline );
 			if( PPU_DrawLine( PPU_Scanline, NSCROLLY ) )								//绘制1条扫描线到图形缓冲区数组
@@ -2606,21 +2604,21 @@ void SLNES( unsigned char *DisplayFrameBase)
 			//for (j=0;j<256;)
 			//{
 			//	unsigned char ttt;
-			//	ttt = *(line_buffers + 8 + j);
-			//	*(line_buffers + 8 + j) = *(line_buffers + 8 + j + 3);
-			//	*(line_buffers + 8 + j + 3) = ttt;
+			//	ttt = *(buf + j);
+			//	*(buf + j) = *(buf + j + 3);
+			//	*(buf + j + 3) = ttt;
 			//	
-			//	ttt = *(line_buffers + 8 + j + 1);
-			//	*(line_buffers + 8 + j + 1) = *(line_buffers + 8 + j + 2);
-			//	*(line_buffers + 8 + j + 2) = ttt;
+			//	ttt = *(buf + j + 1);
+			//	*(buf + j + 1) = *(buf + j + 2);
+			//	*(buf + j + 2) = ttt;
 			//	
 			//	j += 4;
 			//}
 
 #ifdef DMA_SDRAM
-			WriteDMA( ( int *)( line_buffers + 8 ), 32, ((int)( DisplayFrameBase )>>2) + ( i << 6 ) );		//绘制PPU桢存当前扫描线的前半段
+			WriteDMA( ( int *)( buf ), 32, ((int)( DisplayFrameBase )>>2) + ( i << 6 ) );		//绘制PPU桢存当前扫描线的前半段
 #else /* DMA_SDRAM */
-			memcpy( DisplayFrameBase  + ( i << 8 ), line_buffers + 8, 256 );
+			memcpy( DisplayFrameBase  + ( i << 8 ), buf, 256 );
 #endif /* DMA_SDRAM */
 
 			FirstSprite = -1;																//初始化FirstSprite
@@ -2630,7 +2628,7 @@ void SLNES( unsigned char *DisplayFrameBase)
 				NSCROLLY = ( NSCROLLY & 0x0100 ) ^ 0x0100;										//切换垂直方向的NT，同时VT->FV计数器清零
 
 #ifdef DMA_SDRAM
-			WriteDMA( ( int *)( line_buffers + 136 ), 32, ((int)( DisplayFrameBase )>>2) + ( i << 6 ) + 32 );	//绘制PPU桢存当前扫描线的后半段
+			WriteDMA( ( int *)( buf + 128 ), 32, ((int)( DisplayFrameBase )>>2) + ( i << 6 ) + 32 );	//绘制PPU桢存当前扫描线的后半段
 #endif /* DMA_SDRAM */
 		}
 
@@ -2771,7 +2769,7 @@ inline int PPU_DrawLine( register int DY, register int SY )	//DY是当前的扫描线序
 		}
 
 		/* Refresh sprites in this scanline */
-		D0 = FirstSprite >= 0 ? PPU_RefreshSprites( /*DY*/buf, ZBuf + 1):0;
+		D0 = FirstSprite >= 0 ? PPU_RefreshSprites( ZBuf + 1):0;
 
 		/* Return hit flag */
 		return( D0 );
@@ -2824,15 +2822,16 @@ inline int PPU_DrawLine( register int DY, register int SY )	//DY是当前的扫描线序
 		}
 	}
 	/* Refresh sprites in this scanline */
-	D0 = FirstSprite >= 0 ? PPU_RefreshSprites( /*DY*/buf, ZBuf + 1) : 0;
-	//#if 0
-	//	/* Mask out left 8 pixels if needed  */
-	//	if( !( PPU_R1 & R1_CLIP_BG ) )
-	//	{
-	//		P+=Shift-8-256;
-	//		P[0]=P[1]=P[2]=P[3]=P[4]=P[5]=P[6]=P[7]=63;	//63即0x3F，在NES的64色调色板中索引的黑色
-	//	}
-	//#endif
+	D0 = FirstSprite >= 0 ? PPU_RefreshSprites( ZBuf + 1) : 0;
+
+	#if 0
+		/* Mask out left 8 pixels if needed  */
+		if( !( PPU_R1 & R1_CLIP_BG ) )
+		{
+			P+=Shift-8-256;
+			P[0]=P[1]=P[2]=P[3]=P[4]=P[5]=P[6]=P[7]=63;	//63即0x3F，在NES的64色调色板中索引的黑色
+		}
+	#endif
 
 	/* Return 1 if we hit sprite #0 */
 	return( D0 );
@@ -2843,12 +2842,13 @@ inline int PPU_DrawLine( register int DY, register int SY )	//DY是当前的扫描线序
 /** intersection of sprite #0 with the background occurs, 0 **/
 /** otherwise.                                              **/
 /*************************************************************/
-inline int PPU_RefreshSprites( /*register int Y*/BYTE *PP, register BYTE *Z )
+inline int PPU_RefreshSprites( register BYTE *Z )
 {
-	register BYTE *T/*, *XPal, *SprCol*/;
+	register BYTE *T, *PP;
 	register BYTE *P, *C, *Pal;
 	register int D0, D1, J, I;
 
+	PP = buf;
 	Pal = PalTable + 16;											//Pal指向调色板数组PalTable[32]的sprite部分
 
 	for( J = FirstSprite, T = SPRRAM + ( J << 2 ), I = 0; J >= 0; J--, T -= 4 )	//在SPRRAM[256]中按63到0的顺序处理sprite
@@ -2874,7 +2874,7 @@ inline int PPU_RefreshSprites( /*register int Y*/BYTE *PP, register BYTE *Z )
 			/* If any bits left to draw... */
 			if( D1 )														//如果D1中有不透明的像素（非0）的话
 			{
-				P = buf + T[ 3 ];
+				P = PP + T[ 3 ];
 				C = Pal + ( ( T[ 2 ] & SPR_ATTR_COLOR ) << 2 );					//C等于Pal加上sprite属性字节中的低两位，也就是sprite调色板选择值0、4、8或C
 				if(D0=D1&0xC000) P[0]=C[D0>>14];
 				if(D0=D1&0x00C0) P[1]=C[D0>>6];
@@ -3840,7 +3840,7 @@ void APU_Process(void)
 //#else /* WIN32 */
 //
 //#ifdef DMA_SDRAM
-//			WriteDMA( ( int *)( line_buffers + 8 ), 32, ((int)( DisplayFrameBase )>>2) + ( i << 6 ) + ( i << 2 ) + 2 );		//绘制PPU桢存当前扫描线的前半段
+//			WriteDMA( ( int *)( buf ), 32, ((int)( DisplayFrameBase )>>2) + ( i << 6 ) + ( i << 2 ) + 2 );		//绘制PPU桢存当前扫描线的前半段
 //#else /* DMA_SDRAM */
 //
 //#if BITS_PER_SAMPLE == 8

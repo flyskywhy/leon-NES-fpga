@@ -58,9 +58,9 @@ DWORD dwKeySystem = 0;
 //}
 
 /*=================================================================*/
-/*                                                                 */
-/*                main() : Application main                        */
-/*                                                                 */
+/*                                                                   */
+/*                main() : Application main                          */
+/*                                                                   */
 /*=================================================================*/
 //int SLNES_Main()
 int main()
@@ -208,9 +208,9 @@ int main()
 
 
 /*=================================================================*/
-/*                                                                 */
+/*                                                                   */
 /*               SLNES_ReadRom() : Read ROM image file             */
-/*                                                                 */
+/*                                                                   */
 /*=================================================================*/
 int SLNES_ReadRom( const char *pszFileName )
 {
@@ -249,9 +249,9 @@ int SLNES_ReadRom( const char *pszFileName )
 }
 
 /*=================================================================*/
-/*                                                                 */
+/*                                                                   */
 /*           SLNES_ReleaseRom() : Release a memory for ROM         */
-/*                                                                 */
+/*                                                                   */
 /*=================================================================*/
 void SLNES_ReleaseRom()
 {
@@ -324,9 +324,9 @@ void SLNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
 }
 
 /*=================================================================*/
-/*                                                                 */
+/*                                                                   */
 /*                  SLNES_Menu() : Menu screen                     */
-/*                                                                 */
+/*                                                                   */
 /*=================================================================*/
 int SLNES_Menu()
 {
@@ -343,9 +343,9 @@ int SLNES_Menu()
 }
 
 /*=================================================================*/
-/*                                                                 */
+/*                                                                   */
 /*        SLNES_SoundOpen() : Sound Emulation Initialize           */
-/*                                                                 */
+/*                                                                   */
 /*=================================================================*/
 int SLNES_SoundOpen( int samples_per_sync, int sample_rate )
 {
@@ -353,9 +353,9 @@ int SLNES_SoundOpen( int samples_per_sync, int sample_rate )
 }
 
 /*=================================================================*/
-/*                                                                 */
+/*                                                                   */
 /*        SLNES_SoundClose() : Sound Close                         */
-/*                                                                 */
+/*                                                                   */
 /*=================================================================*/
 void SLNES_SoundClose( void ) 
 {
