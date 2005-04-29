@@ -2569,7 +2569,7 @@ void SLNES( unsigned char *DisplayFrameBase)
 
 #ifdef PrintfFrameClock
 	long cur_time, old_time;
-	old_time = lr->timercnt1;
+	old_time = *(volatile int*)(TCNT0 + PREGS);
 #endif /* PrintfFrameClock */
 
 	//在非跳桢期间
@@ -2600,6 +2600,7 @@ void SLNES( unsigned char *DisplayFrameBase)
 				LastHit = i;
 			}
 
+			// 每4个像素左右颠倒，测试时用
 			//int j;
 			//for (j=0;j<256;)
 			//{
@@ -2653,7 +2654,6 @@ void SLNES( unsigned char *DisplayFrameBase)
 	//CPU_Step( STEP_PER_SCANLINE * 11 );							//少执行几条扫描线，为了加快速度，当然前提是画面不能出错
 	PPU_R2 &= 0x3F;//= 0;																//在VBlank结束时复位R2_IN_VBLANK和R2_HIT_SP标记，SLNES采用的是全部复位
 	CPU_Step( STEP_PER_SCANLINE );													//执行最后1条扫描线
-	//SLNES_PadState( &PAD1_Latch, &PAD2_Latch, &PAD_System );							//在非跳桢期间获取手柄输入信息
 	APU_Process();
 
 	SLNES_PadState( &PAD1_Latch, &PAD2_Latch, &PAD_System );							//在非跳桢期间获取手柄输入信息
@@ -2684,18 +2684,18 @@ void SLNES( unsigned char *DisplayFrameBase)
 #endif /* PrintfFrameGraph */
 
 #ifdef PrintfFrameClock
-	cur_time = lr->timercnt1;
+	cur_time = *(volatile int*)(TCNT0 + PREGS);
 	if( old_time > cur_time )
 		printf( "6+A+P: %d;	Frame: %d;\n", ( old_time - cur_time ) * MICROSEC_PER_COUNT, Frame++ );
 	else
-		printf( "6+A+P: %d;	Frame: %d;\n", ( lr->timerload1 - cur_time + old_time ) * MICROSEC_PER_COUNT, Frame++ );
+		printf( "6+A+P: %d;	Frame: %d;\n", ( *(volatile int*)(TRLD0 + PREGS) - cur_time + old_time ) * MICROSEC_PER_COUNT, Frame++ );
 #endif /* PrintfFrameClock */
 
 	//在跳桢期间
 	for ( i = 0; i < FRAME_SKIP; i++ )
 	{
 #ifdef PrintfFrameClock
-		old_time = lr->timercnt1;
+		old_time = *(volatile int*)(TCNT0 + PREGS);
 #endif /* PrintfFrameClock */
 		//CPU_Step( 25088 );																//在跳桢期间只执行224条扫描线而不绘制扫描线，当然也不刷新屏幕，112 * 224 = 25088
 		CPU_Step( STEP_PER_SCANLINE * LastHit );											//执行Sprite 0点击标记之前的扫描线而不绘制扫描线
@@ -2712,11 +2712,11 @@ void SLNES( unsigned char *DisplayFrameBase)
 		CPU_Step( STEP_PER_SCANLINE );													//执行最后1条扫描线
 		APU_Process();
 #ifdef PrintfFrameClock
-		cur_time = lr->timercnt1;
+		cur_time = *(volatile int*)(TCNT0 + PREGS);
 		if( old_time > cur_time )
 			printf( "6+A: %d;	Frame: %d;\n", ( old_time - cur_time ) * MICROSEC_PER_COUNT, Frame++ );
 		else
-			printf( "6+A: %d;	Frame: %d;\n", ( lr->timerload1 - cur_time + old_time ) * MICROSEC_PER_COUNT, Frame++ );
+			printf( "6+A: %d;	Frame: %d;\n", ( *(volatile int*)(TRLD0 + PREGS) - cur_time + old_time ) * MICROSEC_PER_COUNT, Frame++ );
 #endif /* PrintfFrameClock */
 	}
 }
@@ -2933,6 +2933,8 @@ BYTE wave_buffers[ SAMPLE_PER_FRAME ];
 #else /* BITS_PER_SAMPLE */
 short wave_buffers[ SAMPLE_PER_FRAME ];
 #endif /* BITS_PER_SAMPLE */
+
+unsigned int wave_buffers_count;		// 模拟器向APU桢存中的某一桢传输采样值
 
 #define  APU_VOLUME_DECAY(x)  ((x) -= ((x) >> 7))	//设定每过一个采样值的时间就衰减一部分音量，应该是用来模拟电平随时间的衰减，将它取消也没什么问题
 
@@ -3837,27 +3839,41 @@ void APU_Process(void)
 #ifdef WIN32
 	SLNES_SoundOutput(apu->num_samples, wave_buffers);						//将采样值输出到系统声音硬件的缓冲区中进行播放
 
-//#else /* WIN32 */
-//
-//#ifdef DMA_SDRAM
-//			WriteDMA( ( int *)( buf ), 32, ((int)( DisplayFrameBase )>>2) + ( i << 6 ) + ( i << 2 ) + 2 );		//绘制PPU桢存当前扫描线的前半段
-//#else /* DMA_SDRAM */
-//
-//#if BITS_PER_SAMPLE == 8
-//			memcpy( APU, wave_buffers, SAMPLE_PER_FRAME );
-//#else /* BITS_PER_SAMPLE */
-//			memcpy( APU  + ( i << 8 ) + ( i << 4 ) + 8, wave_buffers, SAMPLE_PER_FRAME * 2 );	//待优化
-//#endif /* BITS_PER_SAMPLE */
-//
-//#endif /* DMA_SDRAM */
+#else /* WIN32 */
+
+#ifdef DMA_SDRAM
+
+#if BITS_PER_SAMPLE == 8
+			WriteDMA( ( int *)( wave_buffers ), 32, (int)( APU + SAMPLE_PER_FRAME * wave_buffers_count ) >> 2);		//绘制PPU桢存当前扫描线的前半段
+			WriteDMA( ( int *)( wave_buffers ), ( 184 - 128 ) >> 2, (int)( APU + SAMPLE_PER_FRAME * wave_buffers_count + 128 ) >> 2);		//绘制PPU桢存当前扫描线的前半段
+#else /* BITS_PER_SAMPLE */
+			WriteDMA( ( int *)( wave_buffers ), 32, (int)( APU + SAMPLE_PER_FRAME * wave_buffers_count ) >> 2);		//绘制PPU桢存当前扫描线的前半段
+			WriteDMA( ( int *)( wave_buffers ), 32, (int)( APU + SAMPLE_PER_FRAME * wave_buffers_count + 64 ) >> 2);		//绘制PPU桢存当前扫描线的前半段
+			WriteDMA( ( int *)( wave_buffers ), ( 184 - 128 ) >> 1, (int)( APU + SAMPLE_PER_FRAME * wave_buffers_count + 128 ) >> 2);		//绘制PPU桢存当前扫描线的前半段
+#endif /* BITS_PER_SAMPLE */
+
+#else /* DMA_SDRAM */
+
+#if BITS_PER_SAMPLE == 8
+			memcpy( APU + SAMPLE_PER_FRAME * wave_buffers_count, wave_buffers, SAMPLE_PER_FRAME );
+#else /* BITS_PER_SAMPLE */
+			memcpy( APU + SAMPLE_PER_FRAME * wave_buffers_count, wave_buffers, SAMPLE_PER_FRAME * 2 );
+#endif /* BITS_PER_SAMPLE */
+
+#endif /* DMA_SDRAM */
 
 #endif /* WIN32 */
+
+	wave_buffers_count++;
+	if ( wave_buffers_count == APU_LOOPS )
+		wave_buffers_count = 0;
 }
 
 void APU_Reset(void)
 {
 	unsigned int address;
 
+	wave_buffers_count = 0;
 	apu->elapsed_cycles = 0;
 
 	int i;

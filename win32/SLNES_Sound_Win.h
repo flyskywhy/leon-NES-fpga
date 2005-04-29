@@ -27,7 +27,6 @@
 #else /* BITS_PER_SAMPLE */
 #define ds_BITSPERSAMPLE	  16
 #endif /* BITS_PER_SAMPLE */
-#define Loops               20
 
 #define ds_SAMPLERATE		SAMPLE_PER_SEC
 #define rec_freq			SAMPLE_PER_FRAME

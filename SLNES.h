@@ -44,18 +44,17 @@
 
 
 #define FRAME_SKIP 6		//跳桢数，一般设为10以下
+#define APU_LOOPS ((FRAME_SKIP + 2) << 1)	//APU桢存内所含的桢数，不一定非和FRAME_SKIP有如此精确的关系
+#define PCM_START APU_LOOPS >> 1	//模拟器启动时PCM从APU桢存的后半部分开始读取/
 
 #define SCALER_RELOAD 81 - 1
 #define LEON_CLK 40		//LEON的频率（MHz）
 #if LEON_CLK == 27		//27MHz
 #define MICROSEC_PER_COUNT 3	//timer每计数一次相当于3微秒
-#define TIMER_RELOAD0 40000 - 1
 #elif LEON_CLK == 40		//40.5MHz
 #define MICROSEC_PER_COUNT 2	//timer每计数一次相当于2微秒
-#define TIMER_RELOAD0 60000 - 1
 #else				//81MHz
 #define MICROSEC_PER_COUNT 1	//timer每计数一次相当于1微秒
-#define TIMER_RELOAD0 120000 - 1	//只适用于FRAME_SKIP为6，SAMPLE_PER_FRAME为189的情况
 #endif
 
 
@@ -115,7 +114,6 @@ extern BYTE *VROM;
 #endif
 
 #define BITS_PER_SAMPLE				16
-
 
 /*-----------------------------------------------------------------*/
 /*  Function prototypes                                              */

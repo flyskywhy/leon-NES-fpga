@@ -27,7 +27,7 @@ DIRSOUND::DIRSOUND(HWND hwnd)
 	WORD x;
 
   // init variables
-  iCnt = Loops * 2 / 4;
+  iCnt = APU_LOOPS * 2 / 4;
 
 	for ( x = 0;x < ds_NUMCHANNELS; x++ )
 	{
@@ -143,7 +143,7 @@ void DIRSOUND::CreateBuffer(WORD channel)
 	memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
 	dsbdesc.dwSize				= sizeof(DSBUFFERDESC);
  	dsbdesc.dwFlags 			= 0;
-	dsbdesc.dwBufferBytes = len[channel]*Loops;
+	dsbdesc.dwBufferBytes = len[channel]*APU_LOOPS;
 	dsbdesc.lpwfxFormat 	= (LPWAVEFORMATEX)&pcmwf;
 
 	hr = lpdirsnd->CreateSoundBuffer(&dsbdesc, &lpdsb[channel], NULL);
@@ -258,7 +258,7 @@ BOOL DIRSOUND::SoundOpen(int samples_per_sync, int sample_rate)
 
   /* Clear buffer */
   FillMemory( sound[ch1], len[ch1], 0 ); 
-  for ( int i = 0; i < Loops; i++ )
+  for ( int i = 0; i < APU_LOOPS; i++ )
     SoundOutput( len[ch1], sound[ch1] ); 
 
   /* Begin to play sound */
@@ -298,7 +298,7 @@ BOOL DIRSOUND::SoundOutput(int samples, short *wave)
   FillBuffer( ch1 );  
 
   /* Play if Counter reaches buffer edge */
-  if ( Loops == ++iCnt )
+  if ( APU_LOOPS == ++iCnt )
   {
     iCnt = 0;
   }
@@ -325,7 +325,7 @@ BOOL DIRSOUND::SoundMute( BOOL flag )
 //#endif
 
     /* Mute off : Begin to play sound */    
-    iCnt = Loops * 3 / 4;
+    iCnt = APU_LOOPS * 3 / 4;
     Start( ch1, TRUE );
   }
   return TRUE;

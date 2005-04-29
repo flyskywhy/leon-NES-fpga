@@ -22,105 +22,77 @@
 
 #include "AVSync.h"
 #include "register.h"
-extern BOOL CanSetAddr;
 
-/* Pad state */
-DWORD dwKeyPad1 = 0;
-DWORD dwKeyPad2 = 0;
-DWORD dwKeySystem = 0;
+#ifndef TCNT2
+#define TCNT2 	0xD0
+#endif
+#ifndef TRLD2
+#define TRLD2 	0xD4
+#endif
+#ifndef TCTRL2
+#define TCTRL2	0xD8
+#endif
 
-//void ISRForTimer_Leon()
-//{
-//	int temp;
-//	// for Game
-//	//SetCPUTimer(1, 40);
-//	//BasicWriteReg32( TRLD0 + PREGS, 40 * 405 - 1);
-//#ifdef PrintfFrameClock
-//	BasicWriteReg32_lb( TRLD0 + PREGS, 0xffffff );
-//#else /* PrintfFrameClock */
-//	BasicWriteReg32_lb( TRLD0 + PREGS, TIMER_RELOAD0 );		//只适用于FRAME_SKIP为6，SAMPLE_PER_FRAME为189的情况
-//#endif /* PrintfFrameClock */
-//	BasicReadReg32_lb( TCTRL1 + PREGS, &temp );
-//	BasicWriteReg32_lb( TCTRL1 + PREGS, temp | 0x4);		// load new value
-//
-//	CanSetAddr = TRUE;
-//}
-//
-//void ISR_Leon(int IntNo)
-//{
-//	printf("Have got a %d interrupt.\r\n", IntNo);
-//	if((1 << IRQ_TIMER1) == IntNo)
-//	{
-//		// clear interrupt
-//		BasicWriteReg32_lb( ICLEAR + PREGS, ( 1 << IRQ_TIMER1 ) );
-//		ISRForTimer_Leon();
-//	}
-//}
+extern DWORD PAD_System;
 
 /*=================================================================*/
-/*                                                                   */
-/*                main() : Application main                          */
-/*                                                                   */
+/*                                                                 */
+/*                main() : Application main                        */
+/*                                                                 */
 /*=================================================================*/
 //int SLNES_Main()
 int main()
 {
-	int temp;
-
-	EnrollInterrupt(ISR);
-
 #ifndef SLNES_SIM
 	/*GameInit();*/
 
-	CanSetAddr = FALSE;
-
 	// Disable interrupt
 	//DisableAllInterrupt();
-	BasicWriteReg32_lb( IMASK + PREGS, 0);
-	BasicWriteReg32_lb( IMASK2 + PREGS, 0);
+	*(volatile int*)(IMASK + PREGS) = 0;
+	*(volatile int*)(IMASK2 + PREGS) = 0;
 
 #ifdef withMEMIO
 	//EnableDemux(FALSE);
-	BasicWriteReg32_lb( ( DEMUX_BASE_ADDR + DEMUX_ENABLE ) * 4 + MEMIO, FALSE );
+	*(volatile int*)((DEMUX_BASE_ADDR + DEMUX_ENABLE) * 4 + MEMIO) = 0;
 
 	//EnableTVEncoder(FALSE);
-	BasicWriteReg32_lb( ( DECODE_BASE_ADDR + TV_ONOFF ) * 4 + MEMIO, FALSE);
+	*(volatile int*)((DECODE_BASE_ADDR + TV_ONOFF) * 4 + MEMIO) = 0;
 #endif /* withMEMIO */
 
 	//InitTimer();
-	//BasicWriteReg32_lb( SCNT + PREGS, 0x63);
-	BasicWriteReg32_lb( SCNT + PREGS, SCALER_RELOAD );
-	//BasicWriteReg32_lb( SRLD + PREGS, 0x63);		// system clock divide 1/1K
-	BasicWriteReg32_lb( SRLD + PREGS, SCALER_RELOAD );
-	BasicWriteReg32_lb( TCNT0 + PREGS, 0xffffff);
-	BasicWriteReg32_lb( TRLD0 + PREGS, 0xffffff);
-	BasicWriteReg32_lb( TCNT1 + PREGS, 0xffffff);
-	BasicWriteReg32_lb( TRLD1 + PREGS, 0xffffff);
+	*(volatile int*)(SCNT + PREGS) = SCALER_RELOAD;
+	*(volatile int*)(SRLD + PREGS) = SCALER_RELOAD;
+	*(volatile int*)(TCNT2 + PREGS) = 0xFFFFFFFF;
+	*(volatile int*)(TRLD2 + PREGS) = 0xFFFFFFFF;
+#ifdef PrintfFrameClock
+	*(volatile int*)(TCNT0 + PREGS) = 0xFFFFFF;
+	*(volatile int*)(TRLD0 + PREGS) = 0xFFFFFF;
+#endif /* PrintfFrameClock */
 
 	// init Sdram
 	//InitSdram();
-	//BasicWriteReg32_lb( ( HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR ) * 4 + MEMIO, 0x00);
-	//BasicWriteReg32_lb( ( HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR ) * 4 + MEMIO, 0x01);
-	//BasicWriteReg32_lb( ( HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR ) * 4 + MEMIO, 0x02);
-	//BasicWriteReg32_lb( ( HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR ) * 4 + MEMIO, 0x02);
-	//BasicWriteReg32_lb( ( HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR ) * 4 + MEMIO, 0x03);
-	//BasicWriteReg32_lb( ( HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR ) * 4 + MEMIO, 0x04);
-	//BasicWriteReg32_lb( ( HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR ) * 4 + MEMIO, 0x00);
-	//BasicWriteReg32_lb( ( HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR ) * 4 + MEMIO, 0x10);
+	//*(volatile int*)((HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR) * 4 + MEMIO) = 0x00;
+	//*(volatile int*)((HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR) * 4 + MEMIO) = 0x01;
+	//*(volatile int*)((HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR) * 4 + MEMIO) = 0x02;
+	//*(volatile int*)((HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR) * 4 + MEMIO) = 0x02;
+	//*(volatile int*)((HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR) * 4 + MEMIO) = 0x03;
+	//*(volatile int*)((HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR) * 4 + MEMIO) = 0x04;
+	//*(volatile int*)((HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR) * 4 + MEMIO) = 0x00;
+	//*(volatile int*)((HOST8_BASE_ADDR+MMUHOST8_CMD_ADDR) * 4 + MEMIO) = 0x10;
 
-	/* Configure Display*/
 #ifdef withMEMIO
+	/* Configure Display*/
 	// Configure Display frame address for init picture.
-	//SetTVMode(TRUE/*bGame*/, 0/*BarMode*/, TRUE/*bPAL*/, FALSE/*bSVideo*/,
-	//	      TRUE/*bPAL625*/, TRUE/*bMaster*/);
-	BasicWriteReg32_lb( ( DECODE_BASE_ADDR + TV_MODE ) * 4 + MEMIO, ( 1 << 6 | 0 << 4 | 1 << 3 | 0 << 2 | 1 << 1 | 1 ) );
+	//SetTVMode(TRUE/*bGame*/, 0/*BarMode*/, TRUE/*bPAL*/,
+	//	FALSE/*bSVideo*/,TRUE/*bPAL625*/, TRUE/*bMaster*/);
+	*(volatile int*)((DECODE_BASE_ADDR + TV_MODE) * 4 + MEMIO) = 1<<6 | 0<<4 | 1<<3 | 0<<2 | 1<<1 | 1;
 	//SetDisplayFrameBase((BYTE*)P1);
-	BasicWriteReg32_lb( (DECODE_BASE_ADDR+DISPLAY_FRAME_BASE_ADDR)*4 + MEMIO, /*0x8000*/(int)( PPU0 )>>2 & 0xFFFFFF );
+	*(volatile int*)((DECODE_BASE_ADDR+DISPLAY_FRAME_BASE_ADDR) * 4 + MEMIO) = /*0x8000*/(int)( PPU0 )>>2 & 0xFFFFFF;
 	//SetDisplayFrameTypeB(FALSE);
-	BasicWriteReg32_lb( ( DECODE_BASE_ADDR + DISPLAY_FRAME_B ) * 4 + MEMIO, FALSE );
+	*(volatile int*)((DECODE_BASE_ADDR + DISPLAY_FRAME_B) * 4 + MEMIO) = 0;
 	// set a invariable B frame addr for buffer status diagnos
 	//WriteRegister(DECODE_BASE_ADDR+BFRAME_BASE_ADDR, P3/*0x1A900*/);
-	BasicWriteReg32_lb( ( DECODE_BASE_ADDR + BFRAME_BASE_ADDR ) * 4 + MEMIO, P3/*0x1A900*/);
+	*(volatile int*)((DECODE_BASE_ADDR+BFRAME_BASE_ADDR) * 4 + MEMIO) = P3/*0x1A900*/;
 #endif /* withMEMIO */
 
 #endif /* SLNES_SIM */
@@ -129,78 +101,100 @@ int main()
 		return -1;
 
 #ifdef withMEMIO
-	lr->piodir = 0xC;	//pio(0):DQ0;pio(1):DQ1;pio(2):OUT;pio(3):CLK	手柄接口设置
+	// 手柄接口设置	pio(0):DQ0; pio(1):DQ1; pio(2):OUT; pio(3):CLK
+	*(volatile int*)(IODIR + PREGS) = 0xC;
 #endif /* withMEMIO */
 
 	for(;;)
 	{
+		unsigned int frame_count;
+		unsigned int cur_time, last_frame_time;
+		unsigned int base_time;
 
 #ifndef SLNES_SIM
 
-	//SetCPUTimer(1, 40);
-	// 27648 <---> 1s
-	//   28  <---> 1ms
-	//BasicWriteReg32( TRLD0 + PREGS, 40 * 405 -1);
-#ifdef PrintfFrameClock
-	BasicWriteReg32_lb( TRLD0 + PREGS, 0xffffff );
-#else /* PrintfFrameClock */
-	BasicWriteReg32_lb( TRLD0 + PREGS, TIMER_RELOAD0 );		//只适用于FRAME_SKIP为6，SAMPLE_PER_FRAME为189的情况
-#endif /* PrintfFrameClock */
-	//BasicWriteReg32_lb( TCNT0 + PREGS, 0x01ffff);	//为避免在TSIM中发现的时间首次重载时发生过早重载的错误现象，经试验发现初始时设为此值即可
-	BasicReadReg32_lb( TCTRL1 + PREGS, &temp );
-	BasicWriteReg32_lb( TCTRL1 + PREGS, temp | 0x4);		// load new value
-	//EnableTimer(1, TRUE);
-	//BasicWriteReg32_lb( TCTRL0 + PREGS, 0x7 );
-	BasicWriteReg32_lb( TCTRL0 + PREGS, 0x3 );
+		//开启Timer3
+		*(volatile int*)(TCTRL2 + PREGS) = 0x7;
 
-	//////////////////////////////////////////////////////////////////
-	//EnableInterrupt(IRQ_TIMER1, LEVEL1);
-	BasicWriteReg32_lb( ICLEAR + PREGS, ( 1 << IRQ_TIMER1 ) );
-	BasicReadReg32_lb( IMASK + PREGS, &temp );
-	BasicWriteReg32_lb( IMASK + PREGS, temp | ( 1 << IRQ_TIMER1 ) );
-	//////////////////////////////////////////////////////////////////
+#ifdef PrintfFrameClock
+		*(volatile int*)(TCTRL0 + PREGS) = 0x7;
+#endif /* PrintfFrameClock */
 
 #ifdef withMEMIO
-	//EnableTVEncoder(TRUE);
-	BasicWriteReg32_lb( ( DECODE_BASE_ADDR + TV_ONOFF ) * 4 + MEMIO, TRUE);
-	//////////////////////////////////////////////////////////////////
+		//EnableTVEncoder(TRUE);
+		*(volatile int*)((DECODE_BASE_ADDR + TV_ONOFF) * 4 + MEMIO) = 1;
 #endif /* withMEMIO */
 
 #endif /* SLNES_SIM */
 
-	for(;;)
-	{
-#ifdef withMEMIO
-		BasicWriteReg32_lb( (DECODE_BASE_ADDR+DISPLAY_FRAME_BASE_ADDR)*4 + MEMIO, /*0x8000*/( (int)PPU0 >> 2 & 0xFFFFFF ));
-#endif /* withMEMIO */
-		SLNES( PPU1 );
-#ifdef withMEMIO
-		BasicWriteReg32_lb( (DECODE_BASE_ADDR+DISPLAY_FRAME_BASE_ADDR)*4 + MEMIO, /*0x18000*/( (int)PPU1 >> 2 & 0xFFFFFF ));
-#endif /* withMEMIO */
-		SLNES( PPU2 );
-#ifdef withMEMIO
-		BasicWriteReg32_lb( (DECODE_BASE_ADDR+DISPLAY_FRAME_BASE_ADDR)*4 + MEMIO, /*0x28000*/( (int)PPU2 >> 2 & 0xFFFFFF ));
-#endif /* withMEMIO */
-		SLNES( PPU0 );
+		frame_count = 1;
 
-		//if()									//如果遥控器按的是退出键，就返回主控程序，否则就是reset键，重新进行游戏
-		//	return 0;
-		//else
-		//	break;
-	}
+		//开启PCM播放
+
+		base_time = *(volatile int*)(TCNT2 + PREGS);
+
+		for(;;)
+		{
+#ifdef withMEMIO
+			*(volatile int*)((DECODE_BASE_ADDR+DISPLAY_FRAME_BASE_ADDR)*4 + MEMIO) = /*0x8000*/(int)PPU0 >> 2 & 0xFFFFFF;
+#endif /* withMEMIO */
+			SLNES( PPU1 );
+
+			last_frame_time = base_time - ( frame_count++ ) * ( FRAME_SKIP + 1 ) * SAMPLE_PER_FRAME * 1000000 / SAMPLE_PER_SEC;
+			for(;;)
+			{
+				cur_time = *(volatile int*)(TCNT2 + PREGS);
+				if( last_frame_time >= cur_time )
+					break;
+			}
+
+#ifdef withMEMIO
+			*(volatile int*)((DECODE_BASE_ADDR+DISPLAY_FRAME_BASE_ADDR)*4 + MEMIO) = /*0x18000*/(int)PPU1 >> 2 & 0xFFFFFF;
+#endif /* withMEMIO */
+			SLNES( PPU2 );
+
+			last_frame_time = base_time - ( frame_count++ ) * ( FRAME_SKIP + 1 ) * SAMPLE_PER_FRAME * 1000000 / SAMPLE_PER_SEC;
+			for(;;)
+			{
+				cur_time = *(volatile int*)(TCNT2 + PREGS);
+				if( last_frame_time >= cur_time )
+					break;
+			}
+
+#ifdef withMEMIO
+			*(volatile int*)((DECODE_BASE_ADDR+DISPLAY_FRAME_BASE_ADDR)*4 + MEMIO) = /*0x28000*/(int)PPU2 >> 2 & 0xFFFFFF;
+#endif /* withMEMIO */
+			SLNES( PPU0 );
+
+			last_frame_time = base_time - ( frame_count++ ) * ( FRAME_SKIP + 1 ) * SAMPLE_PER_FRAME * 1000000 / SAMPLE_PER_SEC;
+			for(;;)
+			{
+				cur_time = *(volatile int*)(TCNT2 + PREGS);
+				if( last_frame_time >= cur_time )
+					break;
+			}
+
+			////如果Timer快要溢出了，立即手动重载，如果prescaler开得够大的话，也可以不要本语句，因为要连续运行几个小时的游戏才会溢出
+			//if (last_frame_time < 3 * ( FRAME_SKIP + 1 ) * SAMPLE_PER_FRAME * 1000000 / SAMPLE_PER_SEC);	//待优化
+			//{
+			//	//重载Timer3
+			//	*(volatile int*)(TCTRL2 + PREGS) |= 0x1;
+			//	base_time = *(volatile int*)(TCNT2 + PREGS);
+			//}
+
+			if (PAD_System == 0x0F)									//如果遥控器按的是退出键，就返回主控程序，否则就是reset键，重新进行游戏
+				break;
+			else if (PAD_System == 0xF0)
+				return 0;
+		}
 
 		SLNES_Reset();
 
-	// Disable interrupt
-	//DisableAllInterrupt();
-	BasicWriteReg32_lb( IMASK + PREGS, 0);
-	BasicWriteReg32_lb( IMASK2 + PREGS, 0);
-
-	//SetDisplayFrameBase((BYTE*)P1);
-	BasicWriteReg32_lb( (DECODE_BASE_ADDR+DISPLAY_FRAME_BASE_ADDR)*4 + MEMIO, /*0x8000*/(int)( PPU0 )>>2 & 0xFFFFFF );
+		//SetDisplayFrameBase((BYTE*)P1);
+		*(volatile int*)((DECODE_BASE_ADDR+DISPLAY_FRAME_BASE_ADDR) * 4 + MEMIO) = /*0x8000*/(int)( PPU0 )>>2 & 0xFFFFFF;
 	}
 
-	// Completion treatment
+	// 退出游戏模拟器
 	SLNES_Fin();
 
 	return 0;
@@ -208,9 +202,9 @@ int main()
 
 
 /*=================================================================*/
-/*                                                                   */
+/*                                                                 */
 /*               SLNES_ReadRom() : Read ROM image file             */
-/*                                                                   */
+/*                                                                 */
 /*=================================================================*/
 int SLNES_ReadRom( const char *pszFileName )
 {
@@ -249,9 +243,9 @@ int SLNES_ReadRom( const char *pszFileName )
 }
 
 /*=================================================================*/
-/*                                                                   */
+/*                                                                 */
 /*           SLNES_ReleaseRom() : Release a memory for ROM         */
-/*                                                                   */
+/*                                                                 */
 /*=================================================================*/
 void SLNES_ReleaseRom()
 {
@@ -268,12 +262,12 @@ void SLNES_ReleaseRom()
 /*             SLNES_PadState() : Get a joypad state               */
 /*                                                                 */
 /*=================================================================*/
-#define READ_GM_DATA0 lr->piodata & 1			//pio(0):DQ0	从DQ0端口读入电平
-#define READ_GM_DATA0 lr->piodata & 2			//pio(1):DQ1	从DQ1端口读入电平
-#define SET_GM_LATCH0 lr->piodata |= 4			//pio(2):OUT	向OUT端口送入高电平
-#define CLEAR_GM_LATCH0 lr->piodata &= 0xFB		//pio(2):OUT	向OUT端口送入低电平
-#define SET_GM_CLK0 lr->piodata |= 8			//pio(3):CLK	向CLK端口送入高电平
-#define CLEAR_GM_CLK0 lr->piodata &= 0xF7		//pio(3):CLK	向CLK端口送入低电平
+#define READ_GM_DATA0 *(volatile int*)(IOREG + PREGS) & 1			//pio(0):DQ0	从DQ0端口读入电平
+#define READ_GM_DATA1 *(volatile int*)(IOREG + PREGS) & 2			//pio(1):DQ1	从DQ1端口读入电平
+#define SET_GM_LATCH0 *(volatile int*)(IOREG + PREGS) |= 4			//pio(2):OUT	向OUT端口送入高电平
+#define CLEAR_GM_LATCH0 *(volatile int*)(IOREG + PREGS) &= 0xFB		//pio(2):OUT	向OUT端口送入低电平
+#define SET_GM_CLK0 *(volatile int*)(IOREG + PREGS) |= 8			//pio(3):CLK	向CLK端口送入高电平
+#define CLEAR_GM_CLK0 *(volatile int*)(IOREG + PREGS) &= 0xF7		//pio(3):CLK	向CLK端口送入低电平
 
 void SLNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
 {
@@ -294,39 +288,31 @@ void SLNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
     int i;
 
 	*pdwPad1 = *pdwPad2 = 0 ;
-#ifdef IR_GAMEPAD
-	if( GB_ir_key )									//如果有遥控器按钮按钮按下则只处理遥控器动作
-	{
-		*pdwSystem = GB_ir_key ;
-		return;
-	}
-#endif
 
     SET_GM_LATCH0;									//向OUT端口送入高电平
-    //risc_sleep_a_bit(262);
     CLEAR_GM_LATCH0;								//向OUT端口送入低电平
-    //risc_sleep_a_bit(262);
-    //TRI_GM_DATA0;
-#ifdef GB_TWO_PAD
-    //TRI_GM_DATA1;
-#endif
 	for( i = 0; i < 8; i++ )
 	{
 		CLEAR_GM_CLK0;									//向CLK端口送入低电平
 		*pdwPad1 |= ( (READ_GM_DATA0) == 0 ) << i;
-#ifdef GB_TWO_PAD
 		*pdwPad2 |= ( (READ_GM_DATA1) == 0 ) << i;
-#endif
-		//risc_sleep_a_bit(262);
 		SET_GM_CLK0;									//向CLK端口送入高电平
-		//risc_sleep_a_bit(262);
 	}
+
+	*pdwSystem = *pdwPad1 ;
+#ifdef IR_GAMEPAD
+	if( GB_ir_key )									//如果有遥控器按钮按钮按下则只处理遥控器动作
+	{
+		*pdwSystem = 0xF0/*GB_ir_key*/ ;
+		return;
+	}
+#endif
 }
 
 /*=================================================================*/
-/*                                                                   */
+/*                                                                 */
 /*                  SLNES_Menu() : Menu screen                     */
-/*                                                                   */
+/*                                                                 */
 /*=================================================================*/
 int SLNES_Menu()
 {
@@ -343,9 +329,9 @@ int SLNES_Menu()
 }
 
 /*=================================================================*/
-/*                                                                   */
+/*                                                                 */
 /*        SLNES_SoundOpen() : Sound Emulation Initialize           */
-/*                                                                   */
+/*                                                                 */
 /*=================================================================*/
 int SLNES_SoundOpen( int samples_per_sync, int sample_rate )
 {
@@ -353,9 +339,9 @@ int SLNES_SoundOpen( int samples_per_sync, int sample_rate )
 }
 
 /*=================================================================*/
-/*                                                                   */
+/*                                                                 */
 /*        SLNES_SoundClose() : Sound Close                         */
-/*                                                                   */
+/*                                                                 */
 /*=================================================================*/
 void SLNES_SoundClose( void ) 
 {
