@@ -1,4 +1,5 @@
 lo LeonTest
 run
 lo SLNES.exe
+tm both
 run

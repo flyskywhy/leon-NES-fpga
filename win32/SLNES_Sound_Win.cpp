@@ -29,7 +29,7 @@ DIRSOUND::DIRSOUND(HWND hwnd)
   // init variables
   iCnt = APU_LOOPS * 2 / 4;
 
-	for ( x = 0;x < ds_NUMCHANNELS; x++ )
+	for (x = 0;x < ds_NUMCHANNELS; x++)
 	{
 		lpdsb[x] = NULL;
 	}
@@ -39,7 +39,7 @@ DIRSOUND::DIRSOUND(HWND hwnd)
 
 	if (ret != DS_OK)
 	{
-    SLNES_MessageBox( "Sound Card is needed to execute this application." );
+    SLNES_MessageBox("Sound Card is needed to execute this application.");
 		exit(-1);
 	}
 
@@ -47,12 +47,12 @@ DIRSOUND::DIRSOUND(HWND hwnd)
 #if 1
   ret = lpdirsnd->SetCooperativeLevel(hwnd, DSSCL_PRIORITY);
 #else
-  ret = lpdirsnd->SetCooperativeLevel( hwnd, DSSCL_NORMAL );
+  ret = lpdirsnd->SetCooperativeLevel(hwnd, DSSCL_NORMAL);
 #endif
 
-	if ( ret != DS_OK )
+	if (ret != DS_OK)
 	{
-    SLNES_MessageBox( "SetCooperativeLevel() Failed." );
+    SLNES_MessageBox("SetCooperativeLevel() Failed.");
 		exit(-1);
 	}
 }
@@ -64,11 +64,11 @@ DIRSOUND::~DIRSOUND()
 {
 	WORD x;
 
-	for ( x=0; x < ds_NUMCHANNELS; x++ )
+	for (x=0; x < ds_NUMCHANNELS; x++)
 	{
-		if ( lpdsb[x] != NULL )
+		if (lpdsb[x] != NULL)
 		{
-			DestroyBuffer( x );
+			DestroyBuffer(x);
 
 			if (sound[x] != NULL)
 			{
@@ -82,7 +82,7 @@ DIRSOUND::~DIRSOUND()
 /*-----------------------------------------------------------------*/
 /*  FillBuffer() : Fill Sound Buffer                                 */
 /*-----------------------------------------------------------------*/
-void DIRSOUND::FillBuffer( WORD channel )
+void DIRSOUND::FillBuffer(WORD channel)
 {
 	LPVOID write1;
 	DWORD length1;
@@ -90,24 +90,24 @@ void DIRSOUND::FillBuffer( WORD channel )
 	DWORD length2;
 	HRESULT hr;
 
-  hr = lpdsb[channel]->Lock( iCnt * len[channel], len[channel], 
-    &write1, &length1, &write2, &length2, 0 );
+  hr = lpdsb[channel]->Lock(iCnt * len[channel], len[channel], 
+    &write1, &length1, &write2, &length2, 0);
 
 	if (hr == DSERR_BUFFERLOST)
 	{
 		lpdsb[channel]->Restore();
 
-		hr = lpdsb[channel]->Lock( iCnt * len[channel], len[channel], 
-      &write1, &length1, &write2, &length2, 0 );
+		hr = lpdsb[channel]->Lock(iCnt * len[channel], len[channel], 
+      &write1, &length1, &write2, &length2, 0);
 	}
 
 	if (hr != DS_OK)
 	{
-    SLNES_MessageBox( "Lock() Failed." );
+    SLNES_MessageBox("Lock() Failed.");
 		exit(-1);
 	}
 
-	CopyMemory( write1, sound[channel], length1 );
+	CopyMemory(write1, sound[channel], length1);
 
 	if (write2 != NULL)
 	{
@@ -118,7 +118,7 @@ void DIRSOUND::FillBuffer( WORD channel )
 
 	if (hr != DS_OK)
 	{
-    SLNES_MessageBox( "Unlock() Failed." );
+    SLNES_MessageBox("Unlock() Failed.");
 		exit(-1);
 	}
 }
@@ -150,7 +150,7 @@ void DIRSOUND::CreateBuffer(WORD channel)
 
 	if (hr != DS_OK)
 	{
-    SLNES_MessageBox( "CreateSoundBuffer() Failed." );
+    SLNES_MessageBox("CreateSoundBuffer() Failed.");
 		exit(-1);
 	}
 }
@@ -166,7 +166,7 @@ void DIRSOUND::DestroyBuffer(WORD channel)
 
 	if (hr != DS_OK)
 	{
-    SLNES_MessageBox( "Release() Failed." );
+    SLNES_MessageBox("Release() Failed.");
 		exit(-1);
 	}
 
@@ -188,10 +188,10 @@ WORD DIRSOUND::AllocChannel(void)
 		}
 	}
 
-	if ( x == ds_NUMCHANNELS )
+	if (x == ds_NUMCHANNELS)
 	{
     /* No available channel */
-    SLNES_MessageBox( "AllocChannel() Failed." );
+    SLNES_MessageBox("AllocChannel() Failed.");
 		exit(-1); 		
 	}
 
@@ -205,11 +205,11 @@ void DIRSOUND::Start(WORD channel, BOOL looping)
 {
 	HRESULT hr;
 
-	hr = lpdsb[channel]->Play( 0, 0, looping == TRUE ? DSBPLAY_LOOPING : 0 );
+	hr = lpdsb[channel]->Play(0, 0, looping == TRUE ? DSBPLAY_LOOPING : 0);
 
-	if ( hr != DS_OK )
+	if (hr != DS_OK)
 	{
-    SLNES_MessageBox( "Play() Failed." );
+    SLNES_MessageBox("Play() Failed.");
 		exit(-1);
 	}
 }
@@ -229,7 +229,7 @@ void DIRSOUND::UnLoadWave(WORD channel)
 {
 	DestroyBuffer(channel);
 
-	if ( sound[channel] != NULL )
+	if (sound[channel] != NULL)
 	{
 		delete sound[channel];
 	}
@@ -243,26 +243,26 @@ BOOL DIRSOUND::SoundOpen(int samples_per_sync, int sample_rate)
   ch1 = AllocChannel();
 
 #if BITS_PER_SAMPLE == 8
-	sound[ch1] = new BYTE[ samples_per_sync ];
+	sound[ch1] = new unsigned char[samples_per_sync];
 #else /* BITS_PER_SAMPLE */
-	sound[ch1] = new short[ samples_per_sync ];
+	sound[ch1] = new short[samples_per_sync];
 #endif /* BITS_PER_SAMPLE */
 	len[ch1]	 = samples_per_sync;
 
-	if ( sound[ch1] == NULL )
+	if (sound[ch1] == NULL)
 	{
-    SLNES_MessageBox( "new BYTE[] Failed." );
+    SLNES_MessageBox("new BYTE[] Failed.");
 		exit(-1);
 	}
-  CreateBuffer( ch1 );
+  CreateBuffer(ch1);
 
   /* Clear buffer */
-  FillMemory( sound[ch1], len[ch1], 0 ); 
-  for ( int i = 0; i < APU_LOOPS; i++ )
-    SoundOutput( len[ch1], sound[ch1] ); 
+  FillMemory(sound[ch1], len[ch1], 0); 
+  for (int i = 0; i < APU_LOOPS; i++)
+    SoundOutput(len[ch1], sound[ch1]); 
 
   /* Begin to play sound */
-  Start( ch1, TRUE );
+  Start(ch1, TRUE);
 
   return TRUE;
 }
@@ -270,10 +270,10 @@ BOOL DIRSOUND::SoundOpen(int samples_per_sync, int sample_rate)
 /*-----------------------------------------------------------------*/
 /*  SoundClose() : Close Devices for Sound Emulation                 */
 /*-----------------------------------------------------------------*/
-void DIRSOUND::SoundClose( void )
+void DIRSOUND::SoundClose(void)
 {
   /* Stop to play sound */
-  Stop( ch1 );
+  Stop(ch1);
 
   UnLoadWave(ch1);
 }
@@ -282,23 +282,23 @@ void DIRSOUND::SoundClose( void )
 /*  SoundOutput() : Output Sound to Device for Sound Emulation       */
 /*-----------------------------------------------------------------*/
 #if BITS_PER_SAMPLE == 8
-BOOL DIRSOUND::SoundOutput(int samples, BYTE *wave)
+BOOL DIRSOUND::SoundOutput(int samples, unsigned char *wave)
 #else /* BITS_PER_SAMPLE */
 BOOL DIRSOUND::SoundOutput(int samples, short *wave)
 #endif /* BITS_PER_SAMPLE */
 {
 	/* Buffering sound data */
 #if BITS_PER_SAMPLE == 8
-	CopyMemory( sound[ ch1 ], wave, samples );  
+	CopyMemory(sound[ch1], wave, samples);  
 #else /* BITS_PER_SAMPLE */
-	CopyMemory( sound[ ch1 ], wave, samples * 2 );  
+	CopyMemory(sound[ch1], wave, samples * 2);  
 #endif /* BITS_PER_SAMPLE */
 
   /* Copying to sound data buffer */
-  FillBuffer( ch1 );  
+  FillBuffer(ch1);  
 
   /* Play if Counter reaches buffer edge */
-  if ( APU_LOOPS == ++iCnt )
+  if (APU_LOOPS == ++iCnt)
   {
     iCnt = 0;
   }
@@ -308,25 +308,25 @@ BOOL DIRSOUND::SoundOutput(int samples, short *wave)
 /*-----------------------------------------------------------------*/
 /*  SoundMute() : Sound Mute for Sound Emulation                     */
 /*-----------------------------------------------------------------*/
-BOOL DIRSOUND::SoundMute( BOOL flag )
+BOOL DIRSOUND::SoundMute(BOOL flag)
 {
-  if ( flag )
+  if (flag)
   {
     /* Mute on : Stop to play sound */
-    Stop( ch1 );
+    Stop(ch1);
   } 
   else 
   {
 //#if 0
 //    /* Clear buffer */
-//    FillMemory( sound[ch1], len[ch1], 0 ); 
-//    for ( int i = 0; i < Loops; i++ )
-//      SoundOutput( len[ch1], sound[ch1] );
+//    FillMemory(sound[ch1], len[ch1], 0); 
+//    for (int i = 0; i < Loops; i++)
+//      SoundOutput(len[ch1], sound[ch1]);
 //#endif
 
     /* Mute off : Begin to play sound */    
     iCnt = APU_LOOPS * 3 / 4;
-    Start( ch1, TRUE );
+    Start(ch1, TRUE);
   }
   return TRUE;
 }

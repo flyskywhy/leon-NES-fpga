@@ -109,13 +109,7 @@
 			Name="源文件"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
 			<File
-				RelativePath="..\AVSync.cpp">
-			</File>
-			<File
 				RelativePath="DMAAccessFunction.cpp">
-			</File>
-			<File
-				RelativePath="..\Int.cpp">
 			</File>
 			<File
 				RelativePath="..\SLNES.cpp">
@@ -129,21 +123,12 @@
 			<File
 				RelativePath="hostsim.cpp">
 			</File>
-			<File
-				RelativePath="..\periph.cpp">
-			</File>
 		</Filter>
 		<Filter
 			Name="头文件"
 			Filter="h;hpp;hxx;hm;inl;inc">
 			<File
-				RelativePath="..\AVSync.h">
-			</File>
-			<File
 				RelativePath="DMAAccessFunction.h">
-			</File>
-			<File
-				RelativePath="..\Int.h">
 			</File>
 			<File
 				RelativePath="..\SLNES.h">
@@ -159,12 +144,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\Project\Reuse\Leon\SOFTWARE\include\leon.h">
-			</File>
-			<File
-				RelativePath="..\periph.h">
-			</File>
-			<File
-				RelativePath="..\register.h">
 			</File>
 		</Filter>
 		<Filter

@@ -20,7 +20,6 @@
 
 #include "../SLNES.h"
 #include "../SLNES_System.h"
-
 #include "../SLNES_Data.h"
 
 #include "SLNES_Resource_Win.h"
@@ -30,14 +29,14 @@
 /*  ROM image file information                                       */
 /*-----------------------------------------------------------------*/
 
-char szRomName[ 256 ];
-char szSaveName[ 256 ];
+char szRomName[256];
+char szSaveName[256];
 int nSRAM_SaveFlag;
 
 /*-----------------------------------------------------------------*/
 /*  Variables for Windows                                            */
 /*-----------------------------------------------------------------*/
-#define APP_NAME     "SLNES v1.0"
+#define APP_NAME     "SLNES v1.00"
  
 HWND hWndMain;
 WNDCLASS wc;
@@ -49,7 +48,7 @@ LOGPALETTE *plpal;
 BITMAPINFO *bmi;
 
 // Palette data
-WORD NesPalette[ 64 ] =
+WORD NesPalette[64] =
 {
   0x39ce, 0x1071, 0x0015, 0x2013, 0x440e, 0x5402, 0x5000, 0x3c20,
   0x20a0, 0x0100, 0x0140, 0x00e2, 0x0ceb, 0x0000, 0x0000, 0x0000,
@@ -98,29 +97,29 @@ DIRSOUND* lpSndDevice = NULL;
 #define EXPIRED_MSG     "This software has been expired.\nPlease download newer one."     
 
 /*-----------------------------------------------------------------*/
-/*  Function prototypes ( Windows specific )                         */
+/*  Function prototypes (Windows specific)                         */
 /*-----------------------------------------------------------------*/
 
-LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam );
+LRESULT CALLBACK MainWndproc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 //#if 0
-//LRESULT CALLBACK AboutDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
+//LRESULT CALLBACK AboutDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 //#endif
-void ShowTitle( HWND hWnd );
-void SetWindowSize( WORD wMag );
+void ShowTitle(HWND hWnd);
+void SetWindowSize(WORD wMag);
 int LoadSRAM();
 int SaveSRAM();
-int CreateScreen( HWND hWnd );
+int CreateScreen(HWND hWnd);
 void DestroyScreen();
 static void SLNES_StartTimer(); 
 static void SLNES_StopTimer();
-static void CALLBACK TimerFunc( UINT nID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD dw2);
+static void CALLBACK TimerFunc(UINT nID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD dw2);
 
 /*=================================================================*/
 /*                                                                   */
 /*                WinMain() : Application main                       */
 /*                                                                   */
 /*=================================================================*/
-int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {	
   /*-----------------------------------------------------------------*/
   /*  Create a window                                                  */
@@ -131,15 +130,15 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
   wc.cbClsExtra = 0;
   wc.cbWndExtra = 0;
   wc.hInstance = hInstance;
-  wc.hIcon = LoadIcon( hInstance, MAKEINTRESOURCE(IDI_ICON) );
-  wc.hCursor = LoadCursor( NULL, IDC_ARROW );
-  wc.hbrBackground = (HBRUSH)GetStockObject( BLACK_BRUSH );
+  wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON));
+  wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+  wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
   wc.lpszMenuName = MAKEINTRESOURCE(IDR_MENU);
   wc.lpszClassName = "SLNESClass";
-  if ( !RegisterClass( &wc ) )
+  if (!RegisterClass(&wc))
     return FALSE;
 
-  hWndMain = CreateWindowEx( 0,
+  hWndMain = CreateWindowEx(0,
                              "SLNESClass",
                              APP_NAME,
                              WS_VISIBLE | WS_POPUP | WS_OVERLAPPEDWINDOW,
@@ -150,25 +149,25 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
                              NULL,
                              NULL,
                              hInstance,
-                             NULL );
+                             NULL);
 
-  if ( !hWndMain )
+  if (!hWndMain)
     return FALSE;
 
-  ShowWindow( hWndMain, nCmdShow );
-  UpdateWindow( hWndMain );
+  ShowWindow(hWndMain, nCmdShow);
+  UpdateWindow(hWndMain);
 
 //#if 0
 //  /*-----------------------------------------------------------------*/
 //  /*  Expired or Not?                                                  */
 //  /*-----------------------------------------------------------------*/
 //  SYSTEMTIME st;
-//  GetLocalTime( &st );
+//  GetLocalTime(&st);
 //
-//  if ( st.wYear > EXPIRED_YEAR || st.wMonth > EXPIRED_MONTH)
+//  if (st.wYear > EXPIRED_YEAR || st.wMonth > EXPIRED_MONTH)
 //  {
-//    SLNES_MessageBox( EXPIRED_MSG );
-//    exit( -1 );
+//    SLNES_MessageBox(EXPIRED_MSG);
+//    exit(-1);
 //  }
 //#endif
 
@@ -176,32 +175,32 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
   /*  Init Resources                                                   */
   /*-----------------------------------------------------------------*/
   SLNES_StartTimer();
-  CreateScreen( hWndMain );
-  ShowTitle( hWndMain );
+  CreateScreen(hWndMain);
+  ShowTitle(hWndMain);
 
   /*-----------------------------------------------------------------*/
   /*  For Drag and Drop Function                                       */
   /*-----------------------------------------------------------------*/
-  if ( lpCmdLine[ 0 ] != '\0' )
+  if (lpCmdLine[0] != '\0')
   {
     // If included space characters, strip dobule quote marks
-    if ( lpCmdLine[ 0 ] == '"' )
+    if (lpCmdLine[0] == '"')
     {
-      lpCmdLine[ strlen( lpCmdLine ) - 1 ] = '\0';
+      lpCmdLine[strlen(lpCmdLine) - 1] = '\0';
       lpCmdLine++;
     }
 
     // Load cassette
-    if ( SLNES_Load( lpCmdLine ) == 0 )
+    if (SLNES_Load(lpCmdLine) == 0)
     {
       // Set a ROM image name
-      strcpy( szRomName, lpCmdLine );
+      strcpy(szRomName, lpCmdLine);
 
       // Load SRAM
       LoadSRAM();
 
 	    // Create Emulation Thread
-		  m_hThread = CreateThread( (LPSECURITY_ATTRIBUTES)NULL, (DWORD)0,
+		  m_hThread = CreateThread((LPSECURITY_ATTRIBUTES)NULL, (DWORD)0,
 			  (LPTHREAD_START_ROUTINE)SLNES_Main, (LPVOID)NULL, (DWORD)0, &m_ThreadID);
     }
   }
@@ -215,7 +214,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
   {
     if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
     {
-      if (!GetMessage(&msg, NULL, 0, 0 ))
+      if (!GetMessage(&msg, NULL, 0, 0))
 				break;
 	  
 			// Translate and dispatch the message
@@ -251,28 +250,28 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 /*                MainWndProc() : Window procedure                   */
 /*                                                                   */
 /*=================================================================*/
-LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
+LRESULT CALLBACK MainWndproc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
   OPENFILENAME ofn;
-  char szFileName[ 256 ];
+  char szFileName[256];
 
-  switch ( message )
+  switch (message)
   {
     case WM_ERASEBKGND:
       return 1;
 
     case WM_DESTROY:
-      PostQuitMessage( 0 );
+      PostQuitMessage(0);
       break;
     
     case WM_ACTIVATE:
       // Show title screen if emulation thread dosent exist
-      if ( NULL == m_hThread )
-        ShowTitle( hWnd );
+      if (NULL == m_hThread)
+        ShowTitle(hWnd);
       break;
 
     case WM_COMMAND:
-      switch ( LOWORD( wParam ) )
+      switch (LOWORD(wParam))
       {
         case IDC_BTN_OPEN:
           /*-----------------------------------------------------------------*/
@@ -283,8 +282,8 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 					if (NULL != m_hThread)
 						break;
 
-          memset( &ofn, 0, sizeof ofn );
-          szFileName[ 0 ] = '\0';
+          memset(&ofn, 0, sizeof ofn);
+          szFileName[0] = '\0';
           ofn.lStructSize = sizeof ofn;
           ofn.hwndOwner = hWnd;
           ofn.hInstance = wc.hInstance;
@@ -307,13 +306,13 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
           ofn.lpfnHook = NULL; 
           ofn.lpTemplateName = NULL; 
 
-          if ( GetOpenFileName( &ofn ) )
+          if (GetOpenFileName(&ofn))
           {
             // Load cassette
-            if ( SLNES_Load( szFileName ) == 0 )
+            if (SLNES_Load(szFileName) == 0)
             {
               // Set a ROM image name
-              strcpy( szRomName, szFileName );
+              strcpy(szRomName, szFileName);
 
               // Load SRAM
               LoadSRAM();
@@ -340,11 +339,11 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             DestroyScreen();
 
             // Preperations
-            CreateScreen( hWndMain );
+            CreateScreen(hWndMain);
             SLNES_StartTimer();
           } 
           // Show Title Screen
-          ShowTitle( hWnd );
+          ShowTitle(hWnd);
           break;
 
         case IDC_BTN_RESET:
@@ -363,15 +362,15 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             DestroyScreen();
 
             // Create Emulation Thread
-            CreateScreen( hWndMain );
+            CreateScreen(hWndMain);
             SLNES_StartTimer();
-            SLNES_Load( szRomName );
+            SLNES_Load(szRomName);
             LoadSRAM();
 						m_hThread=CreateThread((LPSECURITY_ATTRIBUTES)NULL, (DWORD)0,
 							(LPTHREAD_START_ROUTINE)SLNES_Main, (LPVOID)NULL, (DWORD)0, &m_ThreadID);
           } else {
             // Show Title Screen
-            ShowTitle( hWnd );
+            ShowTitle(hWnd);
           }
           break;
         
@@ -396,32 +395,32 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
           /*-----------------------------------------------------------------*/
           /*  Screen Size x1, x2, x3 button                                    */
           /*-----------------------------------------------------------------*/  
-          SetWindowSize( 1 );
+          SetWindowSize(1);
 
           // Check x1 button
-          CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_SINGLE, MF_CHECKED );
-          CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_DOUBLE, MF_UNCHECKED );
-          CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_TRIPLE, MF_UNCHECKED );
+          CheckMenuItem(GetMenu(hWndMain), IDC_BTN_SINGLE, MF_CHECKED);
+          CheckMenuItem(GetMenu(hWndMain), IDC_BTN_DOUBLE, MF_UNCHECKED);
+          CheckMenuItem(GetMenu(hWndMain), IDC_BTN_TRIPLE, MF_UNCHECKED);
 
           break;
 
         case IDC_BTN_DOUBLE:
-          SetWindowSize( 2 );
+          SetWindowSize(2);
 
           // Check x2 button
-          CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_SINGLE, MF_UNCHECKED );
-          CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_DOUBLE, MF_CHECKED );
-          CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_TRIPLE, MF_UNCHECKED );
+          CheckMenuItem(GetMenu(hWndMain), IDC_BTN_SINGLE, MF_UNCHECKED);
+          CheckMenuItem(GetMenu(hWndMain), IDC_BTN_DOUBLE, MF_CHECKED);
+          CheckMenuItem(GetMenu(hWndMain), IDC_BTN_TRIPLE, MF_UNCHECKED);
 
           break;
 
         case IDC_BTN_TRIPLE:
-          SetWindowSize( 3 );
+          SetWindowSize(3);
 
           // Check x3 button
-          CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_SINGLE, MF_UNCHECKED );
-          CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_DOUBLE, MF_UNCHECKED );
-          CheckMenuItem( GetMenu( hWndMain ), IDC_BTN_TRIPLE, MF_CHECKED );
+          CheckMenuItem(GetMenu(hWndMain), IDC_BTN_SINGLE, MF_UNCHECKED);
+          CheckMenuItem(GetMenu(hWndMain), IDC_BTN_DOUBLE, MF_UNCHECKED);
+          CheckMenuItem(GetMenu(hWndMain), IDC_BTN_TRIPLE, MF_CHECKED);
 
           break;
 
@@ -432,14 +431,14 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
           if (NULL != m_hThread) 
           {
             char pszInfo[1024];
-            sprintf( pszInfo, "Mapper\t\t%d\nPRG ROM\t\t%dKB\nCHR ROM\t\t%dKB\n" \
+            sprintf(pszInfo, "Mapper\t\t%d\nPRG ROM\t\t%dKB\nCHR ROM\t\t%dKB\n" \
                               "Mirroring\t\t%s\nSRAM\t\t%s",
                               MapperNo, RomSize * 16, VRomSize * 8,
-                              ( ROM_Mirroring ? "V" : "H" ), ( ROM_SRAM ? "Yes" : "No" ) );
-            MessageBox( hWndMain, pszInfo, APP_NAME, MB_OK | MB_ICONINFORMATION );              
+                              (ROM_Mirroring ? "V" : "H"), (ROM_SRAM ? "Yes" : "No"));
+            MessageBox(hWndMain, pszInfo, APP_NAME, MB_OK | MB_ICONINFORMATION);              
           } else {
             // Show Title Screen
-            ShowTitle( hWnd );
+            ShowTitle(hWnd);
           }
           break;
 
@@ -450,10 +449,10 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 			{
 				/* Version Infomation */
 				char pszInfo[1024];
-				sprintf( pszInfo, "%s\nA fast and portable NES emulator\n"
+				sprintf(pszInfo, "%s\nA fast and portable NES emulator\n"
 					"Copyright (C) 2004-2005 Silan Co.,Ltd <www.silan.com.cn>",
-					APP_NAME );
-				MessageBox( hWndMain, pszInfo, APP_NAME, MB_OK | MB_ICONINFORMATION );   
+					APP_NAME);
+				MessageBox(hWndMain, pszInfo, APP_NAME, MB_OK | MB_ICONINFORMATION);   
 			}
           break;
       }
@@ -470,23 +469,23 @@ LRESULT CALLBACK MainWndproc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 /*      ShowTitle() : Show Title Screen Procedure                    */
 /*                                                                   */
 /*=================================================================*/
-void ShowTitle( HWND hWnd )
+void ShowTitle(HWND hWnd)
 {
-  HDC hDC = GetDC( hWnd );
-  HDC hMemDC = CreateCompatibleDC( hDC );
-  HBITMAP hTitleBmp = LoadBitmap( wc.hInstance, MAKEINTRESOURCE( IDB_BITMAP ) );
+  HDC hDC = GetDC(hWnd);
+  HDC hMemDC = CreateCompatibleDC(hDC);
+  HBITMAP hTitleBmp = LoadBitmap(wc.hInstance, MAKEINTRESOURCE(IDB_BITMAP));
 
   // Blt Title Bitmap
-  SelectObject( hMemDC, hTitleBmp );
+  SelectObject(hMemDC, hTitleBmp);
 
-  StretchBlt( hDC, 0, 0, NES_DISP_WIDTH * wScreenMagnification, 
+  StretchBlt(hDC, 0, 0, NES_DISP_WIDTH * wScreenMagnification, 
               NES_DISP_HEIGHT * wScreenMagnification, hMemDC, 
-              0, 0, NES_DISP_WIDTH, NES_DISP_HEIGHT, SRCCOPY );
+              0, 0, NES_DISP_WIDTH, NES_DISP_HEIGHT, SRCCOPY);
 
-  SelectObject( hMemDC, hTitleBmp );
+  SelectObject(hMemDC, hTitleBmp);
 
-  DeleteDC( hMemDC );
-  ReleaseDC( hWnd, hDC );
+  DeleteDC(hMemDC);
+  ReleaseDC(hWnd, hDC);
 }
 
 /*=================================================================*/
@@ -494,16 +493,16 @@ void ShowTitle( HWND hWnd )
 /*            CreateScreen() : Create SLNES screen                 */
 /*                                                                   */
 /*=================================================================*/
-int CreateScreen( HWND hWnd )
+int CreateScreen(HWND hWnd)
 {
   /*-----------------------------------------------------------------*/
   /*  Create a SLNES screen                                          */
   /*-----------------------------------------------------------------*/
-  HDC hDC = GetDC( hWnd );
+  HDC hDC = GetDC(hWnd);
 
   BITMAPINFOHEADER bi;
 
-  bi.biSize = sizeof( BITMAPINFOHEADER );
+  bi.biSize = sizeof(BITMAPINFOHEADER);
   bi.biWidth = NES_DISP_WIDTH;
   bi.biHeight = NES_DISP_HEIGHT * -1;
   bi.biPlanes = 1;
@@ -517,15 +516,15 @@ int CreateScreen( HWND hWnd )
   bi.biClrUsed = 0;
   bi.biClrImportant = 0;
 
-  hScreenBmp = CreateDIBSection( hDC, 
+  hScreenBmp = CreateDIBSection(hDC, 
                                  (BITMAPINFO *)&bi,
                                  DIB_RGB_COLORS, 
                                  (void **)&pScreenMem, 
                                  0,
-                                 0 ); 
-  ReleaseDC( hWnd, hDC );
+                                 0); 
+  ReleaseDC(hWnd, hDC);
 
-  if ( !hScreenBmp ) { return -1; } 
+  if (!hScreenBmp) { return -1; } 
   else {  return 0; }
 }
 
@@ -536,7 +535,7 @@ int CreateScreen( HWND hWnd )
 /*=================================================================*/
 void DestroyScreen()
 {
-  if ( !hScreenBmp ) { DeleteObject( hScreenBmp ); }
+  if (!hScreenBmp) { DeleteObject(hScreenBmp); }
 }
 
 /*=================================================================*/
@@ -555,26 +554,31 @@ int SLNES_Main()
 	long BaseTime = clock();
 
 	// Main loop
-	for(;;)
+	for (;;)
 	{
 		/*-----------------------------------------------------------------*/
 		/*  To the menu screen                                               */
 		/*-----------------------------------------------------------------*/
-		if ( SLNES_Menu() == -1 )
+		if (SLNES_Menu() == -1)
 			break;  // Quit
 
 		/*-----------------------------------------------------------------*/
 		/*  Start a NES emulation                                            */
 		/*-----------------------------------------------------------------*/
 
-		SLNES( PPU0 );
+		SLNES(PPU0);
 
-		last_frame_time = BaseTime + ( frame++ ) * ( FRAME_SKIP + 1 ) * SAMPLE_PER_FRAME * 1000 / SAMPLE_PER_SEC;
-		for(;;)
+		last_frame_time = BaseTime + (frame++) * (FRAME_SKIP + 1) * SAMPLE_PER_FRAME * 1000 / SAMPLE_PER_SEC;
+		for (;;)
 		{
 			cur_time = clock();
-			if( last_frame_time <= cur_time )
+			if(last_frame_time <= cur_time)
 				break;
+		}
+		if (frame == 1000)
+		{
+			frame = 1;
+			BaseTime = clock();
 		}
 	}
 
@@ -600,7 +604,7 @@ int LoadSRAM()
  */
 
   FILE *fp;
-  unsigned char pSrcBuf[ SRAM_SIZE ];
+  unsigned char pSrcBuf[SRAM_SIZE];
   unsigned char chData;
   unsigned char chTag;
   int nRunLen;
@@ -612,30 +616,30 @@ int LoadSRAM()
   nSRAM_SaveFlag = 0;
 
   // It is finished if the ROM doesn't have SRAM
-  if ( !ROM_SRAM )
+  if (!ROM_SRAM)
     return 0;
 
   // There is necessity to save it
   nSRAM_SaveFlag = 1;
 
   // The preparation of the SRAM file name
-  strcpy( szSaveName, szRomName );
-  strcpy( strrchr( szSaveName, '.' ) + 1, "srm" );
+  strcpy(szSaveName, szRomName);
+  strcpy(strrchr(szSaveName, '.') + 1, "srm");
 
   /*-----------------------------------------------------------------*/
   /*  Read a SRAM data                                                 */
   /*-----------------------------------------------------------------*/
 
   // Open SRAM file
-  fp = fopen( szSaveName, "rb" );
-  if ( fp == NULL )
+  fp = fopen(szSaveName, "rb");
+  if (fp == NULL)
     return -1;
 
   // Read SRAM data
-  fread( pSrcBuf, SRAM_SIZE, 1, fp );
+  fread(pSrcBuf, SRAM_SIZE, 1, fp);
 
   // Close SRAM file
-  fclose( fp );
+  fclose(fp);
 
   /*-----------------------------------------------------------------*/
   /*  Extract a SRAM data                                              */
@@ -644,24 +648,24 @@ int LoadSRAM()
   nDecoded = 0;
   nDecLen = 0;
 
-  chTag = pSrcBuf[ nDecoded++ ];
+  chTag = pSrcBuf[nDecoded++];
 
-  while ( nDecLen < 8192 )
+  while (nDecLen < 8192)
   {
-    chData = pSrcBuf[ nDecoded++ ];
+    chData = pSrcBuf[nDecoded++];
 
-    if ( chData == chTag )
+    if (chData == chTag)
     {
-      chData = pSrcBuf[ nDecoded++ ];
-      nRunLen = pSrcBuf[ nDecoded++ ];
-      for ( nIdx = 0; nIdx < nRunLen + 1; ++nIdx )
+      chData = pSrcBuf[nDecoded++];
+      nRunLen = pSrcBuf[nDecoded++];
+      for (nIdx = 0; nIdx < nRunLen + 1; ++nIdx)
       {
-        SRAM[ nDecLen++ ] = chData;
+        SRAM[nDecLen++] = chData;
       }
     }
     else
     {
-      SRAM[ nDecLen++ ] = chData;
+      SRAM[nDecLen++] = chData;
     }
   }
 
@@ -685,7 +689,7 @@ int SaveSRAM()
  */
 
   FILE *fp;
-  int nUsedTable[ 256 ];
+  int nUsedTable[256];
   unsigned char chData;
   unsigned char chPrevData;
   unsigned char chTag;
@@ -693,24 +697,24 @@ int SaveSRAM()
   int nEncoded;
   int nEncLen;
   int nRunLen;
-  unsigned char pDstBuf[ SRAM_SIZE ];
+  unsigned char pDstBuf[SRAM_SIZE];
 
-  if ( !nSRAM_SaveFlag )
+  if (!nSRAM_SaveFlag)
     return 0;  // It doesn't need to save it
 
   /*-----------------------------------------------------------------*/
   /*  Compress a SRAM data                                             */
   /*-----------------------------------------------------------------*/
 
-  memset( nUsedTable, 0, sizeof nUsedTable );
+  memset(nUsedTable, 0, sizeof nUsedTable);
 
-  for ( nIdx = 0; nIdx < SRAM_SIZE; ++nIdx )
+  for (nIdx = 0; nIdx < SRAM_SIZE; ++nIdx)
   {
-    ++nUsedTable[ SRAM[ nIdx++ ] ];
+    ++nUsedTable[SRAM[nIdx++]];
   }
-  for ( nIdx = 1, chTag = 0; nIdx < 256; ++nIdx )
+  for (nIdx = 1, chTag = 0; nIdx < 256; ++nIdx)
   {
-    if ( nUsedTable[ nIdx ] < nUsedTable[ chTag ] )
+    if (nUsedTable[nIdx] < nUsedTable[chTag])
       chTag = nIdx;
   }
 
@@ -718,28 +722,28 @@ int SaveSRAM()
   nEncLen = 0;
   nRunLen = 1;
 
-  pDstBuf[ nEncLen++ ] = chTag;
+  pDstBuf[nEncLen++] = chTag;
 
-  chPrevData = SRAM[ nEncoded++ ];
+  chPrevData = SRAM[nEncoded++];
 
-  while ( nEncoded < SRAM_SIZE && nEncLen < SRAM_SIZE - 133 )
+  while (nEncoded < SRAM_SIZE && nEncLen < SRAM_SIZE - 133)
   {
-    chData = SRAM[ nEncoded++ ];
+    chData = SRAM[nEncoded++];
 
-    if ( chPrevData == chData && nRunLen < 256 )
+    if (chPrevData == chData && nRunLen < 256)
       ++nRunLen;
     else
     {
-      if ( nRunLen >= 4 || chPrevData == chTag )
+      if (nRunLen >= 4 || chPrevData == chTag)
       {
-        pDstBuf[ nEncLen++ ] = chTag;
-        pDstBuf[ nEncLen++ ] = chPrevData;
-        pDstBuf[ nEncLen++ ] = nRunLen - 1;
+        pDstBuf[nEncLen++] = chTag;
+        pDstBuf[nEncLen++] = chPrevData;
+        pDstBuf[nEncLen++] = nRunLen - 1;
       }
       else
       {
-        for ( nIdx = 0; nIdx < nRunLen; ++nIdx )
-          pDstBuf[ nEncLen++ ] = chPrevData;
+        for (nIdx = 0; nIdx < nRunLen; ++nIdx)
+          pDstBuf[nEncLen++] = chPrevData;
       }
 
       chPrevData = chData;
@@ -747,16 +751,16 @@ int SaveSRAM()
     }
 
   }
-  if ( nRunLen >= 4 || chPrevData == chTag )
+  if (nRunLen >= 4 || chPrevData == chTag)
   {
-    pDstBuf[ nEncLen++ ] = chTag;
-    pDstBuf[ nEncLen++ ] = chPrevData;
-    pDstBuf[ nEncLen++ ] = nRunLen - 1;
+    pDstBuf[nEncLen++] = chTag;
+    pDstBuf[nEncLen++] = chPrevData;
+    pDstBuf[nEncLen++] = nRunLen - 1;
   }
   else
   {
-    for ( nIdx = 0; nIdx < nRunLen; ++nIdx )
-      pDstBuf[ nEncLen++ ] = chPrevData;
+    for (nIdx = 0; nIdx < nRunLen; ++nIdx)
+      pDstBuf[nEncLen++] = chPrevData;
   }
 
   /*-----------------------------------------------------------------*/
@@ -764,15 +768,15 @@ int SaveSRAM()
   /*-----------------------------------------------------------------*/
 
   // Open SRAM file
-  fp = fopen( szSaveName, "wb" );
-  if ( fp == NULL )
+  fp = fopen(szSaveName, "wb");
+  if (fp == NULL)
     return -1;
 
   // Write SRAM data
-  fwrite( pDstBuf, nEncLen, 1, fp );
+  fwrite(pDstBuf, nEncLen, 1, fp);
 
   // Close SRAM file
-  fclose( fp );
+  fclose(fp);
 
   // Successful
   return 0;
@@ -802,7 +806,7 @@ int SLNES_Menu()
 /*               SLNES_ReadRom() : Read ROM image file             */
 /*                                                                   */
 /*=================================================================*/
-int SLNES_ReadRom( const char *pszFileName )
+int SLNES_ReadRom(const char *pszFileName)
 {
 /*
  *  Read ROM image file
@@ -818,21 +822,21 @@ int SLNES_ReadRom( const char *pszFileName )
 	FILE *fp;
 
 	/* Open ROM file */
-	fp = fopen( pszFileName, "rb" );
-	if ( fp == NULL )
+	fp = fopen(pszFileName, "rb");
+	if (fp == NULL)
 		return -1;
 
 
-	fread( gamefile, 1, 188416, fp );
+	fread(gamefile, 1, 188416, fp);
 	if(SLNES_Init() == -1)
 		return -1;
 
 	ROM_SRAM = 0;
 	/* Clear SRAM */
-	memset( SRAM, 0, SRAM_SIZE );
+	memset(SRAM, 0, SRAM_SIZE);
 
 	/* File close */
-	fclose( fp );
+	fclose(fp);
 
 	/* Successful */
 	return 0;
@@ -867,25 +871,25 @@ void SLNES_LoadFrame()
  */
 
   // Set screen data
-  for( int i = 0; i < NES_DISP_HEIGHT; i++ )
-	for( int j = 0; j < NES_DISP_WIDTH; j++ )
-		*( (WORD*)pScreenMem + i * NES_DISP_WIDTH + j ) = NesPalette[ PPU0[ i * NES_DISP_WIDTH + j ] ];
+  for (int i = 0; i < NES_DISP_HEIGHT; i++)
+	for (int j = 0; j < NES_DISP_WIDTH; j++)
+		*((WORD*)pScreenMem + i * NES_DISP_WIDTH + j) = NesPalette[PPU0[i * NES_DISP_WIDTH + j]];
 
   // Screen update
-  HDC hDC = GetDC( hWndMain );
+  HDC hDC = GetDC(hWndMain);
 
-  HDC hMemDC = CreateCompatibleDC( hDC );
+  HDC hMemDC = CreateCompatibleDC(hDC);
 
-  HBITMAP hOldBmp = (HBITMAP)SelectObject( hMemDC, hScreenBmp );
+  HBITMAP hOldBmp = (HBITMAP)SelectObject(hMemDC, hScreenBmp);
 
-  StretchBlt( hDC, 0, 0, NES_DISP_WIDTH * wScreenMagnification, 
+  StretchBlt(hDC, 0, 0, NES_DISP_WIDTH * wScreenMagnification, 
               NES_DISP_HEIGHT * wScreenMagnification, hMemDC, 
-              0, 0, NES_DISP_WIDTH, NES_DISP_HEIGHT, SRCCOPY );
+              0, 0, NES_DISP_WIDTH, NES_DISP_HEIGHT, SRCCOPY);
 
-  SelectObject( hMemDC, hOldBmp );
+  SelectObject(hMemDC, hOldBmp);
 
-  DeleteDC( hMemDC );
-  ReleaseDC( hWndMain, hDC );
+  DeleteDC(hMemDC);
+  ReleaseDC(hWndMain, hDC);
 }
 
 /*=================================================================*/
@@ -893,7 +897,7 @@ void SLNES_LoadFrame()
 /*             SLNES_PadState() : Get a joypad state               */
 /*                                                                   */
 /*=================================================================*/
-void SLNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
+void SLNES_PadState(unsigned int *pdwPad1, unsigned int *pdwPad2, unsigned int *pdwSystem)
 {
 /*
  *  Get a joypad state
@@ -914,32 +918,32 @@ void SLNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
   DWORD dwTemp;
 
   /* Joypad 1 */
-  *pdwPad1 =   ( GetAsyncKeyState( 'K' )        < 0 ) |
-             ( ( GetAsyncKeyState( 'J' )        < 0 ) << 1 ) |
-             ( ( GetAsyncKeyState( 'T' )        < 0 ) << 2 ) |
-             ( ( GetAsyncKeyState( 'Y' )        < 0 ) << 3 ) |
-             ( ( GetAsyncKeyState( 'E' )      < 0 ) << 4 ) |
-             ( ( GetAsyncKeyState( 'D' )    < 0 ) << 5 ) |
-             ( ( GetAsyncKeyState( 'S' )    < 0 ) << 6 ) |
-             ( ( GetAsyncKeyState( 'F' )   < 0 ) << 7 );
+  *pdwPad1 =   (GetAsyncKeyState('K')        < 0) |
+             ((GetAsyncKeyState('J')        < 0) << 1) |
+             ((GetAsyncKeyState('T')        < 0) << 2) |
+             ((GetAsyncKeyState('Y')        < 0) << 3) |
+             ((GetAsyncKeyState('E')      < 0) << 4) |
+             ((GetAsyncKeyState('D')    < 0) << 5) |
+             ((GetAsyncKeyState('S')    < 0) << 6) |
+             ((GetAsyncKeyState('F')   < 0) << 7);
 
-//  *pdwPad1 = *pdwPad1 | ( *pdwPad1 << 8 );
+//  *pdwPad1 = *pdwPad1 | (*pdwPad1 << 8);
 
   /* Joypad 2 */
   //*pdwPad2 = 0;
-  *pdwPad2 =   ( GetAsyncKeyState( 'M' )        < 0 ) |
-             ( ( GetAsyncKeyState( 'N' )        < 0 ) << 1 ) |
-             ( ( GetAsyncKeyState( 'Z' )        < 0 ) << 2 ) |
-             ( ( GetAsyncKeyState( 'X' )        < 0 ) << 3 ) |
-             ( ( GetAsyncKeyState( 'G' )      < 0 ) << 4 ) |
-             ( ( GetAsyncKeyState( 'V' )    < 0 ) << 5 ) |
-             ( ( GetAsyncKeyState( 'C' )    < 0 ) << 6 ) |
-             ( ( GetAsyncKeyState( 'B' )   < 0 ) << 7 );
+  *pdwPad2 =   (GetAsyncKeyState('M')        < 0) |
+             ((GetAsyncKeyState('N')        < 0) << 1) |
+             ((GetAsyncKeyState('Z')        < 0) << 2) |
+             ((GetAsyncKeyState('X')        < 0) << 3) |
+             ((GetAsyncKeyState('G')      < 0) << 4) |
+             ((GetAsyncKeyState('V')    < 0) << 5) |
+             ((GetAsyncKeyState('C')    < 0) << 6) |
+             ((GetAsyncKeyState('B')   < 0) << 7);
 
-//  *pdwPad2 = *pdwPad2 | ( *pdwPad2 << 8 );
+//  *pdwPad2 = *pdwPad2 | (*pdwPad2 << 8);
 
   /* Input for SLNES */
-  dwTemp = ( GetAsyncKeyState( VK_ESCAPE )  < 0 );
+  dwTemp = (GetAsyncKeyState(VK_ESCAPE)  < 0);
   
   /* Only the button pushed newly should be inputted */
   *pdwSystem = ~dwSysOld & dwTemp;
@@ -949,12 +953,12 @@ void SLNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
 
   /* Deal with a message */
   MSG msg;
-  while( PeekMessage( &msg, NULL, 0, 0, PM_NOREMOVE ) )
+  while(PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
   {
-    if ( GetMessage( &msg, NULL, 0, 0 ) )
+    if (GetMessage(&msg, NULL, 0, 0))
     {
-      TranslateMessage( &msg );
-      DispatchMessage( &msg );
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
     }
   }
 }
@@ -964,7 +968,7 @@ void SLNES_PadState( DWORD *pdwPad1, DWORD *pdwPad2, DWORD *pdwSystem )
 /*             SLNES_MemoryCopy() : memcpy                         */
 /*                                                                   */
 /*=================================================================*/
-void *SLNES_MemoryCopy( void *dest, const void *src, int count )
+void *SLNES_MemoryCopy(void *dest, const void *src, int count)
 {
 /*
  *  memcpy
@@ -983,7 +987,7 @@ void *SLNES_MemoryCopy( void *dest, const void *src, int count )
  *    Pointer of destination
  */
 
-  CopyMemory( dest, src, count );
+  CopyMemory(dest, src, count);
   return dest;
 }
 
@@ -992,7 +996,7 @@ void *SLNES_MemoryCopy( void *dest, const void *src, int count )
 /*             SLNES_MemorySet() : Get a joypad state              */
 /*                                                                   */
 /*=================================================================*/
-void *SLNES_MemorySet( void *dest, int c, int count )
+void *SLNES_MemorySet(void *dest, int c, int count)
 {
 /*
  *  memset
@@ -1011,7 +1015,7 @@ void *SLNES_MemorySet( void *dest, int c, int count )
  *    Pointer of destination
  */
 
-  FillMemory( dest, count, c ); 
+  FillMemory(dest, count, c); 
   return dest;
 }
 
@@ -1020,9 +1024,9 @@ void *SLNES_MemorySet( void *dest, int c, int count )
 /*                DebugPrint() : Print debug message                 */
 /*                                                                   */
 /*=================================================================*/
-void SLNES_DebugPrint( char *pszMsg )
+void SLNES_DebugPrint(char *pszMsg)
 {
-  _RPT0( _CRT_WARN, pszMsg );
+  _RPT0(_CRT_WARN, pszMsg);
 }
 
 /*=================================================================*/
@@ -1030,22 +1034,22 @@ void SLNES_DebugPrint( char *pszMsg )
 /*        SLNES_SoundOpen() : Sound Open                           */
 /*                                                                   */
 /*=================================================================*/
-int SLNES_SoundOpen( int samples_per_sync, int sample_rate ) 
+int SLNES_SoundOpen(int samples_per_sync, int sample_rate) 
 {
-  lpSndDevice = new DIRSOUND( hWndMain );
+  lpSndDevice = new DIRSOUND(hWndMain);
 
-  if ( !lpSndDevice->SoundOpen( samples_per_sync, sample_rate ) )
+  if (!lpSndDevice->SoundOpen(samples_per_sync, sample_rate))
   {
-    SLNES_MessageBox( "SoundOpen() Failed." );
+    SLNES_MessageBox("SoundOpen() Failed.");
     exit(0);
   }
 
   //// if sound mute, stop sound
-  //if ( APU_Mute )
+  //if (APU_Mute)
   //{
-  //  if (!lpSndDevice->SoundMute( APU_Mute ) )
+  //  if (!lpSndDevice->SoundMute(APU_Mute))
   //  {
-  //    SLNES_MessageBox( "SoundMute() Failed." );
+  //    SLNES_MessageBox("SoundMute() Failed.");
   //    exit(0);
   //  }
   //}
@@ -1058,7 +1062,7 @@ int SLNES_SoundOpen( int samples_per_sync, int sample_rate )
 /*        SLNES_SoundClose() : Sound Close                         */
 /*                                                                   */
 /*=================================================================*/
-void SLNES_SoundClose( void ) 
+void SLNES_SoundClose(void) 
 {
   lpSndDevice->SoundClose();
   delete lpSndDevice;
@@ -1071,18 +1075,18 @@ void SLNES_SoundClose( void )
 /*                                                                   */
 /*=================================================================*/
 #if BITS_PER_SAMPLE == 8
-void SLNES_SoundOutput( int samples, BYTE *wave ) 
+void SLNES_SoundOutput(int samples, unsigned char *wave) 
 #else /* BITS_PER_SAMPLE */
-void SLNES_SoundOutput( int samples, short *wave ) 
+void SLNES_SoundOutput(int samples, short *wave) 
 #endif /* BITS_PER_SAMPLE */
 {
 #if 1
-  if (!lpSndDevice->SoundOutput( samples, wave ) )
+  if (!lpSndDevice->SoundOutput(samples, wave))
 #else
-  if (!lpSndDevice->SoundOutput( samples, wave3 ) )
+  if (!lpSndDevice->SoundOutput(samples, wave3))
 #endif
   {
-    SLNES_MessageBox( "SoundOutput() Failed." );
+    SLNES_MessageBox("SoundOutput() Failed.");
     exit(0);
   }
 }
@@ -1096,11 +1100,11 @@ static void SLNES_StartTimer()
 {
   TIMECAPS caps;
 
-  timeGetDevCaps( &caps, sizeof(caps) );
-  timeBeginPeriod( caps.wPeriodMin );
+  timeGetDevCaps(&caps, sizeof(caps));
+  timeBeginPeriod(caps.wPeriodMin);
 
   uTimerID = 
-    timeSetEvent( caps.wPeriodMin * TIMER_PER_LINE, caps.wPeriodMin, TimerFunc, 0, (UINT)TIME_PERIODIC );
+    timeSetEvent(caps.wPeriodMin * TIMER_PER_LINE, caps.wPeriodMin, TimerFunc, 0, (UINT)TIME_PERIODIC);
 
   // Calculate proper timing
   wLinePerTimer = LINE_PER_TIMER * caps.wPeriodMin;
@@ -1110,7 +1114,7 @@ static void SLNES_StartTimer()
   bWaitFlag = TRUE;
 
   // Initialize Critical Section Object
-  InitializeCriticalSection( &WaitFlagCriticalSection );
+  InitializeCriticalSection(&WaitFlagCriticalSection);
 }
 
 /*=================================================================*/
@@ -1120,16 +1124,16 @@ static void SLNES_StartTimer()
 /*=================================================================*/
 static void SLNES_StopTimer()
 {
-  if ( 0 != uTimerID )
+  if (0 != uTimerID)
   {
     TIMECAPS caps;
-    timeKillEvent( uTimerID );
+    timeKillEvent(uTimerID);
     uTimerID = 0;
-    timeGetDevCaps( &caps, sizeof(caps) );
-    timeEndPeriod( caps.wPeriodMin * TIMER_PER_LINE );
+    timeGetDevCaps(&caps, sizeof(caps));
+    timeEndPeriod(caps.wPeriodMin * TIMER_PER_LINE);
   }
   // Delete Critical Section Object
-  DeleteCriticalSection( &WaitFlagCriticalSection );
+  DeleteCriticalSection(&WaitFlagCriticalSection);
 }
 
 /*=================================================================*/
@@ -1137,13 +1141,13 @@ static void SLNES_StopTimer()
 /*           TimerProc() : MM Timer Callback Function                */
 /*                                                                   */
 /*=================================================================*/
-static void CALLBACK TimerFunc( UINT nID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD dw2)
+static void CALLBACK TimerFunc(UINT nID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD dw2)
 {
-  if ( NULL != m_hThread )
+  if (NULL != m_hThread)
   {  
-    EnterCriticalSection( &WaitFlagCriticalSection );
+    EnterCriticalSection(&WaitFlagCriticalSection);
     bWaitFlag = FALSE;
-    LeaveCriticalSection( &WaitFlagCriticalSection );
+    LeaveCriticalSection(&WaitFlagCriticalSection);
   }
 }
 
@@ -1153,15 +1157,15 @@ static void CALLBACK TimerFunc( UINT nID, UINT uMsg, DWORD dwUser, DWORD dw1, DW
 /*            SLNES_MessageBox() : Print System Message            */
 /*                                                                   */
 /*=================================================================*/
-void SLNES_MessageBox( char *pszMsg, ... )
+void SLNES_MessageBox(char *pszMsg, ...)
 {
-  char pszErr[ 1024 ];
+  char pszErr[1024];
   va_list args;
 
-  va_start( args, pszMsg );
-  vsprintf( pszErr, pszMsg, args );  pszErr[ 1023 ] = '\0';
-  va_end( args );
-  MessageBox( hWndMain, pszErr, APP_NAME, MB_OK | MB_ICONSTOP );
+  va_start(args, pszMsg);
+  vsprintf(pszErr, pszMsg, args);  pszErr[1023] = '\0';
+  va_end(args);
+  MessageBox(hWndMain, pszErr, APP_NAME, MB_OK | MB_ICONSTOP);
 }
 
 /*=================================================================*/
@@ -1169,15 +1173,15 @@ void SLNES_MessageBox( char *pszMsg, ... )
 /*            SetWindowSize() : Set Window Size                      */
 /*                                                                   */
 /*=================================================================*/
-void SetWindowSize( WORD wMag )
+void SetWindowSize(WORD wMag)
 {          
   wScreenMagnification = wMag;
 
-  SetWindowPos( hWndMain, HWND_TOPMOST, 0, 0, 
+  SetWindowPos(hWndMain, HWND_TOPMOST, 0, 0, 
 								NES_DISP_WIDTH * wMag + NES_MENU_WIDTH, 
-                NES_DISP_HEIGHT * wMag + NES_MENU_HEIGHT, SWP_NOMOVE );
+                NES_DISP_HEIGHT * wMag + NES_MENU_HEIGHT, SWP_NOMOVE);
           
   // Show title screen if emulation thread dosent exist
-  if ( NULL == m_hThread )
-    ShowTitle( hWndMain );
+  if (NULL == m_hThread)
+    ShowTitle(hWndMain);
 }

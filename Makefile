@@ -6,7 +6,6 @@ vpath %.c gamefile
 program = SLNES
 # 指定modules为组成目标代码的模块名(实际是每个.S,.s,.C对应的.o,无后缀)
 modules = SLNES_System_LEON SLNES SLNES_Data
-#modules = SLNES_System_LEON SLNES SLNES_Data AVSync Int periph
 
 UserLink = MyLink
 
@@ -16,16 +15,16 @@ include ${LeonMakeRoot}\script\LeonMake.mak
 ########################### Optional #################################
 #CFLAGS += -Ddebug
 #CFLAGS += -Ddebug -Ddebug6502asm
-CFLAGS += -DwithMEMIO
+#CFLAGS += -DwithMEMIO
 #CFLAGS += -DwithMEMIO -DDMA_SDRAM
-#CFLAGS += -DPrintfFrameGraph
-#CFLAGS += -DPrintfFrameGraph -DSLNES_SIM
-#CFLAGS += -DPrintfFrameGraph -DwithMEMIO
-#CFLAGS += -DPrintfFrameGraph -DwithMEMIO -DDMA_SDRAM
 #CFLAGS += -DPrintfFrameClock
 #CFLAGS += -DPrintfFrameClock -DSLNES_SIM
 #CFLAGS += -DPrintfFrameClock -DwithMEMIO
 #CFLAGS += -DPrintfFrameClock -DwithMEMIO -DDMA_SDRAM
+#CFLAGS += -DPrintfFrameGraph
+CFLAGS += -DPrintfFrameGraph -DSLNES_SIM
+#CFLAGS += -DPrintfFrameGraph -DwithMEMIO
+#CFLAGS += -DPrintfFrameGraph -DwithMEMIO -DDMA_SDRAM
 
 # 如果移植到高位前置（bigendian）的处理器例如LEON上，则注释本语句
 #CFLAGS += -DLSB_FIRST
@@ -50,11 +49,5 @@ SLNES_System_LEON.o: SLNES_System_LEON.c SLNES_System.h SLNES.c SLNES_Data.h
 SLNES.o: SLNES.c SLNES.h SLNES_System.h SLNES_Data.h
 
 SLNES_Data.o: SLNES_Data.c SLNES_Data.h SLNES.h SLNES_System.h
-
-#AVSync.o: AVSync.c AVSync.h
-
-#Int.o: Int.c Int.h
-
-#periph.o: periph.c periph.h
 
 pmem.bin	: ;	${OBJCOPY} -j .text -O binary $^ $@
