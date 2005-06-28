@@ -47,6 +47,12 @@
 // MapperWrite范围由标准的8000-FFFF扩展为6000-FFFF
 #define damnBIN
 
+// 如果只玩.bin游戏的话，可以简化一些代码以增加速度，大部分.nes游戏
+// 也可以用HACK，当然如果速度够快的话还是不要用HACK为妙，但为了能在
+// 32KB的ITCM里包含mapper1、7、11，就只能用HACK了，mapper4却是再没有
+// 空间放了。
+#define HACK
+
 #if defined(PrintfFrameGraph) || defined(PrintfFrameClock)
 unsigned int Frame = 0;	// 已经过的游戏画面的桢数
 #endif
@@ -186,6 +192,8 @@ unsigned char ZBuf[35];
 // line_buffers + 8
 unsigned char *buf;
 
+void PPU_Mirroring(int nType);
+inline void PPU_CompareSprites(register int DY);
 inline int PPU_DrawLine(register int DY, register int SY);
 inline int PPU_RefreshSprites(unsigned char *Z);
 
@@ -225,13 +233,12 @@ unsigned int PAD2_Bit;
 /*-----------------------------------------------------------------*/
 
 int RomSize;
+int RomMask;
 int VRomSize;
+int VRomMask;
 int MapperNo;		// Mapper Number
 int ROM_Mirroring;	// Mirroring 0:Horizontal 1:Vertical
-
-#ifdef WIN32
-unsigned char ROM_SRAM;
-#endif /* WIN32 */
+int ROM_SRAM;
 
 
 
@@ -265,7 +272,11 @@ static inline void CPU_WriteIO(unsigned short wAddr, unsigned char byData);
 //#define ReadPCX(a) a = *nes_pc++ + nes_X
 
 // 从PRG或RAM中读取操作数并加上nes_Y，然后nes_pc++
+#ifdef HACK
 #define ReadPCY(a) a = *nes_pc++ + nes_Y
+#else /* HACK */
+#define ReadPCY(a) a = (unsigned char)(*nes_pc++ + nes_Y)
+#endif /* HACK */
 
 // 从RAM中读取操作数地址
 #define ReadZpW(a) a = RAM[a] | (RAM[a + 1] << 8)
@@ -278,22 +289,18 @@ static inline void CPU_WriteIO(unsigned short wAddr, unsigned char byData);
 #define WriteZp(a, b) RAM[a] = b
 
 // 从6502RAM中读取操作数
-//#define Read6502RAM(a)  \
-//	if (a >> 15 || !(a >> 13)) \
-//		byD0 = memmap_tbl[a >> 13][a]; \
-//	else \
-//		byD0 = CPU_ReadIO(a);
 #define Read6502RAM(a)  \
-	if (a >= 0x8000 || a < 0x2000) \
+	if (a >= 0x6000 || a < 0x2000) \
 		byD0 = memmap_tbl[a >> 13][a]; \
 	else \
 		byD0 = CPU_ReadIO(a);
 
 // 向6502RAM中写入操作数
-// 这里之所以将标准的“a < 0x8000”改为“a < 0x6000”是为了兼容BIN文
-// 件里人为修改的游戏代码，也就是说，为了兼容BIN文件，只好放弃对
-// 用于游戏存盘功能的SRAM的支持了（$6000-$7FFF）
-#ifdef damnBIN
+// 这里之所以将标准的“a < 0x8000”改为“a < 0x6000”是为了兼容
+// mapper3的BIN文件里人为修改的游戏代码，也就是说，为了兼容BIN文
+// 件而又不影响速度，同时还要兼顾.nes文件的存盘功能，这里把操作
+// SRAM（$6000-$7FFF）的代码放在了各个MapperWrite()函数中。
+//#ifdef damnBIN
 #define Write6502RAM(a, b)  \
 		if (a < 0x2000) \
 			WriteZp(a, b); \
@@ -301,15 +308,15 @@ static inline void CPU_WriteIO(unsigned short wAddr, unsigned char byData);
 			CPU_WriteIO(a, b); \
 		else \
 			MapperWrite(a, b)
-#else /* damnBIN */
-#define Write6502RAM(a, b)  \
-		if (a < 0x2000) \
-			WriteZp(a, b); \
-		else if (a < 0x8000) \
-			CPU_WriteIO(a, b); \
-		else \
-			MapperWrite(a, b)
-#endif /* damnBIN */
+//#else /* damnBIN */
+//#define Write6502RAM(a, b)  \
+//		if (a < 0x2000) \
+//			WriteZp(a, b); \
+//		else if (a < 0x8000) \
+//			CPU_WriteIO(a, b); \
+//		else \
+//			MapperWrite(a, b)
+//#endif /* damnBIN */
 
 // Flag Op.
 #define SETF(a)  nes_F |= (a)
@@ -356,25 +363,50 @@ static inline void CPU_WriteIO(unsigned short wAddr, unsigned char byData);
 // 作用于ASL LSR ROL ROR四类对6502RAM进行位操作的指令
 // 将各种可能只从RAM中读取的代码简化为只从RAM中读取，测遍VCD游戏光盘上
 // 所有的游戏后都没问题
-#define Bit6502RAM(a)  byD0 = RAM[wA0]; WriteZp(wA0, a)
-//#define Bit6502RAM(a)  \
-//		if (wA0 < 0x2000) \
-//			{ byD0 = RAM[wA0]; WriteZp(wA0, a); } \
-//		else if (wA0 < 0x4000) \
-//			{ byD0 = CPU_ReadIO(wA0); K6502_WritePPU(wA0, a); } \
-//		else if (wA0 < 0x8000) \
-//			{ byD0 = CPU_ReadIO(wA0); K6502_WriteAPU(wA0, a); } \
-//		else if (wA0 < 0xC000) \
-//			{ byD0 = ROMBANK0[wA0 & 0x3fff]; MapperWrite(wA0, a); } \
-//		else \
-//			{ byD0 = ROMBANK2[wA0 & 0x3fff]; MapperWrite(wA0, a); }
+#ifdef HACK
+#define Bit6502RAM(a)  byD0 = RAM[wA0]; a; WriteZp(wA0, byD0)
+#else /* HACK */
+#define Bit6502RAM(a)  \
+		if (wA0 < 0x2000) \
+			{ byD0 = RAM[wA0]; a; WriteZp(wA0, byD0); } \
+		else if (wA0 < 0x6000) \
+			{ byD0 = CPU_ReadIO(wA0); a; CPU_WriteIO(wA0, byD0); } \
+		else if (wA0 < 0x8000) \
+			{ byD0 = SRAM[wA0 & 0x1fff]; a; SRAM[wA0 & 0x1fff] = byD0; } \
+		else \
+			{ byD0 = memmap_tbl[wA0 >> 13][wA0]; a; MapperWrite(wA0, byD0); }
+#endif /* HACK */
 
 // Math Op. (nes_A D flag isn't being supported.)
 // 作用于对6502RAM进行减一操作的DEC指令
+#ifdef HACK
 #define DEC6502RAM  byD0 = RAM[wA0] - 1; WriteZp(wA0, byD0)
+#else /* HACK */
+#define DEC6502RAM  \
+		if(wA0 < 0x2000) \
+			{ byD0 = RAM[wA0]; --byD0; WriteZp(wA0, byD0); } \
+		else if(wA0 < 0x6000) \
+			{ byD0 = CPU_ReadIO(wA0); --byD0; CPU_WriteIO(wA0, byD0); } \
+		else if(wA0 < 0x8000) \
+			{ byD0 = SRAM[wA0 & 0x1fff]; --byD0; SRAM[wA0 & 0x1fff] = byD0; } \
+		else \
+			{ byD0 = memmap_tbl[wA0 >> 13][wA0]; --byD0; MapperWrite(wA0, byD0); }
+#endif /* HACK */
 
 // 作用于对6502RAM进行加一操作的INC命令
+#ifdef HACK
 #define INC6502RAM  byD0 = RAM[wA0] + 1; WriteZp(wA0, byD0)
+#else /* HACK */
+#define INC6502RAM  \
+		if(wA0 < 0x2000) \
+			{ byD0 = RAM[wA0]; ++byD0; WriteZp(wA0, byD0); } \
+		else if(wA0 < 0x6000) \
+			{ byD0 = CPU_ReadIO(wA0); ++byD0; CPU_WriteIO(wA0, byD0); } \
+		else if(wA0 < 0x8000) \
+			{ byD0 = SRAM[wA0 & 0x1fff]; ++byD0; SRAM[wA0 & 0x1fff] = byD0; } \
+		else \
+			{ byD0 = memmap_tbl[wA0 >> 13][wA0]; ++byD0; MapperWrite(wA0, byD0); }
+#endif /* HACK */
 
 // Jump Op.
 #define BRA(a) { \
@@ -452,6 +484,7 @@ const unsigned char byTestTable[256] =
 /*-----------------------------------------------------------------*/
 /*  Mapper Function                                                */
 /*-----------------------------------------------------------------*/
+
 /* The address of 8Kbytes unit of the ROM */
 //#define ROMPAGE(a)     (ROM + (a) * 0x2000)
 #define ROMPAGE(a)     (ROM + ((a) << 13))
@@ -459,43 +492,497 @@ const unsigned char byTestTable[256] =
 //#define VROMPAGE(a)    (VROM + (a) * 0x400)
 #define VROMPAGE(a)    (VROM + ((a) << 10))
 
+/*******************************************************************
+ *   函数名称： MapperWrite                                        *
+ *   创建人员： 李政                                               *
+ *   函数版本： 1.00                                               *
+ *   创建日期： 2005/05/08 08:00:00                                *
+ *   功能描述： MMC切换函数，目前支持mapper0、2、3                 *
+ *   入口参数： unsigned short wAddr 向6502RAM写入的地址           *
+ *              unsigned char byData 向6502RAM写入的数据           *
+ *   返回值  ： 无                                                 *
+ *   修改记录：                                                    *
+ *******************************************************************/
 void (*MapperWrite)(unsigned short wAddr, unsigned char byData);
 
+/*******************************************************************
+ *   函数名称： Map0_Write                                         *
+ *   创建人员： 李政                                               *
+ *   函数版本： 1.00                                               *
+ *   创建日期： 2005/05/08 08:00:00                                *
+ *   功能描述： mapper0的MMC切换函数                               *
+ *   入口参数： unsigned short wAddr 向6502RAM写入的地址           *
+ *              unsigned char byData 向6502RAM写入的数据           *
+ *   返回值  ： 无                                                 *
+ *   修改记录：                                                    *
+ *******************************************************************/
 void Map0_Write(unsigned short wAddr, unsigned char byData)
 {
+#ifndef ONLY_BIN
+	if (!(wAddr >> 15))
+		SRAM[wAddr & 0x1fff] = byData;
+#endif /* ONLY_BIN */
 }
 
+/*******************************************************************
+ *   函数名称： Map2_Write                                         *
+ *   创建人员： 李政                                               *
+ *   函数版本： 1.00                                               *
+ *   创建日期： 2005/05/08 08:00:00                                *
+ *   功能描述： mapper2的MMC切换函数                               *
+ *   入口参数： unsigned short wAddr 向6502RAM写入的地址           *
+ *              unsigned char byData 向6502RAM写入的数据           *
+ *   返回值  ： 无                                                 *
+ *   修改记录：                                                    *
+ *******************************************************************/
 void Map2_Write(unsigned short wAddr, unsigned char byData)
 {
-	/* Set ROM Banks */
-	ROMBANK0 = ROM + (byData << 14);
-	ROMBANK1 = ROMBANK0 + 0x2000;
+#ifndef ONLY_BIN
+	if (wAddr >> 15)
+	{
+#endif /* ONLY_BIN */
+		/* Set ROM Banks */
+		ROMBANK0 = ROM + (byData << 14);
+		ROMBANK1 = ROMBANK0 + 0x2000;
 
-	// 这里- 0x8000是为了在encodePC中不用再做& 0x1FFF的运算了
-	memmap_tbl[4] = ROMBANK0 - 0x8000;
-	memmap_tbl[5] = ROMBANK1 - 0xA000;
+		// 这里- 0x8000是为了在encodePC中不用再做& 0x1FFF的运算了
+		memmap_tbl[4] = ROMBANK0 - 0x8000;
+		memmap_tbl[5] = ROMBANK1 - 0xA000;
+#ifndef ONLY_BIN
+	}
+	else
+		SRAM[wAddr & 0x1fff] = byData;
+#endif /* ONLY_BIN */
 }
 
+/*******************************************************************
+ *   函数名称： Map3_Write                                         *
+ *   创建人员： 李政                                               *
+ *   函数版本： 1.00                                               *
+ *   创建日期： 2005/05/08 08:00:00                                *
+ *   功能描述： mapper3的MMC切换函数                               *
+ *   入口参数： unsigned short wAddr 向6502RAM写入的地址           *
+ *              unsigned char byData 向6502RAM写入的数据           *
+ *   返回值  ： 无                                                 *
+ *   修改记录：                                                    *
+ *******************************************************************/
 void Map3_Write(unsigned short wAddr, unsigned char byData)
 {
-	unsigned int dwBase;
+	int Base;
 
 	/* Set PPU Banks */
-    byData &= VRomSize - 1;
-	dwBase = ((unsigned int)byData) << 3;
+	Base = ((int)byData << 3) & VRomMask;
 
-	PPUBANK[0] = VROMPAGE(dwBase + 0);
-	PPUBANK[1] = VROMPAGE(dwBase + 1);
-	PPUBANK[2] = VROMPAGE(dwBase + 2);
-	PPUBANK[3] = VROMPAGE(dwBase + 3);
-	PPUBANK[4] = VROMPAGE(dwBase + 4);
-	PPUBANK[5] = VROMPAGE(dwBase + 5);
-	PPUBANK[6] = VROMPAGE(dwBase + 6);
-	PPUBANK[7] = VROMPAGE(dwBase + 7);
+	PPUBANK[0] = VROMPAGE(Base++);
+	PPUBANK[1] = VROMPAGE(Base++);
+	PPUBANK[2] = VROMPAGE(Base++);
+	PPUBANK[3] = VROMPAGE(Base++);
+	PPUBANK[4] = VROMPAGE(Base++);
+	PPUBANK[5] = VROMPAGE(Base++);
+	PPUBANK[6] = VROMPAGE(Base++);
+	PPUBANK[7] = VROMPAGE(Base++);
 
 	NES_ChrGen = PPUBANK[(PPU_R0 & R0_BG_ADDR) >> 2];
 	NES_SprGen = PPUBANK[(PPU_R0 & R0_SP_ADDR) >> 1];
 }
+
+#ifndef ONLY_BIN
+
+/*******************************************************************
+ *   函数名称： Map1_Write                                         *
+ *   创建人员： 李政                                               *
+ *   函数版本： 1.00                                               *
+ *   创建日期： 2005/05/11 08:43:52                                *
+ *   功能描述： mapper1的MMC切换函数                               *
+ *   入口参数： unsigned short wAddr 向6502RAM写入的地址           *
+ *              unsigned char byData 向6502RAM写入的数据           *
+ *   返回值  ： 无                                                 *
+ *   修改记录：                                                    *
+ *******************************************************************/
+unsigned char Map1_Regs[4];
+unsigned int Map1_Cnt;
+unsigned char Map1_Latch;
+unsigned int Map1_Last_Write_Addr;
+
+enum Map1_Size_t
+{
+	Map1_SMALL,
+	Map1_512K,
+	Map1_1024K
+};
+
+unsigned int Map1_Size;
+unsigned int Map1_256K_base;
+unsigned int Map1_swap;
+
+// these are the 4 ROM banks currently selected
+unsigned int Map1_bank1;
+unsigned int Map1_bank2;
+unsigned int Map1_bank3;
+unsigned int Map1_bank4;
+
+unsigned int Map1_HI1;
+unsigned int Map1_HI2;
+
+void Map1_set_ROM_banks()
+{
+	nes_pc -= (unsigned int)lastbank;
+
+	ROMBANK0 = ROMPAGE(((Map1_256K_base << 5) + (Map1_bank1 & /*((256/8)-1)*/31)) & RomMask);
+	ROMBANK1 = ROMPAGE(((Map1_256K_base << 5) + (Map1_bank2 & /*((256/8)-1)*/31)) & RomMask);
+	ROMBANK2 = ROMPAGE(((Map1_256K_base << 5) + (Map1_bank3 & /*((256/8)-1)*/31)) & RomMask);
+	ROMBANK3 = ROMPAGE(((Map1_256K_base << 5) + (Map1_bank4 & /*((256/8)-1)*/31)) & RomMask);
+
+	// 这里- 0x8000是为了在encodePC中不用再做& 0x1FFF的运算了
+	memmap_tbl[4] = ROMBANK0 - 0x8000;
+	memmap_tbl[5] = ROMBANK1 - 0xA000;
+	memmap_tbl[6] = ROMBANK2 - 0xC000;
+	memmap_tbl[7] = ROMBANK3 - 0xE000;
+
+	encodePC;
+}
+
+/* The address of 1Kbytes unit of the CRAM */
+//#define CRAMPAGE(a)   &PTRAM[((a)&0x1F) * 0x400]
+#define CRAMPAGE(a)   &PTRAM[((a)&0x1F) << 10]
+
+void Map1_Write(unsigned short wAddr, unsigned char byData)
+{
+	unsigned int dwRegNum;
+
+	if (wAddr >> 15)
+	{
+		// if write is to a different reg, reset
+		if ((wAddr & 0x6000) != (Map1_Last_Write_Addr & 0x6000))
+		{
+			Map1_Cnt = 0;
+			Map1_Latch = 0x00;
+		}
+		Map1_Last_Write_Addr = wAddr;
+
+		// if bit 7 set, reset and return
+		if (byData & 0x80)
+		{
+			Map1_Cnt = 0;
+			Map1_Latch = 0x00;
+			return;
+		}
+
+		if (byData & 0x01) Map1_Latch |= (1 << Map1_Cnt);
+		Map1_Cnt++;
+		if (Map1_Cnt < 5) return;
+
+		dwRegNum = (wAddr & 0x7FFF) >> 13;
+		Map1_Regs[dwRegNum] = Map1_Latch;
+
+		Map1_Cnt = 0;
+		Map1_Latch = 0x00;
+
+		switch(dwRegNum)
+		{
+		case 0:
+			{
+				// set mirroring
+				if (Map1_Regs[0] & 0x02)
+				{
+					if (Map1_Regs[0] & 0x01)
+					{
+						PPU_Mirroring(0);
+					}
+					else
+					{
+						PPU_Mirroring(1);
+					}
+				}
+				else
+				{
+					// one-screen mirroring
+					if (Map1_Regs[0] & 0x01)
+					{
+						PPU_Mirroring(2);
+					}
+					else
+					{
+						PPU_Mirroring(3);
+					}
+				}
+			}
+			break;
+
+		case 1:
+			{
+				unsigned char byBankNum = Map1_Regs[1];
+
+				if (Map1_Size == Map1_1024K)
+				{
+					if (Map1_Regs[0] & 0x10)
+					{
+						if (Map1_swap)
+						{
+							Map1_256K_base = (Map1_Regs[1] & 0x10) >> 4;
+							if (Map1_Regs[0] & 0x08)
+							{
+								Map1_256K_base |= ((Map1_Regs[2] & 0x10) >> 3);
+							}
+							Map1_set_ROM_banks();
+							Map1_swap = 0;
+						}
+						else
+						{
+							Map1_swap = 1;
+						}
+					}
+					else
+					{
+						// use 1st or 4th 256K banks
+						Map1_256K_base = (Map1_Regs[1] & 0x10) ? 3 : 0;
+						Map1_set_ROM_banks();
+					}
+				}
+				else if ((Map1_Size == Map1_512K) && (!VRomSize))
+				{
+					Map1_256K_base = (Map1_Regs[1] & 0x10) >> 4;
+					Map1_set_ROM_banks();
+				}
+				else if (VRomSize)
+				{
+					// set VROM bank at $0000
+					if (Map1_Regs[0] & 0x10)
+					{
+						// swap 4K
+						byBankNum <<= 2;
+						byBankNum &= VRomMask;
+						PPUBANK[0] = VROMPAGE(byBankNum++);
+						PPUBANK[1] = VROMPAGE(byBankNum++);
+						PPUBANK[2] = VROMPAGE(byBankNum++);
+						PPUBANK[3] = VROMPAGE(byBankNum++);
+					}
+					else
+					{
+						// swap 8K
+						byBankNum <<= 2;
+						byBankNum &= VRomMask;
+						PPUBANK[0] = VROMPAGE(byBankNum++);
+						PPUBANK[1] = VROMPAGE(byBankNum++);
+						PPUBANK[2] = VROMPAGE(byBankNum++);
+						PPUBANK[3] = VROMPAGE(byBankNum++);
+						PPUBANK[4] = VROMPAGE(byBankNum++);
+						PPUBANK[5] = VROMPAGE(byBankNum++);
+						PPUBANK[6] = VROMPAGE(byBankNum++);
+						PPUBANK[7] = VROMPAGE(byBankNum++);
+					}
+
+					NES_ChrGen = PPUBANK[(PPU_R0 & R0_BG_ADDR) >> 2];
+					NES_SprGen = PPUBANK[(PPU_R0 & R0_SP_ADDR) >> 1];
+				}
+			}
+			break;
+
+		case 2:
+			{
+				unsigned char byBankNum = Map1_Regs[2];
+
+				if ((Map1_Size == Map1_1024K) && (Map1_Regs[0] & 0x08))
+				{
+					if (Map1_swap)
+					{
+						Map1_256K_base =  (Map1_Regs[1] & 0x10) >> 4;
+						Map1_256K_base |= ((Map1_Regs[2] & 0x10) >> 3);
+						Map1_set_ROM_banks();
+						Map1_swap = 0;
+					}
+					else
+					{
+						Map1_swap = 1;
+					}
+				}
+
+				if (!VRomSize) 
+				{
+					if (Map1_Regs[0] & 0x10)
+					{
+						byBankNum <<= 2;
+						PPUBANK[4] = CRAMPAGE(byBankNum++);
+						PPUBANK[5] = CRAMPAGE(byBankNum++);
+						PPUBANK[6] = CRAMPAGE(byBankNum++);
+						PPUBANK[7] = CRAMPAGE(byBankNum++);
+
+						NES_ChrGen = PPUBANK[(PPU_R0 & R0_BG_ADDR) >> 2];
+						NES_SprGen = PPUBANK[(PPU_R0 & R0_SP_ADDR) >> 1];
+						break;
+					}
+				}
+
+				// set 4K VROM bank at $1000
+				if (Map1_Regs[0] & 0x10)
+				{
+					// swap 4K
+					byBankNum <<= 2;
+					byBankNum &= VRomMask;
+					PPUBANK[4] = VROMPAGE(byBankNum++);
+					PPUBANK[5] = VROMPAGE(byBankNum++);
+					PPUBANK[6] = VROMPAGE(byBankNum++);
+					PPUBANK[7] = VROMPAGE(byBankNum++);
+
+					NES_ChrGen = PPUBANK[(PPU_R0 & R0_BG_ADDR) >> 2];
+					NES_SprGen = PPUBANK[(PPU_R0 & R0_SP_ADDR) >> 1];
+				}
+			}
+			break;
+
+		case 3:
+			{
+				unsigned char byBankNum = Map1_Regs[3];
+
+				// set ROM bank
+				if (Map1_Regs[0] & 0x08)
+				{
+					// 16K of ROM
+					byBankNum <<= 1;
+
+					if (Map1_Regs[0] & 0x04)
+					{
+						// 16K of ROM at $8000
+						Map1_bank1 = byBankNum;
+						Map1_bank2 = byBankNum+1;
+						Map1_bank3 = Map1_HI1;
+						Map1_bank4 = Map1_HI2;
+					}
+					else
+					{
+						// 16K of ROM at $C000
+						if (Map1_Size == Map1_SMALL)
+						{
+							Map1_bank1 = 0;
+							Map1_bank2 = 1;
+							Map1_bank3 = byBankNum;
+							Map1_bank4 = byBankNum+1;
+						}
+					}
+				}
+				else
+				{
+					// 32K of ROM at $8000
+					byBankNum <<= 1;
+
+					Map1_bank1 = byBankNum;
+					Map1_bank2 = byBankNum+1;
+					if (Map1_Size == Map1_SMALL)
+					{
+						Map1_bank3 = byBankNum+2;
+						Map1_bank4 = byBankNum+3;
+					}
+				}
+				Map1_set_ROM_banks();
+			}
+			break;
+		}
+	}
+	else
+		SRAM[wAddr & 0x1fff] = byData;
+}
+
+/*******************************************************************
+ *   函数名称： Map7_Write                                         *
+ *   创建人员： 李政                                               *
+ *   函数版本： 1.00                                               *
+ *   创建日期： 2005/05/11 08:43:52                                *
+ *   功能描述： mapper7的MMC切换函数                               *
+ *   入口参数： unsigned short wAddr 向6502RAM写入的地址           *
+ *              unsigned char byData 向6502RAM写入的数据           *
+ *   返回值  ： 无                                                 *
+ *   修改记录：                                                    *
+ *******************************************************************/
+void Map7_Write(unsigned short wAddr, unsigned char byData)
+{
+	int Base;
+
+	if (wAddr >> 15)
+	{
+		/* Set ROM Banks */
+		Base = (byData & 0x07) << 2;
+		Base &= RomMask;
+
+		nes_pc -= (unsigned int)lastbank;
+
+		ROMBANK0 = ROMPAGE(Base++);
+		ROMBANK1 = ROMPAGE(Base++);
+		ROMBANK2 = ROMPAGE(Base++);
+		ROMBANK3 = ROMPAGE(Base++);
+
+		// 这里- 0x8000是为了在encodePC中不用再做& 0x1FFF的运算了
+		memmap_tbl[4] = ROMBANK0 - 0x8000;
+		memmap_tbl[5] = ROMBANK1 - 0xA000;
+		memmap_tbl[6] = ROMBANK2 - 0xC000;
+		memmap_tbl[7] = ROMBANK3 - 0xE000;
+
+		encodePC;
+
+		/* Name Table Mirroring */
+		PPU_Mirroring( byData & 0x10 ? 2 : 3 );
+	}
+	else
+		SRAM[wAddr & 0x1fff] = byData;
+}
+
+/*******************************************************************
+ *   函数名称： Map11_Write                                        *
+ *   创建人员： 李政                                               *
+ *   函数版本： 1.00                                               *
+ *   创建日期： 2005/05/11 08:43:52                                *
+ *   功能描述： mapper11的MMC切换函数                              *
+ *   入口参数： unsigned short wAddr 向6502RAM写入的地址           *
+ *              unsigned char byData 向6502RAM写入的数据           *
+ *   返回值  ： 无                                                 *
+ *   修改记录：                                                    *
+ *******************************************************************/
+void Map11_Write(unsigned short wAddr, unsigned char byData)
+{
+	int Base;
+
+	if (wAddr >> 15)
+	{
+		nes_pc -= (unsigned int)lastbank;
+
+		/* Set ROM Banks */
+		Base = byData << 2;
+		Base &= RomMask;
+
+		ROMBANK0 = ROMPAGE(Base++);
+		ROMBANK1 = ROMPAGE(Base++);
+		ROMBANK2 = ROMPAGE(Base++);
+		ROMBANK3 = ROMPAGE(Base++);
+
+		// 这里- 0x8000是为了在encodePC中不用再做& 0x1FFF的运算了
+		memmap_tbl[4] = ROMBANK0 - 0x8000;
+		memmap_tbl[5] = ROMBANK1 - 0xA000;
+		memmap_tbl[6] = ROMBANK2 - 0xC000;
+		memmap_tbl[7] = ROMBANK3 - 0xE000;
+
+		encodePC;
+
+		if (VRomSize)
+		{
+			/* Set PPU Banks */
+			Base = (byData >> 4) << 3;
+			Base &= VRomMask;
+			PPUBANK[0] = VROMPAGE(Base++);
+			PPUBANK[1] = VROMPAGE(Base++);
+			PPUBANK[2] = VROMPAGE(Base++);
+			PPUBANK[3] = VROMPAGE(Base++);
+			PPUBANK[4] = VROMPAGE(Base++);
+			PPUBANK[5] = VROMPAGE(Base++);
+			PPUBANK[6] = VROMPAGE(Base++);
+			PPUBANK[7] = VROMPAGE(Base++);
+
+			NES_ChrGen = PPUBANK[(PPU_R0 & R0_BG_ADDR) >> 2];
+			NES_SprGen = PPUBANK[(PPU_R0 & R0_SP_ADDR) >> 1];
+		}
+	}
+	else
+		SRAM[wAddr & 0x1fff] = byData;
+}
+#endif /* ONLY_BIN */
 
 /*******************************************************************
  *   函数名称： CPU_Reset                                          *
@@ -537,10 +1024,6 @@ void CPU_Reset()
 			ROMBANK2 = ROMPAGE(0);
 			ROMBANK3 = ROMPAGE(0);
 		}
-
-		/* Set PPU Banks */
-		for (nPage = 0; nPage < 8; ++nPage)
-			PPUBANK[nPage] = VROMPAGE(nPage);
 	}
 	else if (MapperNo == 2)
 	{
@@ -552,15 +1035,8 @@ void CPU_Reset()
 		ROMBANK1 = ROM + 0x2000;
 		ROMBANK2 = ROM + 0x1C000;
 		ROMBANK3 = ROM + 0x1E000;
-
-		/* Set PPU Banks */
-		for (nPage = 0; nPage < 8; ++nPage)
-			//PPUBANK[nPage] = &PTRAM[nPage * 0x400];
-			PPUBANK[nPage] = &PTRAM[nPage << 10];
 	}
-
-	else
-	//else if (MapperNo == 3)
+	else if (MapperNo == 3)
 	{
 		/* Write to Mapper */
 		MapperWrite = Map3_Write;
@@ -578,11 +1054,94 @@ void CPU_Reset()
 			ROMBANK2 = ROMPAGE(0);
 			ROMBANK3 = ROMPAGE(1);
 		}
-
-		/* Set PPU Banks */
-		for (nPage = 0; nPage < 8; ++nPage)
-			PPUBANK[nPage] = VROMPAGE(nPage);
 	}
+#ifndef ONLY_BIN
+	else if (MapperNo == 1)
+	{
+		unsigned int size_in_K;
+
+		/* Write to Mapper */
+		MapperWrite = Map1_Write;
+
+		/* Initialize State Registers */
+		Map1_Cnt = 0;
+		Map1_Latch = 0x00;
+
+		Map1_Regs[0] = 0x0c;
+		Map1_Regs[1] = 0x00;
+		Map1_Regs[2] = 0x00;
+		Map1_Regs[3] = 0x00;
+
+		size_in_K = (RomSize << 1) * 8;
+
+		if (size_in_K == 1024)
+		{
+			Map1_Size = Map1_1024K;
+		} 
+		else if (size_in_K == 512)
+		{
+			Map1_Size = Map1_512K;
+		}
+		else
+		{
+			Map1_Size = Map1_SMALL;
+		}
+
+		Map1_256K_base = 0; // use first 256K
+		Map1_swap = 0;
+
+		if (Map1_Size == Map1_SMALL)
+		{
+			// set two high pages to last two banks
+			Map1_HI1 = (RomSize << 1) - 2;
+			Map1_HI2 = (RomSize << 1) - 1;
+		}
+		else
+		{
+			// set two high pages to last two banks of current 256K region
+			Map1_HI1 = (256 / 8) - 2;
+			Map1_HI2 = (256 / 8) - 1;
+		}
+
+		// set CPU bank pointers
+		Map1_bank1 = 0;
+		Map1_bank2 = 1;
+		Map1_bank3 = Map1_HI1;
+		Map1_bank4 = Map1_HI2;
+
+		/* Set ROM Banks */
+		ROMBANK0 = ROMPAGE(((Map1_256K_base << 5) + (Map1_bank1 & /*((256/8)-1)*/31)) & RomMask);
+		ROMBANK1 = ROMPAGE(((Map1_256K_base << 5) + (Map1_bank2 & /*((256/8)-1)*/31)) & RomMask);
+		ROMBANK2 = ROMPAGE(((Map1_256K_base << 5) + (Map1_bank3 & /*((256/8)-1)*/31)) & RomMask);
+		ROMBANK3 = ROMPAGE(((Map1_256K_base << 5) + (Map1_bank4 & /*((256/8)-1)*/31)) & RomMask);
+
+	}
+	else if (MapperNo == 7)
+	{
+		/* Write to Mapper */
+		MapperWrite = Map7_Write;
+
+		/* Set ROM Banks */
+		ROMBANK0 = ROMPAGE(0);
+		ROMBANK1 = ROMPAGE(1);
+		ROMBANK2 = ROMPAGE(2);
+		ROMBANK3 = ROMPAGE(3);
+	}
+	else if (MapperNo == 11)
+	{
+		/* Write to Mapper */
+		MapperWrite = Map11_Write;
+
+		/* Set ROM Banks */
+		ROMBANK0 = ROMPAGE(0);
+		ROMBANK1 = ROMPAGE(1);
+		ROMBANK2 = ROMPAGE(2);
+		ROMBANK3 = ROMPAGE(3);
+
+		/* Name Table Mirroring */
+		PPU_Mirroring(1);
+	}
+#endif /* ONLY_BIN */
 	//else
 	//{
 	//  // Non support mapper
@@ -590,8 +1149,24 @@ void CPU_Reset()
 	//  //return -1;
 	//}
 
+	/* Set PPU Banks */
+	if (VRomSize)
+	{
+		for (nPage = 0; nPage < 8; ++nPage)
+			PPUBANK[nPage] = VROMPAGE(nPage);
+	}
+	else
+	{
+		for (nPage = 0; nPage < 8; ++nPage)
+			//PPUBANK[nPage] = &PTRAM[nPage * 0x400];
+			PPUBANK[nPage] = &PTRAM[nPage << 10];
+	}
+
+	NES_ChrGen = PPUBANK[(PPU_R0 & R0_BG_ADDR) >> 2];
+	NES_SprGen = PPUBANK[(PPU_R0 & R0_SP_ADDR) >> 1];
+
 	memmap_tbl[0] = RAM;
-	memmap_tbl[3] = SRAM;
+	memmap_tbl[3] = SRAM - 0x6000;
 
 	//这里- 0x8000是为了在encodePC中不用再做& 0x1FFF的运算了，下同
 	memmap_tbl[4] = ROMBANK0 - 0x8000;
@@ -687,7 +1262,7 @@ void CPU_Step(unsigned short wClocks)
 		case 0x01:  // ORA (Zpg,nes_X)
 			ReadPCX(wA0);
 			ReadZpW(wA0);
-			if (wA0 >= 0x8000 || wA0 < 0x2000)
+			if (wA0 >= 0x6000 || wA0 < 0x2000)
 				nes_A |= memmap_tbl[wA0 >> 13][wA0];
 			else
 				nes_A |= CPU_ReadIO(wA0);
@@ -729,7 +1304,7 @@ void CPU_Step(unsigned short wClocks)
 
 		case 0x0D:  // ORA Abs
 			ReadPCW(wA0);
-			if (wA0 >= 0x8000 || wA0 < 0x2000)
+			if (wA0 >= 0x6000 || wA0 < 0x2000)
 				nes_A |= memmap_tbl[wA0 >> 13][wA0];
 			else
 				nes_A |= CPU_ReadIO(wA0);
@@ -739,9 +1314,7 @@ void CPU_Step(unsigned short wClocks)
 
 		case 0x0E:  // ASL Abs 
 			ReadPCW(wA0);
-			ReadZp(wA0);
-			ASL;
-			WriteZp(wA0, byD0);
+			Bit6502RAM(ASL);
 			CLK(6);
 			break;
 
@@ -754,7 +1327,7 @@ void CPU_Step(unsigned short wClocks)
 			ReadZpW(wA0);
 			wA1 = wA0 + nes_Y;
 			CLK((wA0 & 0x0100) != (wA1 & 0x0100));
-			if (wA1 >= 0x8000 || wA1 < 0x2000)
+			if (wA1 >= 0x6000 || wA1 < 0x2000)
 				nes_A |= memmap_tbl[wA1 >> 13][wA1];
 			else
 				nes_A |= CPU_ReadIO(wA1);
@@ -786,7 +1359,7 @@ void CPU_Step(unsigned short wClocks)
 			ReadPCW(wA0);
 			wA1 = wA0 + nes_Y;
 			CLK((wA0 & 0x0100) != (wA1 & 0x0100));
-			if (wA1 >= 0x8000 || wA1 < 0x2000)
+			if (wA1 >= 0x6000 || wA1 < 0x2000)
 				nes_A |= memmap_tbl[wA1 >> 13][wA1];
 			else
 				nes_A |= CPU_ReadIO(wA1);
@@ -798,7 +1371,7 @@ void CPU_Step(unsigned short wClocks)
 			ReadPCW(wA0);
 			wA1 = wA0 + nes_X;
 			CLK((wA0 & 0x0100) != (wA1 & 0x0100));
-			if (wA1 >= 0x8000 || wA1 < 0x2000)
+			if (wA1 >= 0x6000 || wA1 < 0x2000)
 				nes_A |= memmap_tbl[wA1 >> 13][wA1];
 			else
 				nes_A |= CPU_ReadIO(wA1);
@@ -809,9 +1382,7 @@ void CPU_Step(unsigned short wClocks)
 		case 0x1E: // ASL Abs,nes_X
 			ReadPCW(wA0);
 			wA0 += nes_X;
-			ReadZp(wA0);
-			ASL;
-			WriteZp(wA0, byD0);
+			Bit6502RAM(ASL);
 			CLK(7);
 			break;
 
@@ -828,7 +1399,7 @@ void CPU_Step(unsigned short wClocks)
 		case 0x21: // AND (Zpg,nes_X)
 			ReadPCX(wA0);
 			ReadZpW(wA0);
-			if (wA0 >= 0x8000 || wA0 < 0x2000)
+			if (wA0 >= 0x6000 || wA0 < 0x2000)
 				nes_A &= memmap_tbl[wA0 >> 13][wA0];
 			else
 				nes_A &= CPU_ReadIO(wA0);
@@ -878,7 +1449,7 @@ void CPU_Step(unsigned short wClocks)
 
 		case 0x2C: // BIT Abs
 			ReadPCW(wA0);
-			if (wA0 >= 0x8000 || wA0 < 0x2000)
+			if (wA0 >= 0x6000 || wA0 < 0x2000)
 				byD0 = memmap_tbl[wA0 >> 13][wA0];
 			else
 				byD0 = CPU_ReadIO(wA0);
@@ -889,7 +1460,7 @@ void CPU_Step(unsigned short wClocks)
 
 		case 0x2D: // AND Abs 
 			ReadPCW(wA0);
-			if (wA0 >= 0x8000 || wA0 < 0x2000)
+			if (wA0 >= 0x6000 || wA0 < 0x2000)
 				nes_A &= memmap_tbl[wA0 >> 13][wA0];
 			else
 				nes_A &= CPU_ReadIO(wA0);
@@ -899,9 +1470,7 @@ void CPU_Step(unsigned short wClocks)
 
 		case 0x2E: // ROL Abs
 			ReadPCW(wA0);
-			ReadZp(wA0);
-			ROL;
-			WriteZp(wA0, byD0);
+			Bit6502RAM(ROL);
 			CLK(6);
 			break;
 
@@ -917,7 +1486,7 @@ void CPU_Step(unsigned short wClocks)
 			ReadZpW(wA0);
 			wA1 = wA0 + nes_Y;
 			CLK((wA0 & 0x0100) != (wA1 & 0x0100));
-			if (wA1 >= 0x8000 || wA1 < 0x2000)
+			if (wA1 >= 0x6000 || wA1 < 0x2000)
 				nes_A &= memmap_tbl[wA1 >> 13][wA1];
 			else
 				nes_A &= CPU_ReadIO(wA1);
@@ -949,7 +1518,7 @@ void CPU_Step(unsigned short wClocks)
 			ReadPCW(wA0);
 			wA1 = wA0 + nes_Y;
 			CLK((wA0 & 0x0100) != (wA1 & 0x0100));
-			if (wA1 >= 0x8000 || wA1 < 0x2000)
+			if (wA1 >= 0x6000 || wA1 < 0x2000)
 				nes_A &= memmap_tbl[wA1 >> 13][wA1];
 			else
 				nes_A &= CPU_ReadIO(wA1);
@@ -961,7 +1530,7 @@ void CPU_Step(unsigned short wClocks)
 			ReadPCW(wA0);
 			wA1 = wA0 + nes_X;
 			CLK((wA0 & 0x0100) != (wA1 & 0x0100));
-			if (wA1 >= 0x8000 || wA1 < 0x2000)
+			if (wA1 >= 0x6000 || wA1 < 0x2000)
 				nes_A &= memmap_tbl[wA1 >> 13][wA1];
 			else
 				nes_A &= CPU_ReadIO(wA1);
@@ -972,9 +1541,7 @@ void CPU_Step(unsigned short wClocks)
 		case 0x3E: // ROL Abs,nes_X
 			ReadPCW(wA0);
 			wA0 += nes_X;
-			ReadZp(wA0);
-			ROL;
-			WriteZp(wA0, byD0);
+			Bit6502RAM(ROL);
 			CLK(7);
 			break;
 
@@ -990,7 +1557,7 @@ void CPU_Step(unsigned short wClocks)
 		case 0x41: // EOR (Zpg,nes_X)
 			ReadPCX(wA0);
 			ReadZpW(wA0);
-			if (wA0 >= 0x8000 || wA0 < 0x2000)
+			if (wA0 >= 0x6000 || wA0 < 0x2000)
 				nes_A ^= memmap_tbl[wA0 >> 13][wA0];
 			else
 				nes_A ^= CPU_ReadIO(wA0);
@@ -1042,7 +1609,7 @@ void CPU_Step(unsigned short wClocks)
 
 		case 0x4D: // EOR Abs
 			ReadPCW(wA0);
-			if (wA0 >= 0x8000 || wA0 < 0x2000)
+			if (wA0 >= 0x6000 || wA0 < 0x2000)
 				nes_A ^= memmap_tbl[wA0 >> 13][wA0];
 			else
 				nes_A ^= CPU_ReadIO(wA0);
@@ -1052,9 +1619,7 @@ void CPU_Step(unsigned short wClocks)
 
 		case 0x4E: // LSR Abs
 			ReadPCW(wA0);
-			ReadZp(wA0);
-			LSR;
-			WriteZp(wA0, byD0);
+			Bit6502RAM(LSR);
 			CLK(6);
 			break;
 
@@ -1067,7 +1632,7 @@ void CPU_Step(unsigned short wClocks)
 			ReadZpW(wA0);
 			wA1 = wA0 + nes_Y;
 			CLK((wA0 & 0x0100) != (wA1 & 0x0100));
-			if (wA1 >= 0x8000 || wA1 < 0x2000)
+			if (wA1 >= 0x6000 || wA1 < 0x2000)
 				nes_A ^= memmap_tbl[wA1 >> 13][wA1];
 			else
 				nes_A ^= CPU_ReadIO(wA1);
@@ -1099,7 +1664,7 @@ void CPU_Step(unsigned short wClocks)
 			ReadPCW(wA0);
 			wA1 = wA0 + nes_Y;
 			CLK((wA0 & 0x0100) != (wA1 & 0x0100));
-			if (wA1 >= 0x8000 || wA1 < 0x2000)
+			if (wA1 >= 0x6000 || wA1 < 0x2000)
 				nes_A ^= memmap_tbl[wA1 >> 13][wA1];
 			else
 				nes_A ^= CPU_ReadIO(wA1);
@@ -1111,7 +1676,7 @@ void CPU_Step(unsigned short wClocks)
 			ReadPCW(wA0);
 			wA1 = wA0 + nes_X;
 			CLK((wA0 & 0x0100) != (wA1 & 0x0100));
-			if (wA1 >= 0x8000 || wA1 < 0x2000)
+			if (wA1 >= 0x6000 || wA1 < 0x2000)
 				nes_A ^= memmap_tbl[wA1 >> 13][wA1];
 			else
 				nes_A ^= CPU_ReadIO(wA1);
@@ -1122,9 +1687,7 @@ void CPU_Step(unsigned short wClocks)
 		case 0x5E: // LSR Abs,nes_X
 			ReadPCW(wA0);
 			wA0 += nes_X;
-			ReadZp(wA0);
-			LSR;
-			WriteZp(wA0, byD0);
+			Bit6502RAM(LSR);
 			CLK(7);
 			break;
 
@@ -1192,7 +1755,10 @@ void CPU_Step(unsigned short wClocks)
 			wA0 = *nes_pc++;
 			wA0 |= *nes_pc << 8;
 			wA1 = wA0 >> 13;
-			nes_pc = (unsigned char *)(memmap_tbl[wA1][wA0] | (unsigned short)(memmap_tbl[wA1][wA0 + 1]) << 8);
+			if (0x00ff == (wA0 & 0x00ff))
+				nes_pc = (unsigned char *)(memmap_tbl[wA1][wA0] | (unsigned short)(memmap_tbl[wA1][wA0 - 0x00ff]) << 8);
+			else
+				nes_pc = (unsigned char *)(memmap_tbl[wA1][wA0] | (unsigned short)(memmap_tbl[wA1][wA0 + 1]) << 8);
 			encodePC;
 			CLK(5);
 			break;
@@ -1210,9 +1776,7 @@ void CPU_Step(unsigned short wClocks)
 
 		case 0x6E: // ROR Abs
 			ReadPCW(wA0);
-			ReadZp(wA0);
-			ROR;
-			WriteZp(wA0, byD0);
+			Bit6502RAM(ROR);
 			CLK(6);
 			break;
 
@@ -1287,9 +1851,7 @@ void CPU_Step(unsigned short wClocks)
 		case 0x7E: // ROR Abs,nes_X
 			ReadPCW(wA0);
 			wA0 += nes_X;
-			ReadZp(wA0);
-			ROR;
-			WriteZp(wA0, byD0);
+			Bit6502RAM(ROR);
 			CLK(7);
 			break;
 
@@ -1415,7 +1977,7 @@ void CPU_Step(unsigned short wClocks)
 		case 0xA1: // LDA (Zpg,nes_X)
 			ReadPCX(wA0);
 			ReadZpW(wA0);
-			if (wA0 >= 0x8000 || wA0 < 0x2000)
+			if (wA0 >= 0x6000 || wA0 < 0x2000)
 				nes_A = memmap_tbl[wA0 >> 13][wA0];
 			else
 				nes_A = CPU_ReadIO(wA0);
@@ -1470,7 +2032,7 @@ void CPU_Step(unsigned short wClocks)
 
 		case 0xAC: // LDY Abs
 			ReadPCW(wA0);
-			if (wA0 >= 0x8000 || wA0 < 0x2000)
+			if (wA0 >= 0x6000 || wA0 < 0x2000)
 				nes_Y = memmap_tbl[wA0 >> 13][wA0];
 			else
 				nes_Y = CPU_ReadIO(wA0);
@@ -1480,7 +2042,7 @@ void CPU_Step(unsigned short wClocks)
 
 		case 0xAD: // LDA Abs
 			ReadPCW(wA0);
-			if (wA0 >= 0x8000 || wA0 < 0x2000)
+			if (wA0 >= 0x6000 || wA0 < 0x2000)
 				nes_A = memmap_tbl[wA0 >> 13][wA0];
 			else
 				nes_A = CPU_ReadIO(wA0);
@@ -1490,7 +2052,7 @@ void CPU_Step(unsigned short wClocks)
 
 		case 0xAE: // LDX Abs
 			ReadPCW(wA0);
-			if (wA0 >= 0x8000 || wA0 < 0x2000)
+			if (wA0 >= 0x6000 || wA0 < 0x2000)
 				nes_X = memmap_tbl[wA0 >> 13][wA0];
 			else
 				nes_X = CPU_ReadIO(wA0);
@@ -1507,7 +2069,7 @@ void CPU_Step(unsigned short wClocks)
 			ReadZpW(wA0);
 			wA1 = wA0 + nes_Y;
 			CLK((wA0 & 0x0100) != (wA1 & 0x0100));
-			if (wA1 >= 0x8000 || wA1 < 0x2000)
+			if (wA1 >= 0x6000 || wA1 < 0x2000)
 				nes_A = memmap_tbl[wA1 >> 13][wA1];
 			else
 				nes_A = CPU_ReadIO(wA1);
@@ -1545,7 +2107,7 @@ void CPU_Step(unsigned short wClocks)
 			ReadPCW(wA0);
 			wA1 = wA0 + nes_Y;
 			CLK((wA0 & 0x0100) != (wA1 & 0x0100));
-			if (wA1 >= 0x8000 || wA1 < 0x2000)
+			if (wA1 >= 0x6000 || wA1 < 0x2000)
 				nes_A = memmap_tbl[wA1 >> 13][wA1];
 			else
 				nes_A = CPU_ReadIO(wA1);
@@ -1563,7 +2125,7 @@ void CPU_Step(unsigned short wClocks)
 			ReadPCW(wA0);
 			wA1 = wA0 + nes_X;
 			CLK((wA0 & 0x0100) != (wA1 & 0x0100));
-			if (wA1 >= 0x8000 || wA1 < 0x2000)
+			if (wA1 >= 0x6000 || wA1 < 0x2000)
 				nes_Y = memmap_tbl[wA1 >> 13][wA1];
 			else
 				nes_Y = CPU_ReadIO(wA1);
@@ -1575,7 +2137,7 @@ void CPU_Step(unsigned short wClocks)
 			ReadPCW(wA0);
 			wA1 = wA0 + nes_X;
 			CLK((wA0 & 0x0100) != (wA1 & 0x0100));
-			if (wA1 >= 0x8000 || wA1 < 0x2000)
+			if (wA1 >= 0x6000 || wA1 < 0x2000)
 				nes_A = memmap_tbl[wA1 >> 13][wA1];
 			else
 				nes_A = CPU_ReadIO(wA1);
@@ -1587,7 +2149,7 @@ void CPU_Step(unsigned short wClocks)
 			ReadPCW(wA0);
 			wA1 = wA0 + nes_Y;
 			CLK((wA0 & 0x0100) != (wA1 & 0x0100));
-			if (wA1 >= 0x8000 || wA1 < 0x2000)
+			if (wA1 >= 0x6000 || wA1 < 0x2000)
 				nes_X = memmap_tbl[wA1 >> 13][wA1];
 			else
 				nes_X = CPU_ReadIO(wA1);
@@ -1605,7 +2167,7 @@ void CPU_Step(unsigned short wClocks)
 		case 0xC1: // CMP (Zpg,nes_X)
 			ReadPCX(wA0);
 			ReadZpW(wA0);
-			if (wA0 >= 0x8000 || wA0 < 0x2000)
+			if (wA0 >= 0x6000 || wA0 < 0x2000)
 				wD0 = nes_A - memmap_tbl[wA0 >> 13][wA0];
 			else
 				wD0 = nes_A - CPU_ReadIO(wA0);
@@ -1660,7 +2222,7 @@ void CPU_Step(unsigned short wClocks)
 
 		case 0xCC: // CPY Abs
 			ReadPCW(wA0);
-			if (wA0 >= 0x8000 || wA0 < 0x2000)
+			if (wA0 >= 0x6000 || wA0 < 0x2000)
 				wD0 = nes_Y - memmap_tbl[wA0 >> 13][wA0];
 			else
 				wD0 = nes_Y - CPU_ReadIO(wA0);
@@ -1671,7 +2233,7 @@ void CPU_Step(unsigned short wClocks)
 
 		case 0xCD: // CMP Abs
 			ReadPCW(wA0);
-			if (wA0 >= 0x8000 || wA0 < 0x2000)
+			if (wA0 >= 0x6000 || wA0 < 0x2000)
 				wD0 = nes_A - memmap_tbl[wA0 >> 13][wA0];
 			else
 				wD0 = nes_A - CPU_ReadIO(wA0);
@@ -1700,7 +2262,7 @@ void CPU_Step(unsigned short wClocks)
 			ReadZpW(wA0);
 			wA1 = wA0 + nes_Y;
 			CLK((wA0 & 0x0100) != (wA1 & 0x0100));
-			if (wA1 >= 0x8000 || wA1 < 0x2000)
+			if (wA1 >= 0x6000 || wA1 < 0x2000)
 				wD0 = nes_A - memmap_tbl[wA1 >> 13][wA1];
 			else
 				wD0 = nes_A - CPU_ReadIO(wA1);
@@ -1735,7 +2297,7 @@ void CPU_Step(unsigned short wClocks)
 			ReadPCW(wA0);
 			wA1 = wA0 + nes_Y;
 			CLK((wA0 & 0x0100) != (wA1 & 0x0100));
-			if (wA1 >= 0x8000 || wA1 < 0x2000)
+			if (wA1 >= 0x6000 || wA1 < 0x2000)
 				wD0 = nes_A - memmap_tbl[wA1 >> 13][wA1];
 			else
 				wD0 = nes_A - CPU_ReadIO(wA1);
@@ -1748,7 +2310,7 @@ void CPU_Step(unsigned short wClocks)
 			ReadPCW(wA0);
 			wA1 = wA0 + nes_X;
 			CLK((wA0 & 0x0100) != (wA1 & 0x0100));
-			if (wA1 >= 0x8000 || wA1 < 0x2000)
+			if (wA1 >= 0x6000 || wA1 < 0x2000)
 				wD0 = nes_A - memmap_tbl[wA1 >> 13][wA1];
 			else
 				wD0 = nes_A - CPU_ReadIO(wA1);
@@ -1834,7 +2396,7 @@ void CPU_Step(unsigned short wClocks)
 
 		case 0xEC: // CPX Abs
 			ReadPCW(wA0);
-			if (wA0 >= 0x8000 || wA0 < 0x2000)
+			if (wA0 >= 0x6000 || wA0 < 0x2000)
 				wD0 = nes_X - memmap_tbl[wA0 >> 13][wA0];
 			else
 				wD0 = nes_X - CPU_ReadIO(wA0);
@@ -2071,10 +2633,12 @@ static inline unsigned char CPU_ReadIO(unsigned short wAddr)
 	case 0x4017:   // Set Joypad2 data
 		byRet = (unsigned char)((PAD2_Latch >> (PAD2_Bit++)) & 1);
 		return byRet;
-	}
 
-	return (wAddr >> 8); /* when a register is not readable the upper
-						 half address is returned. */
+	default:
+		byRet = wAddr >> 8;/* when a register is not readable
+							the upperhalf address is returned. */
+		return byRet;
+	}
 }
 
 /*******************************************************************
@@ -2199,6 +2763,90 @@ static inline void CPU_WriteIO(unsigned short wAddr, unsigned char byData)
 /*                     PPU Emulation                               */
 /*                                                                 */
 /*=================================================================*/
+
+/*******************************************************************
+ *   函数名称： PPU_Mirroring                                      *
+ *   创建人员： 李政                                               *
+ *   函数版本： 1.00                                               *
+ *   创建日期： 2005/05/10 20:24:00                                *
+ *   功能描述： 处理Name Table的镜像方式                           *
+ *   入口参数： int nType 0：水平镜像                              *
+ *                        1：垂直镜像                              *
+ *   返回值  ： 无                                                 *
+ *   修改记录：                                                    *
+ *******************************************************************/
+void PPU_Mirroring(int nType)
+{
+#ifdef ONLY_BIN
+	if (nType)		// 垂直NT镜像
+	{
+		PPUBANK[NAME_TABLE0] = NTRAM;
+		PPUBANK[NAME_TABLE1] = NTRAM + 0x400;
+		PPUBANK[NAME_TABLE2] = NTRAM;
+		PPUBANK[NAME_TABLE3] = NTRAM + 0x400;
+		PPUBANK[12] = NTRAM;
+		PPUBANK[13] = NTRAM + 0x400;
+		PPUBANK[14] = NTRAM;
+		PPUBANK[15] = PalTable;
+	}
+	else			// 水平NT镜像
+	{
+		PPUBANK[NAME_TABLE0] = NTRAM;
+		PPUBANK[NAME_TABLE1] = NTRAM;
+		PPUBANK[NAME_TABLE2] = NTRAM + 0x400;
+		PPUBANK[NAME_TABLE3] = NTRAM + 0x400;
+		PPUBANK[12] = NTRAM;
+		PPUBANK[13] = NTRAM;
+		PPUBANK[14] = NTRAM + 0x400;
+		PPUBANK[15] = PalTable;
+	}
+#else
+	if (nType == 1)		// 垂直NT镜像
+	{
+		PPUBANK[NAME_TABLE0] = NTRAM;
+		PPUBANK[NAME_TABLE1] = NTRAM + 0x400;
+		PPUBANK[NAME_TABLE2] = NTRAM;
+		PPUBANK[NAME_TABLE3] = NTRAM + 0x400;
+		PPUBANK[12] = NTRAM;
+		PPUBANK[13] = NTRAM + 0x400;
+		PPUBANK[14] = NTRAM;
+		PPUBANK[15] = PalTable;
+	}
+	else if	(nType == 0)	// 水平NT镜像
+	{
+		PPUBANK[NAME_TABLE0] = NTRAM;
+		PPUBANK[NAME_TABLE1] = NTRAM;
+		PPUBANK[NAME_TABLE2] = NTRAM + 0x400;
+		PPUBANK[NAME_TABLE3] = NTRAM + 0x400;
+		PPUBANK[12] = NTRAM;
+		PPUBANK[13] = NTRAM;
+		PPUBANK[14] = NTRAM + 0x400;
+		PPUBANK[15] = PalTable;
+	}
+	else if	(nType == 2)	// $2400的单屏
+	{
+		PPUBANK[NAME_TABLE0] = NTRAM + 0x400;
+		PPUBANK[NAME_TABLE1] = NTRAM + 0x400;
+		PPUBANK[NAME_TABLE2] = NTRAM + 0x400;
+		PPUBANK[NAME_TABLE3] = NTRAM + 0x400;
+		PPUBANK[12] = NTRAM + 0x400;
+		PPUBANK[13] = NTRAM + 0x400;
+		PPUBANK[14] = NTRAM + 0x400;
+		PPUBANK[15] = PalTable;
+	}
+	else if	(nType == 3)	// $2000的单屏
+	{
+		PPUBANK[NAME_TABLE0] = NTRAM;
+		PPUBANK[NAME_TABLE1] = NTRAM;
+		PPUBANK[NAME_TABLE2] = NTRAM;
+		PPUBANK[NAME_TABLE3] = NTRAM;
+		PPUBANK[12] = NTRAM;
+		PPUBANK[13] = NTRAM;
+		PPUBANK[14] = NTRAM;
+		PPUBANK[15] = PalTable;
+	}
+#endif /* ONLY_BIN */
+}
 
 /*******************************************************************
  *   函数名称： PPU_CompareSprites                                 *
@@ -3702,6 +4350,7 @@ void APU_Write(unsigned int address, unsigned char value)
 
 	case 0x4014:  /* 0x4014 */
 		// Sprite DMA
+#ifdef HACK
 		{
 			register unsigned char *T = RAM
 							+ (((unsigned short)value << 8) & 0x7ff);
@@ -3709,6 +4358,70 @@ void APU_Write(unsigned int address, unsigned char value)
 			for (; i < SPRRAM_SIZE; i++)
 				SPRRAM[i] = T[i];
 		}
+#else /* HACK */
+		switch ( value >> 5 )
+		{
+		case 0x0:  /* RAM */
+			{
+				register unsigned char *T = RAM
+					+ (((unsigned short)value << 8) & 0x7ff);
+				register int i = 0;
+				for (; i < SPRRAM_SIZE; i++)
+					SPRRAM[i] = T[i];
+			}
+			break;
+
+		case 0x3:  /* SRAM */
+			{
+				register unsigned char *T = SRAM
+					+ (((unsigned short)value << 8) & 0x1fff);
+				register int i = 0;
+				for (; i < SPRRAM_SIZE; i++)
+					SPRRAM[i] = T[i];
+			}
+			break;
+
+		case 0x4:  /* ROM BANK 0 */
+			{
+				register unsigned char *T = ROMBANK0
+					+ (((unsigned short)value << 8) & 0x1fff);
+				register int i = 0;
+				for (; i < SPRRAM_SIZE; i++)
+					SPRRAM[i] = T[i];
+			}
+			break;
+
+		case 0x5:  /* ROM BANK 1 */
+			{
+				register unsigned char *T = ROMBANK1
+					+ (((unsigned short)value << 8) & 0x1fff);
+				register int i = 0;
+				for (; i < SPRRAM_SIZE; i++)
+					SPRRAM[i] = T[i];
+			}
+			break;
+
+		case 0x6:  /* ROM BANK 2 */
+			{
+				register unsigned char *T = ROMBANK2
+					+ (((unsigned short)value << 8) & 0x1fff);
+				register int i = 0;
+				for (; i < SPRRAM_SIZE; i++)
+					SPRRAM[i] = T[i];
+			}
+			break;
+
+		case 0x7:  /* ROM BANK 3 */
+			{
+				register unsigned char *T = ROMBANK3
+					+ (((unsigned short)value << 8) & 0x1fff);
+				register int i = 0;
+				for (; i < SPRRAM_SIZE; i++)
+					SPRRAM[i] = T[i];
+			}
+			break;
+		}
+#endif /* HACK */
 		break;
 
 	case 0x4016:  /* 0x4016 */
@@ -3722,6 +4435,7 @@ void APU_Write(unsigned int address, unsigned char value)
 		break;
 
 	default:
+		//SLNES_MessageBox("%x",address);
 		break;
 	}
 }
@@ -3936,15 +4650,24 @@ int SLNES_Init()
 		&& gamefile[2] == 'S'
 		&& gamefile[3] == 0x1A)	// *.nes文件
 	{
-		// 因为只支持mapper0、2、3，所以只要知道低4位信息就可以了
-		MapperNo = gamefile[6] >> 4;
+		MapperNo = gamefile[6] >> 4 | gamefile[7] & 0xF0;
+#ifdef ONLY_BIN
 		if (MapperNo != 0 && MapperNo != 2 && MapperNo != 3)
+#else
+		if (MapperNo != 0
+			&& MapperNo != 2
+			&& MapperNo != 3
+			&& MapperNo != 1
+			&& MapperNo != 7
+			&& MapperNo != 11)
+#endif /* ONLY_BIN */
 			return -1;
 
 		ROM = gamefile + 16;
 		RomSize = gamefile[4];
 		VRomSize = gamefile[5];
 		ROM_Mirroring = gamefile[6] & 1;
+		ROM_SRAM = gamefile[6] & 2;
 	}
 	else if (gamefile[0] == 0x3C
 			&& gamefile[1] == 0x08
@@ -4070,14 +4793,19 @@ int SLNES_Init()
 			*(pFixBin + 1) = 0x205189A5;
 		}
 #endif /* LSB_FIRST */
+
+		ROM_SRAM = 0;
 	}
 	else
 		return -1;
 
 // 乘法		VROM = ROM + RomSize * 0x4000;
 	VROM = ROM + (RomSize << 14);
-	return 0;
 
+	RomMask = (RomSize << 1) - 1;
+	VRomMask = (VRomSize << 3) - 1;
+
+	return 0;
 }
 
 /*******************************************************************
@@ -4096,13 +4824,14 @@ void SLNES_Reset()
 /*  Initialize resources                                           */
 /*-----------------------------------------------------------------*/
 	int i;
-	for (i = 0; i < 2048; i++)
+	for (i = 0; i < RAM_SIZE; i++)
 		RAM[i] = 0;
+	for (i = 0; i < SRAM_SIZE; i++)
+		SRAM[i] = 0;
 	for (i = 0; i < 32; i++)
 		PalTable[i] = 0;
 
-	pad_strobe = 0;
-	PAD1_Bit = PAD2_Bit = 0;
+	pad_strobe = PAD1_Bit = PAD2_Bit = 0;
 	PAD1_Latch = PAD2_Latch = PAD_System = 0;
 
 /*-----------------------------------------------------------------*/
@@ -4130,31 +4859,8 @@ void SLNES_Reset()
 	// Reset information on PPU_R0
 	PPU_Increment = 1;
 	PPU_SP_Height = 8;
-	NES_ChrGen = 0;
-	NES_SprGen = 0;
 
-	if (ROM_Mirroring)		// 垂直NT镜像
-	{
-		PPUBANK[NAME_TABLE0] = NTRAM;
-		PPUBANK[NAME_TABLE1] = NTRAM + 0x400;
-		PPUBANK[NAME_TABLE2] = NTRAM;
-		PPUBANK[NAME_TABLE3] = NTRAM + 0x400;
-		PPUBANK[12] = NTRAM;
-		PPUBANK[13] = NTRAM + 0x400;
-		PPUBANK[14] = NTRAM;
-		PPUBANK[15] = PalTable;
-	}
-	else					// 水平NT镜像
-	{
-		PPUBANK[NAME_TABLE0] = NTRAM;
-		PPUBANK[NAME_TABLE1] = NTRAM;
-		PPUBANK[NAME_TABLE2] = NTRAM + 0x400;
-		PPUBANK[NAME_TABLE3] = NTRAM + 0x400;
-		PPUBANK[12] = NTRAM;
-		PPUBANK[13] = NTRAM;
-		PPUBANK[14] = NTRAM + 0x400;
-		PPUBANK[15] = PalTable;
-	}
+	PPU_Mirroring(ROM_Mirroring);	// 处理NT镜像
 
 	byVramWriteEnable = (VRomSize == 0) ? 1 : 0;
 

@@ -827,13 +827,9 @@ int SLNES_ReadRom(const char *pszFileName)
 		return -1;
 
 
-	fread(gamefile, 1, 188416, fp);
+	fread(gamefile, 1, SIZE_OF_gamefile, fp);
 	if(SLNES_Init() == -1)
 		return -1;
-
-	ROM_SRAM = 0;
-	/* Clear SRAM */
-	memset(SRAM, 0, SRAM_SIZE);
 
 	/* File close */
 	fclose(fp);

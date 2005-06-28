@@ -35,18 +35,22 @@
 #include "SLNES_System.h"
 #include "SLNES_Data.h"
 
-#ifndef TCNT2
-#define TCNT2 	0xD0
-//#define TCNT2 	TCNT1
+#ifndef TCNT3
+#define TCNT3 	0xD0
+//#define TCNT3 	TCNT1
 #endif
-#ifndef TRLD2
-#define TRLD2 	0xD4
-//#define TRLD2 	TRLD1
+#ifndef TRLD3
+#define TRLD3 	0xD4
+//#define TRLD3 	TRLD1
 #endif
-#ifndef TCTRL2
-#define TCTRL2	0xD8
-//#define TCTRL2	TCTRL1
+#ifndef TCTRL3
+#define TCTRL3	0xD8
+//#define TCTRL3	TCTRL1
 #endif
+
+#ifdef TEST_STACK
+unsigned int used_stack_size;
+#endif /* TEST_STACK */
 
 /*******************************************************************
  *   函数名称： main（独立运行时）或SLNES_Main（由外部调用时）     *
@@ -62,6 +66,20 @@
 //int SLNES_Main()
 int main()
 {
+#ifdef TEST_STACK
+	unsigned int i;
+	unsigned int dummy = 0x12345678;	// 往Stack里写的测试数据
+	register unsigned int *bottom asm("l0");	// STACK_BOTTOM
+	register unsigned int size asm("l2");
+	__asm__ __volatile__("set STACK_BOTTOM, %l0");
+	__asm__ __volatile__("sub %sp, %l0, %l2");	// 当前剩余的Stack容量
+	size >>= 2;
+	size--;	// 避免冲掉当前的SP
+	for (i = 0; i < size; i++)
+		*(bottom + i) = dummy;
+	used_stack_size = 0;
+#endif /* TEST_STACK */
+
 #ifndef SLNES_SIM
 	/*GameInit();*/
 
@@ -81,11 +99,11 @@ int main()
 	//InitTimer();
 	*(volatile int*)(SCNT + PREGS) = SCALER_RELOAD;
 	*(volatile int*)(SRLD + PREGS) = SCALER_RELOAD;
-	*(volatile int*)(TCNT2 + PREGS) = 0xFFFFFFFF;
-	*(volatile int*)(TRLD2 + PREGS) = 0xFFFFFFFF;
+	*(volatile int*)(TCNT3 + PREGS) = 0xFFFFFFFF;
+	*(volatile int*)(TRLD3 + PREGS) = 0xFFFFFFFF;
 #ifdef PrintfFrameClock
-	*(volatile int*)(TCNT0 + PREGS) = 0xFFFFFF;
-	*(volatile int*)(TRLD0 + PREGS) = 0xFFFFFF;
+	*(volatile int*)(TCNT1 + PREGS) = 0xFFFFFF;
+	*(volatile int*)(TRLD1 + PREGS) = 0xFFFFFF;
 #endif /* PrintfFrameClock */
 
 	// init Sdram
@@ -134,13 +152,14 @@ int main()
 #ifndef SLNES_SIM
 
 		// 开启Timer3
-		*(volatile int*)(TCTRL2 + PREGS) = 0x7;
+		*(volatile int*)(TCTRL3 + PREGS) = 0x7;
 
 #ifdef PrintfFrameClock
-		*(volatile int*)(TCTRL0 + PREGS) = 0x7;
+		*(volatile int*)(TCTRL1 + PREGS) = 0x7;
 #endif /* PrintfFrameClock */
 
 #ifdef withMEMIO
+		// 开启TVEncoder
 		//EnableTVEncoder(TRUE);
 		*(volatile int*)((DECODE_BASE_ADDR+TV_ONOFF)*4 + MEMIO) = 1;
 #endif /* withMEMIO */
@@ -149,10 +168,10 @@ int main()
 
 		frame_count = 1;
 
-		// 开启PCM播放
+		// 开启PCM
 
-//		base_time = *(volatile int*)(TCNT2 + PREGS) * (MICROSEC_PER_COUNT);
-		base_time = *(volatile int*)(TCNT2 + PREGS);
+//		base_time = *(volatile int*)(TCNT3 + PREGS) * (MICROSEC_PER_COUNT);
+		base_time = *(volatile int*)(TCNT3 + PREGS);
 
 		for (;;)
 		{
@@ -161,7 +180,7 @@ int main()
 #endif /* withMEMIO */
 			SLNES(PPU1);
 
-			//与PCM硬件进行同步
+			// 与PCM硬件进行同步
 //			last_frame_time = base_time - (frame_count++) * (FRAME_SKIP + 1) * SAMPLE_PER_FRAME * 1000000 / SAMPLE_PER_SEC;
 //			last_frame_time = base_time - (frame_count++) * 120000;	// FRAME_SKIP为6，SAMPLE_PER_FRAME为189、378或756
 //			last_frame_time = base_time - (frame_count++) * 120000 / (MICROSEC_PER_COUNT);	// FRAME_SKIP为6，SAMPLE_PER_FRAME为189、378或756
@@ -169,8 +188,8 @@ int main()
 			last_frame_time = base_time - (frame_count++) * (FRAME_SKIP + 1) * ((120000/7) / (SCALER_RELOAD + 1)) * LEON_CLK;	// SAMPLE_PER_FRAME为189、378或756
 			for (;;)
 			{
-//				cur_time = *(volatile int*)(TCNT2 + PREGS) * (MICROSEC_PER_COUNT);
-				cur_time = *(volatile int*)(TCNT2 + PREGS);
+//				cur_time = *(volatile int*)(TCNT3 + PREGS) * (MICROSEC_PER_COUNT);
+				cur_time = *(volatile int*)(TCNT3 + PREGS);
 				if(last_frame_time >= cur_time)
 					break;
 			}
@@ -180,7 +199,7 @@ int main()
 #endif /* withMEMIO */
 			SLNES(PPU2);
 
-			//与PCM硬件进行同步
+			// 与PCM硬件进行同步
 //			last_frame_time = base_time - (frame_count++) * (FRAME_SKIP + 1) * SAMPLE_PER_FRAME * 1000000 / SAMPLE_PER_SEC;
 //			last_frame_time = base_time - (frame_count++) * 120000;	// FRAME_SKIP为6，SAMPLE_PER_FRAME为189、378或756
 //			last_frame_time = base_time - (frame_count++) * 120000 / (MICROSEC_PER_COUNT);	// FRAME_SKIP为6，SAMPLE_PER_FRAME为189、378或756
@@ -188,8 +207,8 @@ int main()
 			last_frame_time = base_time - (frame_count++) * (FRAME_SKIP + 1) * ((120000/7) / (SCALER_RELOAD + 1)) * LEON_CLK;	// SAMPLE_PER_FRAME为189、378或756
 			for (;;)
 			{
-//				cur_time = *(volatile int*)(TCNT2 + PREGS) * (MICROSEC_PER_COUNT);
-				cur_time = *(volatile int*)(TCNT2 + PREGS);
+//				cur_time = *(volatile int*)(TCNT3 + PREGS) * (MICROSEC_PER_COUNT);
+				cur_time = *(volatile int*)(TCNT3 + PREGS);
 				if(last_frame_time >= cur_time)
 					break;
 			}
@@ -207,7 +226,7 @@ int main()
 			if (PAD_System == 0xF0)
 				return 0;
 
-			//与PCM硬件进行同步
+			// 与PCM硬件进行同步
 //			last_frame_time = base_time - (frame_count++) * (FRAME_SKIP + 1) * SAMPLE_PER_FRAME * 1000000 / SAMPLE_PER_SEC;
 //			last_frame_time = base_time - (frame_count++) * 120000;	// FRAME_SKIP为6，SAMPLE_PER_FRAME为189、378或756
 //			last_frame_time = base_time - (frame_count++) * 120000 / (MICROSEC_PER_COUNT);	// FRAME_SKIP为6，SAMPLE_PER_FRAME为189、378或756
@@ -215,8 +234,8 @@ int main()
 			last_frame_time = base_time - (frame_count++) * (FRAME_SKIP + 1) * ((120000/7) / (SCALER_RELOAD + 1)) * LEON_CLK;	// SAMPLE_PER_FRAME为189、378或756
 			for (;;)
 			{
-//				cur_time = *(volatile int*)(TCNT2 + PREGS) * (MICROSEC_PER_COUNT);
-				cur_time = *(volatile int*)(TCNT2 + PREGS);
+//				cur_time = *(volatile int*)(TCNT3 + PREGS) * (MICROSEC_PER_COUNT);
+				cur_time = *(volatile int*)(TCNT3 + PREGS);
 				if(last_frame_time >= cur_time)
 					break;
 			}
@@ -230,16 +249,35 @@ int main()
 			if (last_frame_time < 0xFFFFFF)
 //			if (frame_count  == 1000)
 			{
-#if 1
+#if 0
 				printf("last_frame_time = %x;Timer reload.\n", last_frame_time);
 #endif
 
 				frame_count = 1;
 
-				*(volatile int*)(TCTRL2 + PREGS) = 0x7;	// 重载Timer
-//				base_time = *(volatile int*)(TCNT2 + PREGS) * (MICROSEC_PER_COUNT);
-				base_time = *(volatile int*)(TCNT2 + PREGS);
+				*(volatile int*)(TCTRL3 + PREGS) = 0x7;	// 重载Timer
+//				base_time = *(volatile int*)(TCNT3 + PREGS) * (MICROSEC_PER_COUNT);
+				base_time = *(volatile int*)(TCNT3 + PREGS);
 			}
+			
+#ifdef TEST_STACK
+			if (frame_count > 100 && used_stack_size == 0)	// 游戏运行一段时间后再测Stack
+			{
+				for (i = 0; i < size; i++)
+				{
+					// 在计算used_stack_size之前不能调用printf函数，
+					// 否则计算误差为2KB
+					//printf("[%x] = %x\n", bottom + i, *(bottom + i));
+					if (*(bottom + i) != dummy)
+						break;
+				}
+			
+				__asm__ __volatile__("set STACK_SIZE, %l2");
+				used_stack_size = size - (i << 2);	// 被使用过的Stack容量的最大值
+				printf("STACK_BOTTOM is: 0x%x\n", bottom);
+				printf("Used stack size is %d bytes\n", used_stack_size);
+			}
+#endif /* TEST_STACK */
 		}
 
 		SLNES_Reset();
@@ -279,9 +317,8 @@ int SLNES_ReadRom(const char *pszFileName)
 	if(SLNES_Init() == -1)
 		return -1;
 
-	//ROM_SRAM = 0;
-	///* Clear SRAM */
-	//memset(SRAM, 0, SRAM_SIZE);
+	/* Clear SRAM */
+	memset(SRAM, 0, SRAM_SIZE);
 
 	///* File close */
 	//fclose(fp);

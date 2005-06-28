@@ -53,7 +53,7 @@ extern int StartDisplay;
 /*  FRAME_SKIP definition                                          */
 /*-----------------------------------------------------------------*/
 
-#define FRAME_SKIP 0		// 跳桢数，一般设为10以下
+#define FRAME_SKIP 6		// 跳桢数，一般设为10以下
 // APU桢存内所含的桢数，不一定非和FRAME_SKIP有如此精确的关系
 #define APU_LOOPS ((FRAME_SKIP + 2) << 1)
 
@@ -168,7 +168,7 @@ extern int StartDisplay;
 
 #ifdef PrintfFrameClock
 
-#define GET_CPU_CLOCK  *(volatile int*)(TCNT1 + PREGS)
+#define GET_CPU_CLOCK  *(volatile int*)(TCNT0 + PREGS)
 // 打印出非跳桢期间所花的时间（微秒）
 #define Printf_6AP_FrameClock  \
 	if (old_time > cur_time) \
@@ -176,7 +176,7 @@ extern int StartDisplay;
 			(old_time - cur_time) * MICROSEC_PER_COUNT, Frame++); \
 	else \
 		printf("6+A+P: %d;	Frame: %d;\n", \
-			(*(volatile int*)(TRLD1+PREGS) - cur_time + old_time) \
+			(*(volatile int*)(TRLD0+PREGS) - cur_time + old_time) \
 			* MICROSEC_PER_COUNT, Frame++)
 // 打印出跳桢期间所花的时间（微秒）
 #define Printf_6A_FrameClock  \
@@ -185,7 +185,7 @@ extern int StartDisplay;
 			(old_time - cur_time) * MICROSEC_PER_COUNT, Frame++); \
 	else \
 		printf("6+A: %d;	Frame: %d;\n", \
-			(*(volatile int*)(TRLD1+PREGS) - cur_time + old_time) \
+			(*(volatile int*)(TRLD0+PREGS) - cur_time + old_time) \
 			* MICROSEC_PER_COUNT, Frame++)
 
 #endif /* PrintfFrameClock */
@@ -234,7 +234,6 @@ extern int ROM_SRAM;
 /*-----------------------------------------------------------------*/
 
 #define SRAM_SIZE    0x2000
-//#define SRAM_SIZE    0x1
 
 /* ROM */
 extern unsigned char *ROM;

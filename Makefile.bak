@@ -12,6 +12,7 @@ UserLink = MyLink
 # 包含公用的MAKEFILE (注意顺序：先定义，再包含)
 include ${LeonMakeRoot}\script\LeonMake.mak
 
+
 ########################### Optional #################################
 # 在TSIM中测试时使用
 #CFLAGS += -DSLNES_SIM

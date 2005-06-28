@@ -11,10 +11,6 @@
 2.在makefile里的CFLAGS中使用-DSLNES_SIM；
 3.其它同上。
 
-三、
-如果SDRAM够大，则可以将SLNES_Data.h中的SIZE_OF_gamefile由188416改为262160，使得支持256KB的.nes游戏。
-如果SDRAM还够大，则可以将SLNES.h中的SRAM_SIZE由1改为标准的0x2000，使得支持需要存盘功能的.nes游戏。
-
 
 目录说明：
 SLNES目录存放NES模拟器源代码及LEON平台上运行的模拟器的项目文件。
