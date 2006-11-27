@@ -1,0 +1,54 @@
+                           "NES on a chip" Pinout
+                           ----------------------
+
+
+V 1.00
+04/25/00
+K.Horton
+
+
+
+                                 82      63
+                                 ----------
+                               1|\        /|62
+                                |\\      //|
+                                | \\    // |
+                                |  \\  //  |
+                                |   \--/   |
+                                |   |##|   |
+                                |   |##|   |
+                                |   /--\   |
+                                |  //  \\  |
+                                | //    \\ |
+                                |//      \\|
+                              21|/        \|42
+                                 ----------
+                                 22      41
+
+
+Note: Pin 1 is the "fat" route on the board.
+
+
+Pin  Function    Pin  Function    Pin  Function    Pin   Function
+-------------    -------------    -------------    --------------
+1  -             22 - PRG D7      42 - CHR /WE     63 - CHR D0
+2  - PL1C        23 - PRG A6      43 - CHR /RD     64 - CHR D7
+3  -             24 - PRG D6      44 - /CIRAM      65 - CHR D1
+4  -             25 - PRG A5      45 - MIRROR      66 - CHR D6
+5  -             26 - PRG D5      46 - CR /A13     67 - CHR D2
+6  - PL12L       27 - PRG A4      47 - CHR A6      68 - CHR D5
+7  -             28 - PRG D4      48 - CHR A7      69 - CHR D3
+8  -             29 - PRG A3      49 - CHR A5      70 - CHR D4
+9  -             30 - PRG D3      50 - CHR A8      71 - XTAL 1
+10 - PL2C        31 - PRG A2      51 - CHR A4      72 - XTAL 2
+11 - +5V         32 - PRG D2      52 - CHR A9      73 - +5V
+12 - +5V         33 - PRG A1      53 - CHR A3      74 - VIDEO
+13 - PRG A11     34 - PRG D1      54 - GND         75 - NC
+14 - PRG M2      35 - PRG A0      55 - GND         76 - NC
+15 - PRG A10     36 - PRG D0      56 - CHR A10     77 - AUDIO
+16 - PRG A12     37 - PRG R/W     57 - CHR A2      78 - GND
+17 - PRG A9      38 - PRG /CE     58 - CHR A11     79 - GND
+18 - PRG A13     39 - PRG IRQ     59 - CHR A1      80 - /RST
+19 - PRG A8      40 - GND         60 - CHR A12     81 - PL1D
+20 - PRG A14     41 - GND         61 - CHR A0      82 - PL2D
+21 - PRG A7                       62 - CHR A13

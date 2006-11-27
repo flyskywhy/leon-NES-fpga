@@ -1,0 +1,1445 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0059)http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html -->
+<HTML><HEAD><TITLE>How to write an emulator</TITLE>
+<META content="text/html; charset=windows-1252" http-equiv=Content-Type>
+<META content="MSHTML 5.00.3103.1000" name=GENERATOR>
+<STYLE>@font-face {
+	font-family: Verdana;
+}
+P.MsoNormal {
+	FONT-FAMILY: Verdana; FONT-SIZE: 10pt; MARGIN: 0in 0in 0pt
+}
+LI.MsoNormal {
+	FONT-FAMILY: Verdana; FONT-SIZE: 10pt; MARGIN: 0in 0in 0pt
+}
+DIV.MsoNormal {
+	FONT-FAMILY: Verdana; FONT-SIZE: 10pt; MARGIN: 0in 0in 0pt
+}
+H1 {
+	FONT-FAMILY: Verdana; FONT-SIZE: 12pt; MARGIN: 12pt 0in 3pt
+}
+H2 {
+	FONT-FAMILY: Verdana; FONT-SIZE: 18pt; MARGIN: 12pt 0in 3pt
+}
+P.MsoToc1 {
+	FONT-FAMILY: Verdana; FONT-SIZE: 10pt; MARGIN: 0in 0in 0pt
+}
+LI.MsoToc1 {
+	FONT-FAMILY: Verdana; FONT-SIZE: 10pt; MARGIN: 0in 0in 0pt
+}
+DIV.MsoToc1 {
+	FONT-FAMILY: Verdana; FONT-SIZE: 10pt; MARGIN: 0in 0in 0pt
+}
+P.MsoToc2 {
+	FONT-FAMILY: Verdana; FONT-SIZE: 10pt; MARGIN: 0in 0in 0pt
+}
+LI.MsoToc2 {
+	FONT-FAMILY: Verdana; FONT-SIZE: 10pt; MARGIN: 0in 0in 0pt
+}
+DIV.MsoToc2 {
+	FONT-FAMILY: Verdana; FONT-SIZE: 10pt; MARGIN: 0in 0in 0pt
+}
+A:link {
+	COLOR: blue; FONT-FAMILY: Verdana; TEXT-DECORATION: none
+}
+SPAN.MsoHyperlink {
+	COLOR: blue; FONT-FAMILY: Verdana; TEXT-DECORATION: none
+}
+A:visited {
+	COLOR: purple; FONT-FAMILY: Verdana; TEXT-DECORATION: none
+}
+SPAN.MsoHyperlinkFollowed {
+	COLOR: purple; FONT-FAMILY: Verdana; TEXT-DECORATION: none
+}
+P.Code {
+	COLOR: gray; FONT-FAMILY: "Courier New"; FONT-SIZE: 10pt; MARGIN: 0in 0in 0pt 0.5in
+}
+LI.Code {
+	COLOR: gray; FONT-FAMILY: "Courier New"; FONT-SIZE: 10pt; MARGIN: 0in 0in 0pt 0.5in
+}
+DIV.Code {
+	COLOR: gray; FONT-FAMILY: "Courier New"; FONT-SIZE: 10pt; MARGIN: 0in 0in 0pt 0.5in
+}
+SPAN.CodeChar {
+	COLOR: gray; FONT-FAMILY: "Courier New"
+}
+DIV.Section1 {
+	page: Section1
+}
+OL {
+	MARGIN-BOTTOM: 0in
+}
+UL {
+	MARGIN-BOTTOM: 0in
+}
+</STYLE>
+</HEAD>
+<BODY background="How to write an emulator.files/background.jpg" bgColor=white 
+lang=EN-US link=blue vLink=purple>
+<DIV class=Section1>
+<H2 align=center style="TEXT-ALIGN: center"><A name=_Toc9741825></A><A 
+name=_Toc9330970>How to write an emulator</A></H2>
+<P align=center class=MsoNormal style="TEXT-ALIGN: center">By: Nikolas 
+Gavalas</P>
+<P align=center class=MsoNormal style="TEXT-ALIGN: center">Email: <A 
+href="mailto:thundermahoney@hotmail.com">thundermahoney@hotmail.com</A></P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoToc2>&nbsp;</P>
+<P class=MsoToc2>&nbsp;</P>
+<P class=MsoToc2><SPAN class=MsoHyperlink><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Toc9741825">How 
+to write an emulator</A></SPAN></P>
+<P class=MsoToc1><SPAN class=MsoHyperlink><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Toc9741826">Introduction</A></SPAN></P>
+<P class=MsoToc1><SPAN class=MsoHyperlink><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Toc9741827">Stages</A></SPAN></P>
+<P class=MsoToc1><SPAN class=MsoHyperlink><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Toc9741828">Loading</A></SPAN></P>
+<P class=MsoToc1><SPAN class=MsoHyperlink><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Toc9741829">Running</A></SPAN></P>
+<P class=MsoToc1><SPAN class=MsoHyperlink><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Toc9741830">Fetching 
+the opcode</A></SPAN></P>
+<P class=MsoToc1><SPAN class=MsoHyperlink><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Toc9741831">Executing 
+the opcode</A></SPAN></P>
+<P class=MsoToc1><SPAN class=MsoHyperlink><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Toc9741832">Execute 
+Interrupts</A></SPAN></P>
+<P class=MsoToc1><SPAN class=MsoHyperlink><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Toc9741833">Reading 
+And Writing To Memory</A></SPAN></P>
+<P class=MsoToc1><SPAN class=MsoHyperlink><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Toc9741834">Doing 
+the Cyclic Tasks</A></SPAN></P>
+<P class=MsoToc1><SPAN class=MsoHyperlink><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Toc9741835">Video 
+Emulation</A></SPAN></P>
+<P class=MsoToc1><SPAN class=MsoHyperlink><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Toc9741836">Sound 
+Emulation</A></SPAN></P>
+<P class=MsoToc1><SPAN class=MsoHyperlink><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Toc9741837">Optimization</A></SPAN></P>
+<P class=MsoToc1><SPAN class=MsoHyperlink><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Toc9741838">Lessons 
+Learned</A></SPAN></P>
+<P class=MsoToc1><SPAN class=MsoHyperlink><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Toc9741839">My 
+Emulator</A></SPAN></P>
+<P class=MsoToc1><SPAN class=MsoHyperlink><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Toc9741840">Reference</A></SPAN></P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>&nbsp;</P>
+<H1><A name=_Toc9741826></A><A name=_Toc9330971>Introduction</A></H1>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Emulating your favorite system to play games is easier than 
+you think depending on the system you’re trying to emulate. This document is 
+intended to give you the general idea of building an emulator. To help you 
+understand the concepts more I will give specific examples to the NES emulator 
+that I have been working on this semester at California State University of Long 
+Beach.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>This document assumes that the reader is familiar with C++ 
+and Assembly.</P>
+<P class=MsoNormal style="TEXT-INDENT: 0.5in">&nbsp;</P>
+<H1><A name=_Toc9741827></A><A name=_Toc9330972>Stages</A></H1>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>There are really only two major stages that are involved in 
+emulating. They are loading the game or application (ROM) and running the ROM. 
+Most of your work will be spend in the running stage. The loading stage is 
+pretty straight forward.</P>
+<P class=MsoNormal>&nbsp;</P>
+<H1><A name=_Toc9741828></A><A name=_Toc9330973>Loading</A></H1>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>The first thing you want to do when loading the ROM is load 
+the whole file into memory. How you load it into memory depends on what system 
+you’re emulating. I’ll explain how it works on the NES for a good example.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>The NES has two types of memory on the cartridge, program and 
+character. The program memory is the actual instructions to be executed by the 
+CPU. The character memory is the 8x8 pattern tiles used for displaying the 
+graphics. For the NES, I load all the program memory into an array and all the 
+pattern tiles into another array.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>The NES only has 32k of program memory and 8k of character 
+memory. This limits the types and quality of game you can make with such a 
+limited amount of memory. To overcome this, some cartridges have what’s called 
+memory mappers. These are used to swap memory from the cartridge to the memory 
+on the NES. A mapper swap occurs when data is written to one of the registers on 
+the cartridge. These registers tell the cartridge which memory bank to use.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Since you have already loaded the entire cartridge into 
+memory, you can make swapping really fast. Rather than really copying memory to 
+and from the different arrays, you can just change a pointer. For example, if 
+you were required to swap the first bank of program memory, you would just 
+change the variable that points to the bank in use on the cartridge.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=Code>pPRGROMBank1 = &amp;abyPRGROM[PRGROM_BANKSIZE*wBankNumber];</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Now that we have some background information about how to 
+load the ROM into memory and deal with memory mappers, I’ll explain what needs 
+to be done when the ROM is loaded. </P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>You must first set up the PRG-ROM memory bank(s) in a similar 
+way to dealing with memory swapping via memory mappers. The NES has to program 
+banks, each 16k. So depending on which memory mapper is being used, you have to 
+assign the pointers appropriately. In the code example below, <SPAN 
+class=CodeChar>wBankNumber1</SPAN> and <SPAN class=CodeChar>wBankNumber2</SPAN> 
+are the bank numbers to use for each PRG-ROM area.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=Code>pPRGROMBank1 = &amp;abyPRGROM[PRGROM_BANKSIZE*wBankNumber1];</P>
+<P class=Code>pPRGROMBank1 = &amp;abyPRGROM[PRGROM_BANKSIZE*wBankNumber2];</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>The next thing you need to do is set the Instruction pointer 
+to the starting address of the program. Since I do not have much experience with 
+other systems, I’ll explain how the NES works. At a specified address in the 
+PRG-ROM (0FFFEh), there is a word that holds the starting value of the 
+Instruction Pointer. You copy that word into the Instruction Pointer and start 
+execution to wherever the Instruction Pointer points to.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Other stuff can be done during loading as well. You can 
+initialize the graphics and sound. Another option is starting a debugger. There 
+choice is yours really. Now your ready to run the ROM.</P>
+<H1><A name=_Toc9741829></A><A name=_Toc9330974>Running</A></H1>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Running the ROM can be broken down into a few more sections. 
+In order to run the ROM you must:</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal style="MARGIN-LEFT: 0.75in; TEXT-INDENT: -0.25in">1.<SPAN 
+style="FONT: 7pt 'Times New Roman'">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </SPAN><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Fetching_the_opcode">Fetch 
+the opcode from the ROM.</A></P>
+<P class=MsoNormal style="MARGIN-LEFT: 0.75in; TEXT-INDENT: -0.25in">2.<SPAN 
+style="FONT: 7pt 'Times New Roman'">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </SPAN><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Executing_the_opcode">Execute 
+the opcode.</A></P>
+<P class=MsoNormal style="MARGIN-LEFT: 0.75in; TEXT-INDENT: -0.25in">3.<SPAN 
+style="FONT: 7pt 'Times New Roman'">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </SPAN><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Execute_Interrupts">Execute 
+Interrupts.</A></P>
+<P class=MsoNormal style="MARGIN-LEFT: 0.75in; TEXT-INDENT: -0.25in">4.<SPAN 
+style="FONT: 7pt 'Times New Roman'">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </SPAN><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Reading_And_Writing_To Memory">Read/Write 
+to memory.</A></P>
+<P class=MsoNormal style="MARGIN-LEFT: 0.75in; TEXT-INDENT: -0.25in">5.<SPAN 
+style="FONT: 7pt 'Times New Roman'">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </SPAN><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/howto.html#_Doing_the_Cyclic_Tasks">Do 
+the cyclic tasks.</A></P>
+<P class=MsoNormal>&nbsp;</P>
+<H1><A name=_Toc9741830></A><A name=_Toc9330975></A><A 
+name=_Fetching_the_opcode></A>Fetching the opcode</H1>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>The first step to running the ROM is fetching the opcode. You 
+get wherever byte the CPU’s Instruction Pointer (IP) is pointing to. This byte 
+is your opcode. Depending on the opcode you may want to fetch the operands or 
+you may want to save this part for the executing part. For an 8-bit processor, 
+the code would be like the following.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=Code>byOpcode = pPRGROMBank1[wInstructionPointer];</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Where CPU.pPRGROMBank1 points to the PRG-ROM bank that was 
+loaded in the beginning and wInstructionPointer is the Instruction Pointer. 
+After this statement is executed, byOpcode will hold the numeric value of your 
+opcode.</P>
+<H1><A name=_Toc9741831></A><A name=_Toc9330976></A><A 
+name=_Executing_the_opcode></A>Executing the opcode</H1>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Now that you have your opcode byte, you need to decode and 
+execute it. Decoding is much simpler if the processor you’re emulating is 8-bit. 
+If it’s a 16-bit processor, most of this is relatively the same I imagine. But, 
+to make this process more simple and to the point, lets just stick with an 8-bit 
+processor. </P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Your opcode byte is an instruction. For example, on the 6502, 
+the value 29h is a form of an AND instruction. In this case, it is an AND 
+Immediate, which means that it ands the Accumulator register with the immediate 
+value following the opcode byte. So in this case, if you were writing an 
+emulator for the 6502, you would perform an AND on the Accumulator register with 
+the byte following the AND opcode byte. Then you would increment the IP and add 
+or subtract the number of clock cycles it took to execute that particular 
+instruction.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>The code for the AND operation is below. The other operations 
+are just like this with different cases.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=Code>switch (byOpcode)</P>
+<P class=Code>{</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case 0x29:</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+byOperand1 = pPRGROMBank1[wInstructionPointer+1];</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+A &amp;= byOperand1;</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+break;</P>
+<P class=Code>&nbsp;</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; .</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; .</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; .</P>
+<P class=Code>}</P>
+<P class=MsoNormal>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </P>
+<P class=Code>wInstructionPointer += wNumBytesForOpcode;</P>
+<P class=Code>dwCPUCycles -= dwNumCyclesForOpcode;</P>
+<P class=MsoNormal>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </P>
+<H1><A name=_Toc9741832></A><A name=_Execute_Interrupts></A>Execute 
+Interrupts</H1>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>An interrupt can be either a hardware or software interrupt. 
+Hardware interrupts happen when some hardware condition occurs. For example, 
+when VBlank occurs, an interrupt can happen. A software interrupt happens when 
+the program executes a certain instruction. On the NES, this would happen when a 
+<SPAN class=CodeChar>BRK</SPAN> instruction is executed.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>When an interrupt occurs, the NES saves the Instruction 
+Pointer and Flags registers and then looks in the particular area of memory for 
+a new value to put in the Instruction Pointer. Each interrupt has its own 
+assigned address, so it gets the value at that location and puts it in the 
+Instruction Pointer. Executing then continues from this point.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>The NES has three interrupts. The new value of the 
+Instruction Pointer is at these addresses in memory depending on the interrupt 
+that has occurred.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal style="TEXT-INDENT: 0.5in">FFFAh = NMI (VBlank)</P>
+<P class=MsoNormal style="TEXT-INDENT: 0.5in">FFFCh = RESET</P>
+<P class=MsoNormal style="TEXT-INDENT: 0.5in">FFFEh = IRQ/BRK (software)</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>So when VBlank occurs the CPU would:</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal style="MARGIN-LEFT: 0.75in; TEXT-INDENT: -0.25in">1.<SPAN 
+style="FONT: 7pt 'Times New Roman'">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </SPAN>Push 
+the current value of the Instruction Pointer onto the stack.</P>
+<P class=MsoNormal style="MARGIN-LEFT: 0.75in; TEXT-INDENT: -0.25in">2.<SPAN 
+style="FONT: 7pt 'Times New Roman'">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </SPAN>Push 
+the current value of the Flags register onto the stack.</P>
+<P class=MsoNormal style="MARGIN-LEFT: 0.75in; TEXT-INDENT: -0.25in">3.<SPAN 
+style="FONT: 7pt 'Times New Roman'">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </SPAN>Get 
+the word value at FFFAh and copy that into the Instruction Pointer.</P>
+<P class=MsoNormal style="MARGIN-LEFT: 0.5in">&nbsp;</P>
+<H1><A name=_Toc9741833></A><A name="_Reading_And_Writing_To Memory"></A>Reading 
+And Writing To Memory</H1>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>There are two different ways to read and write to memory. 
+Getting the opcode and the opcode’s operands would be considered the simpler 
+form of reading from memory and not too much emulation has to take place during 
+this step. The other way is when an instruction has to go out and read/write 
+from memory. This is the one you’ll be most concerned with.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>To emulate this method, you will need to figure out which 
+instructions actually require a read from or a write to memory. On the NES’s cpu 
+(the 6502), the instructions are <SPAN class=CodeChar>LDA</SPAN> (read) and 
+<SPAN class=CodeChar>STA</SPAN> (write). </P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Depending on what the address of the read or write is, 
+certain events must occur. The particular address of memory may be a register, 
+mirrored memory, or whatever else your system may have. I’ll provide an example 
+that has addresses specific to the NES but will illustrate the point. Writing to 
+memory uses the same idea as reading from memory.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=Code>BYTE ReadMemory(WORD wAddress)</P>
+<P class=Code>{</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; switch (wAddress)</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+case 0x2002:</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+// Emulate the PPU status register.</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+break;</P>
+<P class=Code>&nbsp;</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+case 0x2004:</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+// Return a byte from sprite memory.</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+break;</P>
+<P class=Code>&nbsp;</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+.</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+.</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+.</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+default:</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+// Return a byte at the address passed in.</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</P>
+<P class=Code>}</P>
+<P class=MsoNormal>&nbsp;</P>
+<H1><A name=_Toc9741834></A><A name=_Toc9330977></A><A 
+name=_Doing_the_Cyclic_Tasks></A>Doing the Cyclic Tasks</H1>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Choosing where and when you want to execute all the cyclic 
+tasks is a choice that you will have to make depending on the system you are 
+emulating. It can be at the end of drawing a scanline, after drawing a full 
+screen, or even after every instruction. The more you do the cyclic tasks, the 
+more performance loss you will have, but you may get more accuracy. It goes the 
+same for the other way as well. If you do the cyclic tasks less you may get 
+faster emulation speeds but loose some accuracy. It’s up to you to design your 
+emulator, so I leave the choice up to you.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Once you have decided where to put your cyclic tasks, you 
+must decide what they are. Some examples can be executing interrupts, 
+incrementing the scanline that is being drawn, or anything else you can think of 
+that must be done at certain intervals.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>For my NES emulator I chose to do the cyclic tasks after 
+every scanline is drawn. I keep track of which scanline the screen is drawing by 
+the number of cpu cycles that have passed. I calculate the number of cpu cycles 
+per scanline as follows:</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=Code>NumCyclesPerScanline = (CPUFrequency / RefreshRate) / 
+NumScanlinePerFrame</P>
+<P class=MsoNormal>&nbsp;</P>
+<H1><A name=_Toc9741835></A><A name=_Toc9330978>Video Emulation</A></H1>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Emulating the graphics is a very system dependent subject. In 
+this section, I will explain some general ideas towards emulating graphics, but 
+most of the material covered here will be specific to the NES. If you’re 
+emulating another system besides the NES, I hope that this information will be 
+useful; otherwise, just ignore it.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>On television sets images are displayed via an electron beam. 
+If you look really closely at a television set, you can see the individual 
+pixels. The pixels change color by the electron beam starting from the left side 
+of the screen and moving to the right side of the screen. It does this line by 
+line doing some mojo along the way to make the pixels change color. This is 
+called drawing a scanline. When the beam has finished with the scanline, it 
+moves back to the left side of the screen and moves down to the next scanline. 
+The time that the beam takes to move back to the left side of the screen is 
+called the HBlank period. Once the beam has drawn all the scanlines on the 
+screen, which is 240 on a NTSC television set, it moves back up to the top left 
+corner of the screen. The time that is takes for the beam to move back to the 
+top left corner of the screen is called the VBlank period.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>With all that information behind us, we can talk about some 
+general guidelines to displaying the graphics. The way I see it, you can either 
+draw graphics every scanline, or you can wait and draw everything during the 
+VBlank period. I’ll discuss the differences between the two methods.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Drawing the graphics every scanline is more accurate but also 
+not as fast. To emulate this method you would run the cpu for the number of 
+cycles that it takes to draw a scanline (as calculated above). For the NES, this 
+is 114 (rounded up). Then you would draw that scanline. For the VBlank period 
+you would continue to emulate the cpu, but not draw the scanline until VBlank is 
+over.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Draw the entire screen at once can be much faster, but may 
+loose some accuracy if not emulated correctly. To emulate this method, you would 
+run the cpu for 240 scanlines then draw all the scanlines at once. You can loose 
+accuracy if the system your emulating changes values (scroll values, palette 
+entries) while the screen is drawning.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>For my NES emulator, I chose to use the scanline method for 
+ultimate accuracy. For more information about the NES and the graphics system, 
+check out Yoshi’s NES document.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal><SPAN class=MsoHyperlink><A 
+href="http://www.zophar.net/tech/files/ndox200.zip">http://www.zophar.net/tech/files/ndox200.zip</A></SPAN></P>
+<P class=MsoNormal>&nbsp;</P>
+<H1><A name=_Toc9741836>Sound Emulation</A></H1>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>For me, sound was the hardest thing to emulate. It was mostly 
+due to programming DirectSound Buffers. I’ll explain the approach I used and 
+leave the rest up to you in hopes that you can find where I went wrong and 
+correct my mistakes.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>First off, you will need to study streaming DirectSound 
+Buffers. Microsoft has plenty of information about them in their <A 
+href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dx8_c/directx_cpp/htm/_dx_directsound_c_c_reference_dxaudio.asp">MSDN</A>. 
+It would be a waste of time for me to try and explain them when they have much 
+more information and better writers, hehe.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>My algorithm is at the end of every frame, I update the 
+DirectSound Buffer with the sound data. These are the steps that I use for 
+emulating a channel that outputs a square wave at a desired frequency, volume, 
+etc.:</P>
+<P class=MsoNormal>&nbsp;</P>
+<OL style="MARGIN-TOP: 0in" type=1>
+  <LI class=MsoNormal>Calculate the wavelength of the wave. This is done in CPU 
+  cycles and is read from some sound registers. 
+  <LI class=MsoNormal>Calculate the duty cycle for the wave. This is how many 
+  time to repeat the wave length until the wave must flip over and be negative. 
+  Again this is read from sound registers. 
+  <LI class=MsoNormal>Calculate the output volume. This is read from sound 
+  registers. You can think of this as the amplitude of the wave. </LI></OL>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>I only do this at the beginning of the frame. Then I move 
+along the wave and write the data out to the DirectSound Buffer. The sample rate 
+determines how many bytes to write to the buffer. I only write as many bytes as 
+there are samples in one cpu frame. On the next frame I continue where I left 
+off writing and write the rest of the data. When I am done writing all the data 
+for the wave I calculated for, I recalculate steps 1-3 and then repeat the whole 
+process. For example:</P>
+<P class=MsoNormal>&nbsp;</P>
+<P 
+class=Code>NumBytesToLock=(((NumBitsPerSample/8)*NumChannels*NumSamplesPerSec)/30)</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Below is my code to emulate one square wave channel on the 
+NES to help clarify what I mean.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">//------------------------------------------------------------------------------</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">// Name: 
+APU_DoFrame()</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">// Desc: Takes 
+care of the sound for a frame.</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">//------------------------------------------------------------------------------</SPAN></P>
+<P class=MsoNormal><SPAN style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">BOOL 
+APU_DoFrame()</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Stuff necessary for working with streaming 
+buffers.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+HRESULT hr;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+DWORD&nbsp;&nbsp; dwWritePos;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+DWORD&nbsp;&nbsp; dwBytesLocked1;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+DWORD&nbsp;&nbsp; dwBytesLocked2;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+DWORD&nbsp;&nbsp; dwByteNum;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+VOID*&nbsp;&nbsp; pvData1;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+VOID*&nbsp;&nbsp; pvData2;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+VOID*&nbsp;&nbsp; pvDataSave;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">static</SPAN> DWORD dwLastEndWritePos = 0;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Stuff for nintendo sound files.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+WORD wTotalOutputVol; <SPAN style="COLOR: green">// Sum of all the sound 
+channel's volumes.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// If the buffer is invalid then 
+return.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (lpdsbSoundBuf == NULL)</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">return</SPAN> FALSE;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Get the current write position within the 
+buffer.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> 
+(FAILED(lpdsbSoundBuf-&gt;GetCurrentPosition(NULL, &amp;dwWritePos)))</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">return</SPAN> FALSE;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// If the play cursor has just reached the first or 
+second half</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// of the buffer, it's time to stream data to the 
+other half.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+LONG lTemp = dwLastEndWritePos - 1000;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (lTemp &lt; 0)</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+lTemp = 0;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">//if (dwWritePos &gt;= (dwLastEndWritePos))// || 
+())</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (dwWritePos &gt;= (DWORD)lTemp)<SPAN 
+style="COLOR: green">// || ())</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Lock the buffer so we can write to 
+it.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+hr = lpdsbSoundBuf-&gt;Lock(dwLastEndWritePos, OPTIONS_NUM_BYTESTOLOCK, 
+</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+&amp;pvData1, &amp;dwBytesLocked1, &amp;pvData2, &amp;dwBytesLocked2, 
+0);</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (SUCCEEDED(hr))</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// For the first part of the loop calculate the sound 
+values.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+bCalculateSound = TRUE;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Fill the whole locked portion of the sound buffer 
+with</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// out sound data from each of the Nintendo's sound 
+channels.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// This involves two for loops since the buffer may 
+wrap around.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Save a temp pointer to the first portions of the 
+sound buffer.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+pvDataSave = pvData1;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// First portion of the buffer.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">for</SPAN> (dwByteNum = 0; dwByteNum &lt; 
+dwBytesLocked1; </SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+dwByteNum += OPTIONS_NUM_CHANNELS * (OPTIONS_NUM_BITSPERSAMPLE / 8))</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Clear the last volume outta 
+there.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+wTotalOutputVol = 0;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Process the square channel 1.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+wTotalOutputVol += (WORD)APU_DoSquare1();</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Write the data to the sound buffer and move the 
+pointer </SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// to the buffer to the next data 
+position.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (OPTIONS_NUM_BITSPERSAMPLE == 8)</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+*((BYTE*)pvDataSave) = (BYTE)wTotalOutputVol;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+pvDataSave = (BYTE*)pvDataSave + (OPTIONS_NUM_CHANNELS * 1);</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">else</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+*((WORD*)pvDataSave) = wTotalOutputVol;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+pvDataSave = (BYTE*)pvDataSave + (OPTIONS_NUM_CHANNELS * 2);</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Stop calculating the sound.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (bCalculateSound == TRUE)</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+bCalculateSound = FALSE;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// If the locked portion of the buffer wrapped around 
+to the </SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// beginning of the buffer then we need to write to 
+it.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (dwBytesLocked2 &gt; 0)</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Save a temp pointer to the second portions of the 
+sound buffer.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+pvDataSave = pvData2;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Second portion of the buffer.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">for</SPAN> (dwByteNum = 0; dwByteNum &lt; 
+dwBytesLocked2; </SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+dwByteNum += OPTIONS_NUM_CHANNELS * (OPTIONS_NUM_BITSPERSAMPLE / 8))</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Clear the last volume outta 
+there.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+wTotalOutputVol = 0;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Process the square channel 1.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+wTotalOutputVol += (WORD)APU_DoSquare1();</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Write the data to the sound buffer and move the 
+pointer </SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// to the buffer to the next data 
+position.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (OPTIONS_NUM_BITSPERSAMPLE == 8)</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+*((BYTE*)pvDataSave) = (BYTE)wTotalOutputVol;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+pvDataSave = (BYTE*)pvDataSave + (OPTIONS_NUM_CHANNELS * 1);</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">else</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+*((WORD*)pvDataSave) = wTotalOutputVol;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+pvDataSave = (BYTE*)pvDataSave + (OPTIONS_NUM_CHANNELS * 2);</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Unlock the buffer now that were done with 
+it.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+lpdsbSoundBuf-&gt;Unlock(pvData1, dwBytesLocked1, pvData2, 
+dwBytesLocked2);</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Save the position of the last place we wrote to so 
+</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// we can continue the next time this function is 
+called.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+dwLastEndWritePos = 
+(DWORD)(dwLastEndWritePos+dwBytesLocked1+dwBytesLocked2);</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (dwLastEndWritePos &gt;= 
+((OPTIONS_NUM_BITSPERSAMPLE/8)*OPTIONS_NUM_CHANNELS*OPTIONS_NUM_SAMPLESPERSEC)*OPTIONS_NUM_SECONDSFORBUFFER)</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+dwLastEndWritePos -= 
+((OPTIONS_NUM_BITSPERSAMPLE/8)*OPTIONS_NUM_CHANNELS*OPTIONS_NUM_SAMPLESPERSEC)*OPTIONS_NUM_SECONDSFORBUFFER;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Victory is ours!!!!</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">return</SPAN> TRUE;</SPAN></P>
+<P class=MsoNormal><SPAN style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">} 
+<SPAN style="COLOR: green">// end APU_DoFrame()</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">//------------------------------------------------------------------------------</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">// Name: 
+APU_DoSquare1()</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">// Desc: 
+Process the first square wave sound channel.</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">//------------------------------------------------------------------------------</SPAN></P>
+<P class=MsoNormal><SPAN style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">WORD 
+APU_DoSquare1()</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">static</SPAN> DWORD dwNumCyclesElapsed = 0; <SPAN 
+style="COLOR: green">// Keeps track of where we are in the 
+wave.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">static</SPAN> DWORD dwDutyFlip = 
+0;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <SPAN style="COLOR: green">// 
+How many times the programmable timer must </SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// reload untill a duty flip.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">static</SPAN> DWORD dwWaveLength = 
+0;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <SPAN style="COLOR: green">// How many 
+cycles till the programmable timer reloads.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">static</SPAN> BYTE&nbsp; byOutput = 0x80; <SPAN 
+style="COLOR: green">// The returned output volume.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">static</SPAN> BOOL&nbsp; bDutyFlip = FALSE; <SPAN 
+style="COLOR: green">// Has a duty flip happended?</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">static</SPAN> BOOL bCalcSquare = FALSE;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">static</SPAN> BOOL bCalcOnNextFlag = FALSE;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (bCalculateSound)</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+bCalcOnNextFlag = TRUE;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// If the calculate flag is set, then we need to 
+calculate everything</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// that is needed to return an output volume to the 
+calling function.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Otherwise we just return the precalculated data 
+that was stored</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// in the static variables.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (bCalcSquare)</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">CalculateIt:</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// First thing we need to do is start over by 
+reseting the elapsed cycles.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+dwNumCyclesElapsed = 0;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Reset the duty toggle.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+bDutyFlip = FALSE;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+bCalcSquare = FALSE;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+bCalcOnNextFlag = FALSE;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN 
+style="COLOR: green">//---------------------------------------------------------------------</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Do the length counter part.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN 
+style="COLOR: green">//---------------------------------------------------------------------</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// If the length counter is enabled then we need to 
+process it.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (!(CPU.Memory[0x4000] &amp; 
+0x20))</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// If the length counter is not zero then decrement 
+the value.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (APU.sndchanSquare1.byLengthCtr)</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+APU.sndchanSquare1.byLengthCtr--;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN 
+style="COLOR: green">//---------------------------------------------------------------------</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// TODO: This is where the sweeping unit needs to be 
+emulated.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN 
+style="COLOR: green">//---------------------------------------------------------------------</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN 
+style="COLOR: green">//---------------------------------------------------------------------</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Emulate the programmable timer to get the 
+wavelength.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN 
+style="COLOR: green">//---------------------------------------------------------------------</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Take the 3 least significant bits from $4003 
+and</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// use those as the bits 8-10 for our wavelength. 
+Bits</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// 0-7 come from $4002 to produce our 11-bit 
+wavelength.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// The we need to add one to it.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+dwWaveLength = ((((WORD)(CPU.Memory[0x4003]&amp;0x7)) &lt;&lt; 8) | </SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+CPU.Memory[0x4002]) + 1;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN 
+style="COLOR: green">//---------------------------------------------------------------------</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Emulate the duty flip part.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN 
+style="COLOR: green">//---------------------------------------------------------------------</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+dwDutyFlip = abyDutyCycleTablePos[CPU.Memory[0x4000]&gt;&gt;6];</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN 
+style="COLOR: green">//---------------------------------------------------------------------</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Now finally send the signal through the 
+volume/envelope decay unit.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN 
+style="COLOR: green">//---------------------------------------------------------------------</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="COLOR: green; FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// If the envelope decay bit is set, then the volume 
+goes staight</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// to the DAC...or in our case DirectSound. This 
+means that</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// the envelope decay is disabled.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (!(CPU.Memory[0x4000] &amp; 
+0x10))</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// There are a few conditions when 0 is sent 
+straight</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// to the DAC for the volume. They are as 
+follows:</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// 1.&nbsp; If the length counter is 
+0</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// 2.&nbsp; Something to do with the sweep 
+unit.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// 3.&nbsp; On the negative portion of the output 
+frequency </SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">//&nbsp;&nbsp;&nbsp;&nbsp; signal coming from the 
+duty cycle.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">//</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Otherwise bits (0-3) of $4000 are sent straight 
+the</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// DAC for the volume.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (APU.sndchanSquare1.byLengthCtr == 0) <SPAN 
+style="COLOR: green">// TODO: implement other conditions.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+byOutput = 0x80;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">else</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+byOutput = ((CPU.Memory[0x4000] &amp; 0x0F) &lt;&lt; 3);</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">else</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+byOutput = ((CPU.Memory[0x4000] &amp; 0x0F) &lt;&lt; 3);</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// If we are done with the wave we need to start 
+over.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (dwNumCyclesElapsed &gt;= 
+dwWaveLength)</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// We need to flip the volume to negative if the 
+amount of</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// times for a duty flip has 
+passed.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> ((dwDutyFlip--) == 0)</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// If the duty flip is positive then we load the 
+counter with the negative</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// value. If the duty flip is negative, then we load 
+the counter</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// with the positive counter.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (bDutyFlip)</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+dwDutyFlip = abyDutyCycleTablePos[CPU.Memory[0x4000]&gt;&gt;6];</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">if</SPAN> (bCalcOnNextFlag)</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+bCalcSquare = FALSE;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">//return (WORD)byOutput;</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">goto</SPAN> CalculateIt;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">else</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+{</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+dwDutyFlip = abyDutyCycleTableNeg[CPU.Memory[0x4000]&gt;&gt;6];</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Flip the output wave.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+byOutput = -byOutput;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Toggle the duty flip indicator.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+bDutyFlip ^= TRUE;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+dwNumCyclesElapsed -= dwWaveLength;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+}</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">else</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Keep moving along the phase of the wave 
+form.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+dwNumCyclesElapsed += dwNumCyclesPerSample;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;</SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: green">// Return the final value.</SPAN></SPAN></P>
+<P class=MsoNormal><SPAN 
+style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<SPAN style="COLOR: blue">return</SPAN> (WORD)byOutput;</SPAN></P>
+<P class=MsoNormal><SPAN style="FONT-FAMILY: 'Courier New'; FONT-SIZE: 9pt">} 
+<SPAN style="COLOR: green">// end APU_DoSquare1()</SPAN></SPAN></P>
+<P class=MsoNormal>&nbsp;</P>
+<H1><A name=_Toc9741837>Optimization</A></H1>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>For this section, I will list some general optimization 
+methods and some methods that are specific to the NES.</P>
+<P class=MsoNormal style="MARGIN-LEFT: 0.25in">&nbsp;</P>
+<OL style="MARGIN-TOP: 0in" type=1>
+  <LI class=MsoNormal>Unroll loops. If you have a loop that you know you are 
+  going to be doing a certain amount of times, just cut and paste the same code. 
+  For example, if you have a for loop that executes some code three times, then 
+  just execute that code 3 times rather than using looping. Looping introduces 
+  compares and jumps in assembly language which take longer to execute than just 
+  the straight code. </LI></OL>
+<P class=MsoNormal style="MARGIN-LEFT: 0.25in">&nbsp;</P>
+<P class=Code>for (int i=0; i &lt; 3; i++)</P>
+<P class=Code>{</P>
+<P class=Code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Some Code</P>
+<P class=Code>}</P>
+<P class=Code>&nbsp;</P>
+<P class=Code>This could be written as:</P>
+<P class=Code>&nbsp;</P>
+<P class=Code>// Some Code</P>
+<P class=Code>// Some Code</P>
+<P class=Code>// Some Code</P>
+<P class=MsoNormal style="MARGIN-LEFT: 0.25in">&nbsp;</P>
+<OL start=2 style="MARGIN-TOP: 0in" type=1>
+  <LI class=MsoNormal>Rewrite sections of code that get used a lot in assembly 
+  language. Loops are one example of code that gets executed a lot. Another 
+  example is instead of using <SPAN class=CodeChar>switch</SPAN> and <SPAN 
+  class=CodeChar>case</SPAN> statements in C++, you could use what’s called a 
+  jump table in assembly language. A jump table is an array that holds 
+  addresses. Whatever the <SPAN class=CodeChar>case</SPAN> value is, you go to 
+  that position in the array and move that value into a 32-bit register. Then 
+  you jump to the value that is in that register. This idea is very useful when 
+  emulating the Read and Write memory functions and the opcode <SPAN 
+  class=CodeChar>switch</SPAN> statement. </LI></OL>
+<P class=MsoNormal style="MARGIN-LEFT: 0.25in">&nbsp;</P>
+<P class=Code>; Get the opcode byte.</P>
+<P class=Code>GET_MEMORY_BYTE CPU.P</P>
+<P class=Code>&nbsp;</P>
+<P class=Code>; Save the opcode for later use and then jump to the</P>
+<P class=Code>; correct opcode using the jump table defined above.</P>
+<P class=Code>and eax, 000000FFh</P>
+<P class=Code>mov dwOpcode, eax</P>
+<P class=Code>jmp [adwOpcodeJumpTable+eax*4]</P>
+<P class=MsoNormal style="MARGIN-LEFT: 0.25in">&nbsp;</P>
+<OL start=3 style="MARGIN-TOP: 0in" type=1>
+  <LI class=MsoNormal>For the graphics on the NES, use a tile caching algorithm. 
+  This will make sense when you read how NES graphics work. They are explained 
+  in Yoshi’s NES document. <SPAN class=MsoHyperlink><A 
+  href="http://www.zophar.net/tech/files/ndox200.zip">http://www.zophar.net/tech/files/ndox200.zip</A></SPAN> 
+  </LI></OL>
+<P class=MsoNormal>&nbsp;</P>
+<H1><A name=_Toc9741838>Lessons Learned</A></H1>
+<P class=MsoNormal>&nbsp;</P>
+<OL style="MARGIN-TOP: 0in" type=1>
+  <LI class=MsoNormal>Don’t do this project during a semester at school ;-) 
+  <LI class=MsoNormal>When emulating the NES, read different documents on the 
+  6502. They have different information. For example, one document I read said 
+  that <SPAN class=CodeChar>PLA</SPAN> did not set the flags on the CPU when 
+  another document I read said that it does in fact set the flags. </LI></OL>
+<P class=MsoNormal>&nbsp;</P>
+<H1><A name=_Toc9741839>My Emulator</A></H1>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Below are links to my emulator and my emulator’s source code 
+to help you in your quest. The project was done using Visual C++ .NET and the 
+DirectX 8 SDK.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>To run a NES ROM on my emulator, you start the program, 
+select Open Rom from the file menu, and then select Run from the file menu. 
+While running the ROM, use the arrow keys for up, down, left, and right, S for 
+Start, A for Select, Z for B, X for A. Pressing ESC will stop running the 
+ROM.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>To debug a ROM in my emulator you can double click on any 
+line to add or remove a breakpoint. You can use the Debug menu to step through 
+the code or run until an NMI interrupt. Use the View menu to view memory.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/NEStreme.zip">NEStreme</A></P>
+<P class=MsoNormal><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/NEStreme_src.zip">NEStreme 
+source</A></P>
+<P class=MsoNormal><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/mapper0.zip">NEStreme 
+Mapper0 source</A></P>
+<P class=MsoNormal><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/mapper2.zip">NEStreme 
+Mapper2 source</A></P>
+<P class=MsoNormal><A 
+href="http://www.cecs.csulb.edu/~hill/cecs497/nestreme/mapper3.zip">NEStreme 
+Mapper3 source</A></P>
+<P class=MsoNormal>&nbsp;</P>
+<H1><A name=_Toc9741840>Reference</A></H1>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal><SPAN class=MsoHyperlink><A 
+href="http://www.zophar.net/index.phtml">Zophar’s Domain</A></SPAN></P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Holds tons of information on emulators as well as the 
+emulators themselves.</P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal><A href="http://nesdev.parodius.com/">NES info, programs, and 
+demos</A></P>
+<P class=MsoNormal>&nbsp;</P>
+<P class=MsoNormal>Holds over 2 thousand pounds of programming information on 
+the NES as well as some free demos.</P></DIV></BODY></HTML>

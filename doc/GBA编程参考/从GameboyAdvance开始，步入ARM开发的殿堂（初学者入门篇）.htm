@@ -1,0 +1,577 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD><TITLE>从GameboyAdvance开始，步入ARM开发的殿堂（初学者入门篇） - 同济网论坛</TITLE>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<meta name="GENERATOR" content="Celeste 2.0">
+<LINK href="images/style.css" rel=stylesheet type=text/css>
+<script language="javaScript1.2" type="text/javascript">
+function openScript(theURL, W, H) {
+	var Win = window.open(theURL, 'helpWindow', 'width=' + W + ',height=' + H + ',resizable=1,scrollbars=yes,menubar=yes,status=yes');
+}
+pmpopup = 'false';
+if(0 > 0 && pmpopup)
+  window.open('pm.php');
+function roll(name,status) {
+    ziel=eval("document."+name);
+    if (status=="off") ziel.src="images/"+name+".gif";
+    else ziel.src="images/"+name+"_on.gif";
+}
+//-->
+</script>
+</HEAD>
+<body bgcolor="#ffffff"  >
+<table border=0 cellpadding=0 cellspacing=0 width=98%  align=center >
+  <tr> 
+    <td rowspan=2 valign="bottom" background="images/mainPageBorderLeft.gif" width="1"></td>
+    <td background="images/mainPageBorderLeft.gif" height="1"></td>
+    <td rowspan="2" background="images/mainPageBorderLeft.gif" width="1"></td>
+  </tr>
+  <tr> 
+    <td> 
+      <table width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr> 
+          <td colspan="2" height="20" align=center>　<a href="http://www.tongji.net/index.php"><font color="#000000">首页</font></a><span lang="en-us"> | </span><a href="http://bbs.tongji.net"><font color="#000000">论坛</font></a><span lang="en-us"> | </span><a href="http://news.tongji.net"><font color="#000000">新闻</font></a><span lang="en-us"> | </span><a href="http://campus.tongji.net"><font color="#000000">纪录同济</font></a><span lang="en-us"> | </span><a href="http://kaoyan.tongji.net"> <font color="#000000">考研信息</font></a><span lang="en-us"> | </span><a href="http://guide.tongji.net"><font color="#000000">同济黄页</font></a><span lang="en-us"> | </span><A href='http://tjftp.tongji.net' target=_blank><font color="#000000">FTP联盟</font></a><span lang="en-us"> | </span><A href='http://link.tongji.net' target=_blank><font color="#000000">同济网链</font></a><span lang="en-us"> | </span><A href='http://wap.tongji.net' target=_blank><font color="#000000">同济WAP</font></a><span lang="en-us"> | </span><A href='http://msclub.tongji.net' target=_blank><font color="#000000">微软俱乐部</font></a><span lang="en-us"> | </span><A href='http://bbs.tongji.net/index.php?prog=topic::list&fid=277' target=_blank><font color="red">[奥运专题讨论区]</font></a><BR />
+<!-- donation -->
+
+
+<!-- donation -->
+
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<a name=top></a> 
+<table align=center border=0 cellpadding=0 cellspacing=0 height=25 width=98%>
+  
+  <tr> 
+    <td background="images/mainPageBorderLeft.gif" height=25 width=1><img height=25 src="images/spacer.gif" width=1></td>
+	  <td align="center" colspan=6 bgcolor=#ffffff width="*"> 
+        
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>  
+<form action="index.php?prog=user::login" method=post>
+<td valign=bottom align=left bgcolor=#ffffff><img src="http://www.tongji.net/images/ad_on.gif" border="0" align="absmiddle" > 
+      <a href="http://www.yq51.com/pro/index.asp?yuzhong=德语" target="_blank"><font color="#FF0000">专销文曲星德语，日语，法语电子词典</font></a></td>  
+      <td valign=bottom align=right bgcolor=#ffffff height=25><a href="http://bbs.tongji.net/top.php" target="_blank"><font color=red>论坛导读</font></a>  &nbsp;&nbsp;&nbsp;&nbsp;<img src="images/icon_mini_profile.gif" border="0"> <a href="index.php?prog=user::register"><font color=red>注 册</font></a>　<img src="images/icon_mini_login.gif" border="0"> <a href="index.php?prog=user::reqpwd">找回密码</a>　　名字: 
+        <input class=barInputText name=username>
+        密码: 
+        <input class=barInputText name=password type=password>
+        <input type=hidden name=show value=1>
+        COOKIE<input name=life 
+      style="HEIGHT: 11px; MARGIN: 7px; WIDTH: 11px ;border: 0" type=checkbox value=1>
+        <input class=barInputImage 
+      src="images/loginButton.gif" type=image 
+    value=Login name="image">
+      </td>
+   </form>
+  </tr> 
+		<tr> 
+          <td bgcolor=#ffffff height=25 colspan="2"><table width="100%" border="0" cellpadding="0" cellspacing="0" height=30>
+  <tr>
+    <td><div align="left" valign="top"><b><a href="index.php">同济网论坛</a>&nbsp;&#187; <a href="index.php?prog=topic::list&fid=1">工作学习区</a>&nbsp;&#187; <a href="index.php?prog=topic::list&fid=113">计算机与信息技术</a>&nbsp;&#187; <a href="index.php?prog=topic::list&fid=180">编程语言</a></b></div></td> 
+    <td width="40%">
+
+<div align="right" valign="top">
+  <table border=0 cellspacing=0 cellpadding=0>
+    <tr > 
+      <td width=25 rowspan="2" valign=middle > <img src="http://www.tongji.net/images/ad_on.gif" border="0"  align="absmiddle"> 
+      </td>
+      <td  valign=top ><a href="http://www.tjstrong.com/school/enroll.htm" target="_blank"><font color="red">政府买单,学生培训,提升技能</font></a></td>
+    </tr>
+    <tr >
+      <td  valign=top ><a href="http://www.68tg.com/bbs/showthread.php?s=&threadid=1142" target="_blank"><font color="red">乐邦网-暑期团购学车空调大巴门口接送</font></a> 
+      </td>
+    </tr>
+  </table>
+</div></td> 
+  </tr>
+</table>  </td>
+        </tr>
+        
+      </table>
+
+	  </td>
+  
+    
+	<td background="images/mainPageBorderLeft.gif" width=1><img height=25 src="images/spacer.gif" width=1></td>
+  </tr>
+    </table>
+<table align=center border=0 cellpadding=0 cellspacing=0 width=98%>
+<tr> 
+    <td background="images/mainPageBorderLeft.gif" height=25 width=1><img height=25 src="images/spacer.gif" width=1></td>
+   <td bgcolor=#ffffff width=*>
+ 
+  
+<table cellspacing="0" cellpadding="0" width="100%" align="center" border="0" >
+  <tr align="right"> 
+    <td height="12" colspan="3"><a href="index.php?prog=topic::reply&tid=168026"><img src=images/replytopic.gif border="0"></a>　<a href="index.php?prog=topic::new&fid=180"><img src=images/post.gif border="0"></a></td>
+  </tr>
+  <tr> 
+    <td align="left" colspan="3" height="8" ></td>
+  </tr>
+  <tr> 
+    <td align="left" width="30%" >目前只有一页 </td>
+    <td align="center" width="*" ><a href="index.php?prog=ucp::favorites&action=add&tid=168026"><img src=images/collection.gif border="0"> 收藏此贴</a>　<a href="index.php?prog=topic::print&tid=168026"><img src=images/print.gif border="0"> 打印模式</a>　<a href="index.php?prog=topic::email&tid=168026"><img src=images/email.gif border="0"> 发给朋友</a></td>
+    <td width="30%" align="right" ><a href="index.php?prog=topic::flat&tid=168026&go=older"><img src="images/prev.gif" border=0></a><a href="index.php?prog=topic::threaded&tid=168026"><img src="images/thread.gif" border=0></a><a href="index.php?prog=topic::flat&tid=168026&go=newer"><img src="images/next.gif" border=0></a></td>
+  </tr>
+</table>
+<table cellSpacing="0" cellPadding="0" width="100%" align="center" border="0">
+   <tr>
+     <td bgColor="#EDECED">
+      <table cellSpacing="1" cellPadding="4" width="100%" border="0">
+        <tr bgColor="#5f8ac5">
+          <td class=topicrow align=left>标题 : 从GameboyAdvance开始，步入ARM开发的殿堂（初学者入门篇）</td>
+       </tr>
+    </table>
+  </td>
+  </tr>
+ </table>
+
+<TABLE border=0 cellPadding=0 cellSpacing=1 width="100%" align=center bgcolor="#EDECED" height="1" >
+  <TR> 
+    <TD width="18%" valign=top  bgColor=#ffffff align="left"> 
+      <TABLE bgColor=#ffffff cellPadding=0 cellSpacing=8 width="99%">
+        <TR> 
+          <TD align=left> <b>hiphoper</b> [版主]<br /><br><img src="http://66.35.250.203/sflogo.php?group_id=105359&type=1" border=0 width="88" height="31"><br /><br />技术精英<br><br>
+            发贴: 1263<br>
+            注册: 2002-05-11  <br>
+            来自: OptiBBS (base.3322.org)</TD>
+        </TR>
+        <!--<TR> 
+          <TD align=left></TD>
+        </TR>-->
+      </TABLE>
+    </TD>
+    <TD width="82%" valign=top bgColor=#ffffff height="10"> 
+      <TABLE bgColor=#ffffff cellPadding=4 cellSpacing=0 width="100%" height=100%>
+        <TR valign="middle"> 
+          <TD height="20" colspan="2"> <img src="images/icon/16.gif" align=left border=0 align="absmiddle"> 
+              从GameboyAdvance开始，步入ARM开发的殿堂（初学者入门篇）　  发表于 : <font class=smalltext>2004-07-11 14:22:48　  来源：BBS.TONGJI.NET <font color="red">　  </font></font></TD>
+        </TR> <TR> 
+          <TD vAlign=bottom height="1" colspan="2" bgcolor="#999999"></TD>
+        </TR>
+        <TR valign="top"> 
+          <TD height="100%" colspan="2"> 
+            <table cellpadding=0 cellspacing=0 width="100%" style="word-wrap:break-word; word-break:break-all" height="100%" style="TABLE-LAYOUT: fixed">
+              <TBODY> 
+              <tr> 
+                <td  valign="top" > 
+                  <p>1.为什么要选用GBA作为嵌入式系统学习平台<br />
+我们知道，任天堂公司的GameBoy Advance（简称GBA）一款非常出色的掌上游戏机，该产品占领了全球90％以上的掌上游戏机市场。<br />
+抛开游戏功能不说，GBA本身就是一个很好的嵌入式系统开发学习平台，因为GBA采用ARM7 CPU（RISC），拥有240×160 64K色彩色液晶、立体声系统、按键、DMA、通讯口、32K的CPU高速RAM（32Bit）和256K外部RAM（16Bit），还有可外接的游戏卡，可扩充至256Mbit的FLASH ROM以及用于保存进度的128K EEPROM（或FLASH、带电池记忆的SRAM）。<br />
+现在，许多开发者都开始学习嵌入式开发，并购买ARM实验板和JTAG仿真器。从成本的角度来看，ARM实验板和JTAG仿真器价格不菲，但是非常适合于拥有长期硬件开发经验的开发者；对于想踏入嵌入式开发殿堂的初学者而言，高昂的硬件价格以及过高的硬件调试门槛，自然成为阻碍学习嵌入式开发的拦路虎，许多初学者正是因为入门无路而中途放弃。从许多硬件工程师的开发经验来看，无论是低级的单片机开发还是高级的嵌入式系统设计，学习重点都应该在软件编程设计上，因为硬件部分都是有成熟的电路，熟悉以后自然水到渠成。因此，对于初学嵌入式开发的开发者而言，GBA也就成为最便宜、最容易入门的硬件平台，GBA可以让初学者把烦人的硬件调试抛开，而将注意力集中到学习软件开发。<br />
+<br />
+开发套件                            价格  使用难易程度                      备注<br />
+ARM实验板＋JTAG仿真器 昂贵         困难        适合于拥有长期硬件开发经验的工程师<br />
+GBALine＋GBA                 便宜         容易        适合于嵌入式开发初学者<br />
+<br />
+2.GBA硬件平台的特点<br />
+从功能上来看，GBA包括声效处理，彩色LCD显示，以及输入输出等功能。GBA的显示屏幕是240×160像素，可以支持8bit(256色)或16bit（64k色），带有硬件加速能力、支持Alpha渲染（alpha blending）、旋转（rotation）、缩放（scaling）、镶嵌（mosaic）等效果。GBA的屏幕模式有6种，分别为Mode 0 - Mode5。<br />
+从使用者的角度来看，GBA涉及人的手，眼，耳等感觉器官；从开发者角度看，它是完整的嵌入式系统。<br />
+<br />
+3. 必备的硬件GBALine <br />
+GBALINE是为GBA精心设计的一套外设，它完成PC<=>GBA的高速数据交换，以及数据存储，整套的价格也就百来块钱。<br />
+关于GBALine，具体的网址：http://www.sudt.com<br />
+编译好的二进制代码需要写入GBA卡带才能在真实的硬件平台上运行，这就需要一套下载存储系统帮助完成最后的工作，GBALine套件正是为实现此功能而诞生的。该套件包括GBALine下载线以及可擦写卡带，下载线直接将GBA游戏机与电脑连接，实现高速数据交换；可擦写卡带用于存储编译好的二进制代码。<br />
+<br />
+4. 如何进行嵌入式开发<br />
+GBA的硬件和PC完全不一样，究竟该如何学习呢？难道还要去买GBA开发工具，要学GBA的开发语言？许多开发者都会有同样的疑问。不必紧张，只要开发者懂得C语言，会使用ARM C的编译系统，就可以开发GBA程序，使用GBA作为入门级嵌入式学习平台的优点就在此。目前，在Linux下和Windows下都有免费的编译工具，推荐的是DevKitAdv开发包，该开发包使用的是GCC编译器。当然，编译效率比较高的有SDT2.51、ADS1.2、metaware for ARM等等，但是这些都是收费的，对此有兴趣的开发者可以自己研究。源代码编辑工具推荐Visual C++。<br />
+<br />
+5.模拟运行环境<br />
+PC端的模拟运行环境可以采用GBA模拟器，例如VisualboyAdvance等。编译好的ELF或BIN文件用模拟器打开就模拟硬件运行ARM程序。<br />
+<br />
+6.硬件组成<br />
+<br />
+6.1. GBA系统<br />
+CPU 32位RISC CPU（ARM7TDMI）/16.78MHz<br />
+兼容性 集成8位CISC CPU兼容于GBC，但是不能和GBA的CPU同时工作<br />
+内存 系统ROM  16K字节（GBC是2K）<br />
+工作RAM 32K字节＋CPU外部256K字节（2倍周期）<br />
+VRAM 96K字节<br />
+OAM 64位×128<br />
+调色板RAM 16位×512（256色用于精灵，256色用于背景）<br />
+卡带记忆体 最多32M ROM或闪存＋最多512Kbit SRAM或闪存<br />
+显示 240×160×RGB点、32,768色模拟显示、带有应将加速，支持旋转(rotation)、缩放(scaling)、Alpha渲染(alpha blending)、镶嵌(mosaic)；6种屏幕模式，分别为Mode0-Mode5。<br />
+操作 控制键（A、B、L、R、START、SELECT和方向键）<br />
+声音 4声道（相应于GBC的声道）＋2个CPU直接声道（PCM格式）<br />
+通讯 串口通讯（8位/32位、UART、多玩家、多用途、JOY总线）<br />
+卡带 同DMG和GBC一样，GBA的卡带使用32针接口，GBA自动检测插入卡带的类型并切换GBC或GBA模式。GB卡带、GB/GBC双重模式卡带、GBC专用卡带、GBA专用卡带都可以在GBA系统上使用。<br />
+<br />
+6.2. GBALine下载线, <!-- CETagParser ~url~ --><a href="http://www.sudt.com" target=_blank><!-- /CETagParser -->http://www.sudt.com<!-- CETagParser ~/url~ --></a><!-- /CETagParser --><br />
+PC端接口 LPT,自动设置<br />
+GBA端接口 SIO,串口通讯<br />
+数据传输率 115K Byte/s（随操作系统负荷的变化相应波动，范围：90KB/s～115KB/s）<br />
+电源 自供电<br />
+<br />
+6.3. 64Mbit Flash Card<br />
+Flash容量 64Mbit<br />
+Flash擦写次数 10万次<br />
+NV-SRAM 32K Byte,带电池记忆<br />
+<br />
+7.编译环境设置<br />
+DevKitAdv是免费的GCC开发包，目前的最新版本是R5-Beta-3，下面将以此版本为例介绍如何在windows nt、2000、xp平台下使用该开发包。<br />
+下载并安装DevKitAdv开发包到C:\devkitadv-r5-beta-3目录，进入该目录运行DevKit-Advance-R5-Beta-3.lnk文件，此时会出现蓝色的console控制台窗口。<br />
+ <br />
+在c:\devkitadv-r5-beta-3目录下有example、testsuite等目录，现在以testsuite目录为例示范如何通过命令行方式编译文件。<br />
+ 在上面的窗口中输入命令：<br />
+cd  testsuite<br />
+make<br />
+ 之后就开始编译testsuite项目并生成agbmain.bin、agbmain.elf等文件，此时就可以先使用模拟器VisualBoyAdvance运行其中一个文件，或者通过GBALine下载线下载到Flash卡中实际运行。<br />
+ 除了命令行方式之外，也可以自己创建Visual C++的makefile工程文件，这是强烈推荐的方式。<br />
+<br />
+ 最简单的入门过程就是这样，祝各位玩的开心！<br>
+                    <br>
+                     <br>
+-----------------------------------------------------------------------------------------<BR />
+                    http://sourceforge.net/projects/proemulator/<br />
+<!-- CETagParser ~img=http://sourceforge.net/project/stats/stats_graph.png?group_id=105359&report=last_7~ --><img src="http://sourceforge.net/project/stats/stats_graph.png?group_id=105359&report=last_7" border=0><!-- /CETagParser --></p> <br>   </td>
+              </tr>
+              </TBODY> 
+            </table>
+          </TD>
+        </TR>
+        <TR> 
+          <TD vAlign=bottom height="1" colspan="2" bgcolor="#999999"></TD>
+        </TR>
+        <TR> 
+          <form method="post" action="index.php?prog=post::rate&pid=2964621" >
+            <TD vAlign=middle height="20" align="left" width="100%" bgcolor=#f4f4f4><font class=smalltext><a href="index.php?prog=ucp::pm::edit&pid=2964621" title="给hiphoper发悄悄话">PM</a>　<a href="index.php?prog=user::view&uid=831" title="查看hiphoper的个人信息" >信息</a>　<a href="index.php?prog=user::mail&uid=831" title="给hiphoper发送邮件">发邮件</a>　<a href="" title="查看hiphoper的个人主页">主页</a>　<a href="index.php?prog=ucp::notepad&pid=2964621" title="拷贝贴子内容到记事本">复制</a>　<a href="index.php?prog=topic::reply&pid=2964621" title="引用贴子回复">引用</a>　<a href="index.php?prog=topic::reply&pid=2964621"e=0" title="直接回复">回复</a>　<a href="index.php?prog=post::edit&pid=2964621" title="编辑这个贴子">编辑</a>&nbsp;&nbsp;<a href="index.php?prog=post::del&pid=2964621" title="删除这个贴子">删除</a></font>&nbsp;&nbsp;[ <a href="http://bbs.tongji.net/index.php?prog=topic::list&fid=262"><font color=red>武汉同济版</font></a>]&nbsp;&nbsp;[<a href="http://bbs.tongji.net/index.php?prog=topic::list&fid=277"><font color=red>奥运专版——关注中华健儿扬威雅典</font></a>]<!--
+积分:<b><font color=blue> 
+              0 </font></b> 
+            </TD>
+            <TD vAlign=middle height="20" width="20%" align="right"><select name="rating" >
+<option value=1>1</option>
+<option value=2>2</option>
+<option value=3>3</option>
+<option value=4>4</option>
+<option value=5>5</option>
+<option value='-1'>-1</option>
+<option value='-2'>-2</option>
+<option value='-3'>-3</option>
+<option value='-4'>-4</option>
+<option value='-5'>-5</option>
+</select> &nbsp;
+<input type="submit" name="submit" value="评分" class=smlbtnStyle>--> </TD>
+          </form>
+        </TR>
+      </TABLE>
+    </TD>
+  </TR> 
+</table>
+<TABLE border=0 cellPadding=0 cellSpacing=1 width="100%" align=center bgcolor="#EDECED" height="1" >
+  <TR> 
+    <TD width="18%" valign=top  bgColor=#ffffff align="left"> 
+      <TABLE bgColor=#ffffff cellPadding=0 cellSpacing=8 width="99%">
+        <TR> 
+          <TD align=left> <b>fallperson</b> [同济人]<br /><br><img src="http://mai-fans.net/non-cgi2004/usravatars/hajsun2003.gif" border=0 width="100" height="100"><br /><br />[潜水归来团]<br><br>
+            发贴: 329<br>
+            注册: 2002-04-23  <br>
+            来自: 计算机</TD>
+        </TR>
+        <!--<TR> 
+          <TD align=left></TD>
+        </TR>-->
+      </TABLE>
+    </TD>
+    <TD width="82%" valign=top bgColor=#ffffff height="10"> 
+      <TABLE bgColor=#ffffff cellPadding=4 cellSpacing=0 width="100%" height=100%>
+        <TR valign="middle"> 
+          <TD height="20" colspan="2"> <img src="images/icon/1.gif" align=left border=0 align="absmiddle"> 
+              Re:从GameboyAdvance开始，步入ARM开发的殿堂（初学者入门篇）　  发表于 : <font class=smalltext>2004-07-12 18:54:22　  来源：BBS.TONGJI.NET <font color="red">　  </font></font></TD>
+        </TR> <TR> 
+          <TD vAlign=bottom height="1" colspan="2" bgcolor="#999999"></TD>
+        </TR>
+        <TR valign="top"> 
+          <TD height="100%" colspan="2"> 
+            <table cellpadding=0 cellspacing=0 width="100%" style="word-wrap:break-word; word-break:break-all" height="100%" style="TABLE-LAYOUT: fixed">
+              <TBODY> 
+              <tr> 
+                <td  valign="top" > 
+                  <p>原来研究过，后来还是放弃了，<br />
+GBA里的API不是人用的<br>
+                    <br>
+                     <br>
+-----------------------------------------------------------------------------------------<BR />
+                    最爱麻衣<br />
+<!-- CETagParser ~img=http://202.113.16.117/upload/file/1073711621zhuanbi.gif width=240 height=200~ --><a href="http://202.113.16.117/upload/file/1073711621zhuanbi.gif" title="点击显示完整图片" target="_blank"><img src="http://202.113.16.117/upload/file/1073711621zhuanbi.gif" width="240" height="200" border=0></a><!-- /CETagParser --></p> <br>   </td>
+              </tr>
+              </TBODY> 
+            </table>
+          </TD>
+        </TR>
+        <TR> 
+          <TD vAlign=bottom height="1" colspan="2" bgcolor="#999999"></TD>
+        </TR>
+        <TR> 
+          <form method="post" action="index.php?prog=post::rate&pid=2973262" >
+            <TD vAlign=middle height="20" align="left" width="100%" bgcolor=#f4f4f4><font class=smalltext><a href="index.php?prog=ucp::pm::edit&pid=2973262" title="给fallperson发悄悄话">PM</a>　<a href="index.php?prog=user::view&uid=240" title="查看fallperson的个人信息" >信息</a>　<a href="index.php?prog=user::mail&uid=240" title="给fallperson发送邮件">发邮件</a>　<a href="" title="查看fallperson的个人主页">主页</a>　<a href="index.php?prog=ucp::notepad&pid=2973262" title="拷贝贴子内容到记事本">复制</a>　<a href="index.php?prog=topic::reply&pid=2973262" title="引用贴子回复">引用</a>　<a href="index.php?prog=topic::reply&pid=2973262"e=0" title="直接回复">回复</a>　<a href="index.php?prog=post::edit&pid=2973262" title="编辑这个贴子">编辑</a>&nbsp;&nbsp;<a href="index.php?prog=post::del&pid=2973262" title="删除这个贴子">删除</a></font>&nbsp;&nbsp;[ <a href="http://bbs.tongji.net/index.php?prog=topic::list&fid=262"><font color=red>武汉同济版</font></a>]&nbsp;&nbsp;[<a href="http://bbs.tongji.net/index.php?prog=topic::list&fid=277"><font color=red>奥运专版——关注中华健儿扬威雅典</font></a>]<!--
+积分:<b><font color=blue> 
+              0 </font></b> 
+            </TD>
+            <TD vAlign=middle height="20" width="20%" align="right"><select name="rating" >
+<option value=1>1</option>
+<option value=2>2</option>
+<option value=3>3</option>
+<option value=4>4</option>
+<option value=5>5</option>
+<option value='-1'>-1</option>
+<option value='-2'>-2</option>
+<option value='-3'>-3</option>
+<option value='-4'>-4</option>
+<option value='-5'>-5</option>
+</select> &nbsp;
+<input type="submit" name="submit" value="评分" class=smlbtnStyle>--> </TD>
+          </form>
+        </TR>
+      </TABLE>
+    </TD>
+  </TR> 
+</table>
+<TABLE border=0 cellPadding=0 cellSpacing=1 width="100%" align=center bgcolor="#EDECED" height="1" >
+  <TR> 
+    <TD width="18%" valign=top  bgColor=#ffffff align="left"> 
+      <TABLE bgColor=#ffffff cellPadding=0 cellSpacing=8 width="99%">
+        <TR> 
+          <TD align=left> <b>吴炎</b> [同济人]<br /><br><img src="http://collections.ic.gc.ca/science/english/compsci/inline/jag.jpg" border=0 width="100" height="100"><br /><br />倒楣小分队队长<br><br>
+            发贴: 253<br>
+            注册: 2003-04-09  <br>
+            来自: </TD>
+        </TR>
+        <!--<TR> 
+          <TD align=left></TD>
+        </TR>-->
+      </TABLE>
+    </TD>
+    <TD width="82%" valign=top bgColor=#ffffff height="10"> 
+      <TABLE bgColor=#ffffff cellPadding=4 cellSpacing=0 width="100%" height=100%>
+        <TR valign="middle"> 
+          <TD height="20" colspan="2"> <img src="images/icon/1.gif" align=left border=0 align="absmiddle"> 
+              Re:从GameboyAdvance开始，步入ARM开发的殿堂（初学者入门篇）　  发表于 : <font class=smalltext>2004-07-19 11:24:07　  来源：BBS.TONGJI.NET <font color="red">　  </font></font></TD>
+        </TR> <TR> 
+          <TD vAlign=bottom height="1" colspan="2" bgcolor="#999999"></TD>
+        </TR>
+        <TR valign="top"> 
+          <TD height="100%" colspan="2"> 
+            <table cellpadding=0 cellspacing=0 width="100%" style="word-wrap:break-word; word-break:break-all" height="100%" style="TABLE-LAYOUT: fixed">
+              <TBODY> 
+              <tr> 
+                <td  valign="top" > 
+                  <p>帮版主顶<br>
+                    <br>
+                     <br>
+-----------------------------------------------------------------------------------------<BR />
+                    <!-- CETagParser ~img=http://photos.gznet.com/photos//-2VzGrL4JCR.JPG~ --><img src="http://photos.gznet.com/photos//-2VzGrL4JCR.JPG" border=0><!-- /CETagParser --></p> <br>   </td>
+              </tr>
+              </TBODY> 
+            </table>
+          </TD>
+        </TR>
+        <TR> 
+          <TD vAlign=bottom height="1" colspan="2" bgcolor="#999999"></TD>
+        </TR>
+        <TR> 
+          <form method="post" action="index.php?prog=post::rate&pid=3014250" >
+            <TD vAlign=middle height="20" align="left" width="100%" bgcolor=#f4f4f4><font class=smalltext><a href="index.php?prog=ucp::pm::edit&pid=3014250" title="给吴炎发悄悄话">PM</a>　<a href="index.php?prog=user::view&uid=16152" title="查看吴炎的个人信息" >信息</a>　<a href="index.php?prog=user::mail&uid=16152" title="给吴炎发送邮件">发邮件</a>　<a href="" title="查看吴炎的个人主页">主页</a>　<a href="index.php?prog=ucp::notepad&pid=3014250" title="拷贝贴子内容到记事本">复制</a>　<a href="index.php?prog=topic::reply&pid=3014250" title="引用贴子回复">引用</a>　<a href="index.php?prog=topic::reply&pid=3014250"e=0" title="直接回复">回复</a>　<a href="index.php?prog=post::edit&pid=3014250" title="编辑这个贴子">编辑</a>&nbsp;&nbsp;<a href="index.php?prog=post::del&pid=3014250" title="删除这个贴子">删除</a></font>&nbsp;&nbsp;[ <a href="http://bbs.tongji.net/index.php?prog=topic::list&fid=262"><font color=red>武汉同济版</font></a>]&nbsp;&nbsp;[<a href="http://bbs.tongji.net/index.php?prog=topic::list&fid=277"><font color=red>奥运专版——关注中华健儿扬威雅典</font></a>]<!--
+积分:<b><font color=blue> 
+              0 </font></b> 
+            </TD>
+            <TD vAlign=middle height="20" width="20%" align="right"><select name="rating" >
+<option value=1>1</option>
+<option value=2>2</option>
+<option value=3>3</option>
+<option value=4>4</option>
+<option value=5>5</option>
+<option value='-1'>-1</option>
+<option value='-2'>-2</option>
+<option value='-3'>-3</option>
+<option value='-4'>-4</option>
+<option value='-5'>-5</option>
+</select> &nbsp;
+<input type="submit" name="submit" value="评分" class=smlbtnStyle>--> </TD>
+          </form>
+        </TR>
+      </TABLE>
+    </TD>
+  </TR> 
+</table>
+<TABLE border=0 cellPadding=0 cellSpacing=1 width="100%" align=center bgcolor="#EDECED" height="1" >
+  <TR> 
+    <TD width="18%" valign=top  bgColor=#ffffff align="left"> 
+      <TABLE bgColor=#ffffff cellPadding=0 cellSpacing=8 width="99%">
+        <TR> 
+          <TD align=left> <b>neoxstudio</b> [同济人]<br /><br><img src="http://www.jnnarea.com/macface.jpg" border=0 width="100" height="100"><br /><br />偶是桂桂<br><br>
+            发贴: 449<br>
+            注册: 2003-07-18  <br>
+            来自: 03SSE</TD>
+        </TR>
+        <!--<TR> 
+          <TD align=left></TD>
+        </TR>-->
+      </TABLE>
+    </TD>
+    <TD width="82%" valign=top bgColor=#ffffff height="10"> 
+      <TABLE bgColor=#ffffff cellPadding=4 cellSpacing=0 width="100%" height=100%>
+        <TR valign="middle"> 
+          <TD height="20" colspan="2"> <img src="images/icon/1.gif" align=left border=0 align="absmiddle"> 
+              Re:从GameboyAdvance开始，步入ARM开发的殿堂（初学者入门篇）　  发表于 : <font class=smalltext>2004-07-19 16:32:08　  来源：BBS.TONGJI.NET <font color="red">　  </font></font></TD>
+        </TR> <TR> 
+          <TD vAlign=bottom height="1" colspan="2" bgcolor="#999999"></TD>
+        </TR>
+        <TR valign="top"> 
+          <TD height="100%" colspan="2"> 
+            <table cellpadding=0 cellspacing=0 width="100%" style="word-wrap:break-word; word-break:break-all" height="100%" style="TABLE-LAYOUT: fixed">
+              <TBODY> 
+              <tr> 
+                <td  valign="top" > 
+                  <p>手机里面用的不也是ARM?<br>
+                    <br>
+                     <br>
+-----------------------------------------------------------------------------------------<BR />
+                    HP     100%<br />
+MP     100%<br />
+EXP     90%<br />
+LP         0%<br />
+RP         0%</p> <br>   </td>
+              </tr>
+              </TBODY> 
+            </table>
+          </TD>
+        </TR>
+        <TR> 
+          <TD vAlign=bottom height="1" colspan="2" bgcolor="#999999"></TD>
+        </TR>
+        <TR> 
+          <form method="post" action="index.php?prog=post::rate&pid=3016230" >
+            <TD vAlign=middle height="20" align="left" width="100%" bgcolor=#f4f4f4><font class=smalltext><a href="index.php?prog=ucp::pm::edit&pid=3016230" title="给neoxstudio发悄悄话">PM</a>　<a href="index.php?prog=user::view&uid=22932" title="查看neoxstudio的个人信息" >信息</a>　<a href="index.php?prog=user::mail&uid=22932" title="给neoxstudio发送邮件">发邮件</a>　<a href="" title="查看neoxstudio的个人主页">主页</a>　<a href="index.php?prog=ucp::notepad&pid=3016230" title="拷贝贴子内容到记事本">复制</a>　<a href="index.php?prog=topic::reply&pid=3016230" title="引用贴子回复">引用</a>　<a href="index.php?prog=topic::reply&pid=3016230"e=0" title="直接回复">回复</a>　<a href="index.php?prog=post::edit&pid=3016230" title="编辑这个贴子">编辑</a>&nbsp;&nbsp;<a href="index.php?prog=post::del&pid=3016230" title="删除这个贴子">删除</a></font>&nbsp;&nbsp;[ <a href="http://bbs.tongji.net/index.php?prog=topic::list&fid=262"><font color=red>武汉同济版</font></a>]&nbsp;&nbsp;[<a href="http://bbs.tongji.net/index.php?prog=topic::list&fid=277"><font color=red>奥运专版——关注中华健儿扬威雅典</font></a>]<!--
+积分:<b><font color=blue> 
+              0 </font></b> 
+            </TD>
+            <TD vAlign=middle height="20" width="20%" align="right"><select name="rating" >
+<option value=1>1</option>
+<option value=2>2</option>
+<option value=3>3</option>
+<option value=4>4</option>
+<option value=5>5</option>
+<option value='-1'>-1</option>
+<option value='-2'>-2</option>
+<option value='-3'>-3</option>
+<option value='-4'>-4</option>
+<option value='-5'>-5</option>
+</select> &nbsp;
+<input type="submit" name="submit" value="评分" class=smlbtnStyle>--> </TD>
+          </form>
+        </TR>
+      </TABLE>
+    </TD>
+  </TR> 
+</table>
+<TABLE border=0 cellPadding=0 cellSpacing=1 width="100%" align=center bgcolor="#EDECED" height="1" >
+  <TR> 
+    <TD width="18%" valign=top  bgColor=#ffffff align="left"> 
+      <TABLE bgColor=#ffffff cellPadding=0 cellSpacing=8 width="99%">
+        <TR> 
+          <TD align=left> <b>giftzyx</b> [同济人]<br /><br><img src="http://www.pcpchina.com/forum/avatars/alien_mars.jpg" border=0 width="100" height="100"><br /><br />卯星居民<br><br>
+            发贴: 676<br>
+            注册: 2004-03-24  <br>
+            来自: 同濟SSE</TD>
+        </TR>
+        <!--<TR> 
+          <TD align=left></TD>
+        </TR>-->
+      </TABLE>
+    </TD>
+    <TD width="82%" valign=top bgColor=#ffffff height="10"> 
+      <TABLE bgColor=#ffffff cellPadding=4 cellSpacing=0 width="100%" height=100%>
+        <TR valign="middle"> 
+          <TD height="20" colspan="2"> <img src="images/icon/1.gif" align=left border=0 align="absmiddle"> 
+              Re:从GameboyAdvance开始，步入ARM开发的殿堂（初学者入门篇）　  发表于 : <font class=smalltext>2004-07-22 19:42:13　  来源：BBS.TONGJI.NET <font color="red">　  </font></font></TD>
+        </TR> <TR> 
+          <TD vAlign=bottom height="1" colspan="2" bgcolor="#999999"></TD>
+        </TR>
+        <TR valign="top"> 
+          <TD height="100%" colspan="2"> 
+            <table cellpadding=0 cellspacing=0 width="100%" style="word-wrap:break-word; word-break:break-all" height="100%" style="TABLE-LAYOUT: fixed">
+              <TBODY> 
+              <tr> 
+                <td  valign="top" > 
+                  <p>顶！<br />
+先收再看<br>
+                    <br>
+                     <br>
+-----------------------------------------------------------------------------------------<BR />
+                    <!-- CETagParser ~img=http://61.144.28.248:8080/databank/bbs_upload/files_1/armok0110301.jpg width=380 height=270~ --><a href="http://61.144.28.248:8080/databank/bbs_upload/files_1/armok0110301.jpg" title="点击显示完整图片" target="_blank"><img src="http://61.144.28.248:8080/databank/bbs_upload/files_1/armok0110301.jpg" width="380" height="270" border=0></a><!-- /CETagParser --></p> <br>   </td>
+              </tr>
+              </TBODY> 
+            </table>
+          </TD>
+        </TR>
+        <TR> 
+          <TD vAlign=bottom height="1" colspan="2" bgcolor="#999999"></TD>
+        </TR>
+        <TR> 
+          <form method="post" action="index.php?prog=post::rate&pid=3040087" >
+            <TD vAlign=middle height="20" align="left" width="100%" bgcolor=#f4f4f4><font class=smalltext><a href="index.php?prog=ucp::pm::edit&pid=3040087" title="给giftzyx发悄悄话">PM</a>　<a href="index.php?prog=user::view&uid=44098" title="查看giftzyx的个人信息" >信息</a>　<a href="index.php?prog=user::mail&uid=44098" title="给giftzyx发送邮件">发邮件</a>　<a href="" title="查看giftzyx的个人主页">主页</a>　<a href="index.php?prog=ucp::notepad&pid=3040087" title="拷贝贴子内容到记事本">复制</a>　<a href="index.php?prog=topic::reply&pid=3040087" title="引用贴子回复">引用</a>　<a href="index.php?prog=topic::reply&pid=3040087"e=0" title="直接回复">回复</a>　<a href="index.php?prog=post::edit&pid=3040087" title="编辑这个贴子">编辑</a>&nbsp;&nbsp;<a href="index.php?prog=post::del&pid=3040087" title="删除这个贴子">删除</a></font>&nbsp;&nbsp;[ <a href="http://bbs.tongji.net/index.php?prog=topic::list&fid=262"><font color=red>武汉同济版</font></a>]&nbsp;&nbsp;[<a href="http://bbs.tongji.net/index.php?prog=topic::list&fid=277"><font color=red>奥运专版——关注中华健儿扬威雅典</font></a>]<!--
+积分:<b><font color=blue> 
+              0 </font></b> 
+            </TD>
+            <TD vAlign=middle height="20" width="20%" align="right"><select name="rating" >
+<option value=1>1</option>
+<option value=2>2</option>
+<option value=3>3</option>
+<option value=4>4</option>
+<option value=5>5</option>
+<option value='-1'>-1</option>
+<option value='-2'>-2</option>
+<option value='-3'>-3</option>
+<option value='-4'>-4</option>
+<option value='-5'>-5</option>
+</select> &nbsp;
+<input type="submit" name="submit" value="评分" class=smlbtnStyle>--> </TD>
+          </form>
+        </TR>
+      </TABLE>
+    </TD>
+  </TR> 
+</table>
+ 
+<table cellspacing="0" cellpadding="0" width="100%" align="center" border="0">
+  <tr> 
+    <td height="12" align="left" colspan="3"></td>
+  </tr>
+  <tr> 
+    <td height="12" align="left" width="30%">目前只有一页 </td>
+    <td height="12" align="center" width="*">管理 : <a href="modpanel.php?tid=168026&prog=topic::manage">管理贴子</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+   <a href="index.php?prog=topic::rec&tid=168026" onClick="javascript:return confirm('是否推荐本话题？');">推荐贴子</a>
+</td>
+    <td height="12" align="right" width="30%"> <img src="images/gotop.gif" align=absmiddle><a href="#top">返回顶部</a></td>
+  </tr>
+</table>
+ 
+<br>
+    <TD background="images/mainPageBorderLeft.gif" 
+      width=1></TD>
+  </tr>
+</table>
+
+<TABLE align=center border=0 cellPadding=0 cellSpacing=0 height=1 width=95% background="images/mainPageBorderLeft.gif">
+  <TR> 
+    <TD  height="1"></TD>
+  </TR>
+</TABLE>
+<center>
+<a href=http://bbs.tongji.net/index.php?prog=topic::list&fid=277><img src="http://www.tongji.com.cn/bbs/direct_output/attachments/ATT16116_tongjiaoyun.gif" border="0" target="_blank" alt="关注中国奥运，欢迎访问Tongji.Net奥运专题讨论区!"></a>
+
+<!--
+<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,29,0" width="468" height="61">
+        <param name="movie" value="http://www.tongji.net/images/welcome.swf">
+        <param name="quality" value="high">
+        <embed src="http://www.tongji.net/images/welcome.swf" quality="high" pluginspage="http://www.macromedia.com/go/getflashplayer" type="application/x-shockwave-flash" width="468" height="60"></embed></object>
+
+-->
+</center>
+  <center> Copyright (c) 2002-2004 <a href=http://www.tongji.net/ target=blank><font color=888888>Tongji.Net</font></a>. All Rights Reserved.
+</center>
+<center><font color=888888 class=smalltext> <center> Process Time: 0.0596 &nbsp; SQL Queries: 7&nbsp;(5+2) </center></font><font color=888888 class=smalltext> Powered By <a href="http://www.celestesoft.com" target='_blank'><font color=888888>Celeste 2004</font></a></font> 
+</center>
+</body>
+</html><br><center>Celeste Template Engine Info: Gzip <b>Enabled</b> [ Level 2 ]</center>

@@ -1,0 +1,117 @@
+                Nintendo Playchoice 10 Hardware Description
+                -------------------------------------------
+                          V 0.2 by Oliver Achten
+			      
+                              (achten@gmx.de)
+
+I apologize in advance for lingual mistakes... ;-)
+
+Overview
+--------
+The Nintendo Playchoice 10 hardware consists of 2 main parts: the control and
+the game part. The control part is driven by a Z80 CPU, which handles the
+game selection, menu display and controls the game part. The game part is 100%
+compatible to the NES game console, using a N2A03 CPU and a N2B03 PPU.
+
+Z80 memory map
+--------------
+$0000 - $3FFF   16Kb bios rom
+$8000 - $87FF   2Kb scratchpad ram
+$8800 - $8FFF   2KB battery backed up ram
+$9000 - $97FF   2KB video ram (write only!)
+$C000 - $DFFF   8Kb cartridge bios (resides on each game cartridge)
+$E000 - $FFFF   protection
+
+Z80 i/o map
+-----------
+read:
+
+$00	   	bit 0: channel select button
+                bit 1: enter button
+                bit 2: reset button
+                bit 3: N2A03 interrupt detect
+                bit 4: < zero >
+                bit 5: coin 2 button
+                bit 6: service button
+                bit 7: coin 1 button
+            
+$01	       	bits 0-7: dip switch 1
+$02     	bits 0-7: dip switch 2
+
+$03             clears bit 3 of read port $00
+
+write:
+
+(all write ports are using bit 0 only)
+
+$00             vram is accessed by: 0 = cpu  1 = video circuit
+$01             0 = disable game controls  1 = enable
+$02             0 = disable N2B03 ppu display output  1 = enable
+$03             0 = disable N2A03 sound output  1 = enable
+$04             0 = reset N2A03 CPU  1 = run N2A03 CPU
+$05             0 = stop N2A03 CPU  1 = run N2A03 CPU
+
+$06		0 = video circuit output  1 = N2B03 PPU display output
+		    (only on single monitor version)
+
+$08             0 = Z80 nmi disable  1 = enable
+$09             0 = enable watchdog  1 = disable
+$0A             0 = reset N2B03 PPU  1 = run N2B03 PPU
+
+$0B \
+$0C  \ game channel select (0-9), $0B -> LSB, $0E -> MSB
+$0D  /
+$0E /
+            
+$0F             0 = disable upper kb of battery ram  1 = enable                         
+
+Video circuit
+-------------
+
+Video ram resides at $9000 - $97FF, and can only be accessed by the Z80 when
+bit 0 of write port $00 is 0 (which also turns off the display). The screen matrix
+consists of 32*28 characters. Due to the design of the video circuit, the first
+visible line starts at $9080. Character and color codes are stored in two
+bytes:  byte 0 - cccccccc    byte 1 - pppppccc    (bit 0 - 7)
+
+        c: character code ($000 - $7FF)   p: color code ($00 - $1F)
+
+The video circuit generates a nmi each vertical blank (when port $40 is set
+to 1). Screen refresh is 60 Hz.
+
+Watchdog
+--------
+
+When enabled by port $09, the watchdog resets the Z80 cpu after 8 screen
+refreshes, which shall prevent a machine lockup. The watchdog is reset by
+toggling port $09 from 0 to 1, which should be done by the nmi routine.
+
+Game part
+---------
+
+As mentioned before, the game part consists practically of a whole NES. Memory
+map and registers are the same, however, the PPU is different since it has
+seperate RGB and SYNC outputs, which provide a MUCH clearer picture than
+the N2A02 NES PPU. Unlike VS UNISYSTEM PPUïs, the Playchoice 10 PPU holds
+the same color palette than its NES equivalent, so the game part of the
+Playchoice 10 can be considered 100% NES compatible!
+
+The Z80 i/o map shows that each single part of the NES can be controlled.
+
+Ports $0B - $0E determine which one of the 10 game slots is activated.
+It affects also the $C000 - $FFFF area in the Z80 memory map (cartridge bios
+and protection).
+
+Protection
+----------
+Protection is done by a RP5H01 unit. Knowing nothing about this device, i
+canït give any technical descriptions. Theoretically, it holds 16 bytes
+of data, which is accessed by both system and cartridge bios.
+Theoretically, the unit would not need the protection when a new Z80 bios
+is written (iïve written such a bios, so check out the web! ), which would
+allow the possibility of building a NES cart adaptor for the PC 10.
+
+Thanks for reading!
+
+                Oliver
+

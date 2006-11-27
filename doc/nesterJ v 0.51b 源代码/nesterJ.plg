@@ -1,0 +1,108 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: nesterJ - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\lizheng.IC\LOCALS~1\Temp\RSPD.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib advapi32.lib shlwapi.lib shell32.lib winmm.lib comctl32.lib comdlg32.lib wsock32.lib ddraw.lib dsound.lib dinput.lib dxguid.lib /nologo /subsystem:windows /incremental:no /pdb:"Release/nesterJ.pdb" /machine:I386 /out:"Release/nesterJ.exe" 
+".\Release\nes_apu.obj"
+".\Release\nes_apu_wrapper.obj"
+".\Release\nes6502.obj"
+".\Release\NES_6502.obj"
+".\Release\NES_PPU.obj"
+".\Release\libsnss.obj"
+".\Release\NES.obj"
+".\Release\NES_mapper.obj"
+".\Release\NES_ROM.obj"
+".\Release\SNSS.obj"
+".\Release\iDDraw.obj"
+".\Release\iDIDevice.obj"
+".\Release\iDirectX.obj"
+".\Release\win32_datach_barcode_dialog.obj"
+".\Release\win32_default_controls.obj"
+".\Release\win32_dialogs.obj"
+".\Release\win32_directinput_input_mgr.obj"
+".\Release\win32_directinput_key_filter.obj"
+".\Release\win32_directinput_keytable.obj"
+".\Release\win32_directsound_sound_mgr.obj"
+".\Release\win32_emu.obj"
+".\Release\win32_fullscreen_NES_screen_mgr.obj"
+".\Release\win32_GUID.obj"
+".\Release\win32_INPButtons.obj"
+".\Release\win32_NES_pad.obj"
+".\Release\win32_NES_screen_mgr.obj"
+".\Release\win32_settings.obj"
+".\Release\win32_shellext.obj"
+".\Release\win32_timing.obj"
+".\Release\win32_windowed_NES_screen_mgr.obj"
+".\Release\winmain.obj"
+".\Release\debug.obj"
+".\Release\HEX.obj"
+".\Release\mono.obj"
+".\Release\arc.obj"
+".\Release\CSndRec.obj"
+".\Release\mkutils.obj"
+".\Release\recent.obj"
+".\Release\settings.obj"
+".\Release\nesterJ.res"
+]
+Creating command line "link.exe @C:\DOCUME~1\lizheng.IC\LOCALS~1\Temp\RSPD.tmp"
+<h3>Output Window</h3>
+Linking...
+Creating temporary file "C:\DOCUME~1\lizheng.IC\LOCALS~1\Temp\RSPF.tmp" with contents
+[
+/nologo /o"Release/nesterJ.bsc" 
+".\Release\nes_apu.sbr"
+".\Release\nes_apu_wrapper.sbr"
+".\Release\nes6502.sbr"
+".\Release\NES_6502.sbr"
+".\Release\NES_PPU.sbr"
+".\Release\libsnss.sbr"
+".\Release\NES.sbr"
+".\Release\NES_mapper.sbr"
+".\Release\NES_ROM.sbr"
+".\Release\SNSS.sbr"
+".\Release\iDDraw.sbr"
+".\Release\iDIDevice.sbr"
+".\Release\iDirectX.sbr"
+".\Release\win32_datach_barcode_dialog.sbr"
+".\Release\win32_default_controls.sbr"
+".\Release\win32_dialogs.sbr"
+".\Release\win32_directinput_input_mgr.sbr"
+".\Release\win32_directinput_key_filter.sbr"
+".\Release\win32_directinput_keytable.sbr"
+".\Release\win32_directsound_sound_mgr.sbr"
+".\Release\win32_emu.sbr"
+".\Release\win32_fullscreen_NES_screen_mgr.sbr"
+".\Release\win32_GUID.sbr"
+".\Release\win32_INPButtons.sbr"
+".\Release\win32_NES_pad.sbr"
+".\Release\win32_NES_screen_mgr.sbr"
+".\Release\win32_settings.sbr"
+".\Release\win32_shellext.sbr"
+".\Release\win32_timing.sbr"
+".\Release\win32_windowed_NES_screen_mgr.sbr"
+".\Release\winmain.sbr"
+".\Release\debug.sbr"
+".\Release\HEX.sbr"
+".\Release\mono.sbr"
+".\Release\arc.sbr"
+".\Release\CSndRec.sbr"
+".\Release\mkutils.sbr"
+".\Release\recent.sbr"
+".\Release\settings.sbr"]
+Creating command line "bscmake.exe @C:\DOCUME~1\lizheng.IC\LOCALS~1\Temp\RSPF.tmp"
+Creating browse info file...
+<h3>Output Window</h3>
+
+
+
+<h3>Results</h3>
+nesterJ.exe - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

@@ -1,0 +1,547 @@
+From: <ÓÉ Microsoft Internet Explorer 5 ±£´æ>
+Subject: Detailed DMC Operation
+Date: Sat, 14 Aug 2004 12:03:23 +0800
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	boundary="----=_NextPart_000_0000_01C481F6.B2C83660";
+	type="text/html"
+X-MimeOLE: Produced By Microsoft MimeOLE V5.50.4133.2400
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_0000_01C481F6.B2C83660
+Content-Type: text/html;
+	charset="gb2312"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: http://www.slack.net/~ant/nes-emu/dmc/
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD><TITLE>Detailed DMC Operation</TITLE>
+<META content=3D"text/html; charset=3Dgb2312" http-equiv=3DContent-Type>
+<META content=3D"MSHTML 5.00.3103.1000" name=3DGENERATOR></HEAD>
+<BODY>
+<H1>Detailed DMC Operation</H1>I have come up with and implemented a =
+model of=20
+the DMC which explains all DMC behavior I've so far observed, and =
+properly=20
+handles the <A =
+href=3D"http://www.slack.net/~ant/nes-emu/dmc_waves.html">DMC saw=20
+waves hack</A>. The following is a description of the model, which may =
+not match=20
+the DMC hardware. Following the model are several tests which yield the =
+same=20
+results running on an emulator based on the model and NES hardware.=20
+<H2>Model</H2>The DMC consists of three units:
+<UL>
+  <LI>output unit=20
+  <LI>sample buffer=20
+  <LI>DMA unit </LI></UL>The <I>sample buffer</I> either holds a single =
+sample=20
+byte or is empty. It is filled by the DMA unit and emptied by the output =
+unit.=20
+Only the output unit can empty it, so once loaded with a sample it will =
+be=20
+eventually output.<BR><BR>The <I>output unit</I> is always cycling. =
+During each=20
+cycle it either outputs a sample byte or is silent for equal duration. =
+The type=20
+of cycle is determined just before the cycle starts, based on the =
+full/empty=20
+status of the sample buffer. Once a cycle has started, its type can't be =
+changed=20
+nor can it be interrupted.<BR><BR>A cycle consists of 8 steps, each =
+consisting=20
+of a delay followed by a possible action. The delay is determined by the =
+DMC=20
+period ($4010) at the time the delay begins, thus the DMC period is =
+accessed 8=20
+times per cycle. For a sample output cycle, at the <I>end</I> of each =
+step the=20
+next sample bit is applied to the DAC. For a silence cycle, each step =
+consists=20
+of just the delay.<BR><BR>After a cycle is complete, a new cycle is =
+started; its=20
+type is determined by the status of the sample buffer. If the sample =
+buffer is=20
+empty, a silence cycle is started, otherwise a sample output cycle is =
+started=20
+(using the sample from the buffer) and the sample buffer is =
+cleared.<BR><BR>The=20
+<I>DMA unit</I> constantly watches for an opportunity to fill the sample =
+buffer.=20
+If the the sample buffer is empty and there are bytes remaining in the =
+current=20
+sample, the DMA unit reads the next sample byte from memory and puts it =
+into the=20
+sample buffer. After fetching the sample, it decrements the number of =
+remaining=20
+sample bytes; if this becomes zero, further action is taken: if looping =
+is=20
+enabled, the sample is restarted (see below), otherwise an IRQ is =
+generated (if=20
+enabled via $4010).<BR><BR>When a CPU write to $4015 occurs, bit 4 =
+determines=20
+one of two actions to perform: if 0, set the remaining bytes in the =
+current=20
+sample to 0. If bit 4 is 1 <I>and</I> the number of remaining bytes is =
+zero,=20
+restart the sample, otherwise do nothing.<BR><BR>Restarting the DMC =
+sample=20
+involves setting the DMA unit's current address and bytes remaining =
+based on the=20
+values in DMC registers $4012 and =
+$4013<BR><BR><BR><B>Notes</B><BR><BR>If=20
+nothing is currently playing, the sample buffer will be empty and the =
+output=20
+unit will be in a silence cycle. If the DMC is then enabled, the DMA =
+unit will=20
+immediately fill the buffer. If the sample's length is only 1 byte, this =
+will=20
+result in almost immediate clearing of the DMC's enable bit and an IRQ =
+(if it's=20
+enabled). The sample buffer will then be filled, so when the output unit =
+
+completes its current silence cycle, it will play the buffered sample=20
+byte.<BR><BR>If a sample is current playing and the DMC is then =
+disabled, the=20
+sample buffer will still be full and the output unit will be in the =
+middle of a=20
+sample, thus the currently playing sample byte will complete, then the =
+remaining=20
+sample byte in the buffer will also play, then silence. It <I>might</I> =
+be=20
+possible that the CPU disables the DMC just after the output unit =
+empties the=20
+sample buffer and before the DMA unit notices it's empty, which would =
+result in=20
+one fewer sample byte than usual before silence (the DMA unit seems to =
+take a=20
+few cycles to run through its checking cycle).<BR><BR>The number of =
+clock cycles=20
+until the transition of the DMC from enabled to disabled can be =
+calculated as=20
+follows (the sample buffer will already be full):<BR><PRE>    clocks =
+until the end of the output unit's step +
+    steps remaining in current cycle * DMC sample bit period +
+    (sample bytes remaining - 1) * 8 * DMC sample bit period
+</PRE>
+<H2>Tests</H2>I developed and tested the model with several =
+carefully-designed=20
+sequences which were run on NES hardware. The model agrees with the =
+results, and=20
+an emulator based on the model generates the same results. Each test is =
+titled=20
+by the conclusion which it supports. Samples are shown of the output of =
+NES=20
+hardware and the sequence which generated it.<BR><BR><A=20
+href=3D"http://www.slack.net/~ant/nes-emu/dmc/dmc_tests.tar.gz">NES ROMs =
+for some=20
+tests</A> are available. The ROM name is listed at the beginning of =
+assembly=20
+sequences, if one is included. I plan on making better test ROMs which =
+are=20
+designed to find defects in emulation, rather than test the DMC model as =
+the=20
+current tests are designed to do. <A=20
+href=3D"http://www.slack.net/~ant/nes-emu/dmc/#contact">Feedback</A> on=20
+improvements is welcome.<BR><BR>Each sequence starts out with the DMC's =
+DAC=20
+stabilized at 32 (1/4 full range), and the DMC sample set to a series of =
+$55=20
+sample values which result in alternating positive and negative =
+transitions. The=20
+DMC's frequency is set at the lowest and IRQ is disabled ($4010 =3D 0). =
+The DMC=20
+sample length is set to 17 bytes ($4013 =3D 1). Many sequences mark a =
+point in=20
+time by directly setting the DAC in order to generate a noticeable =
+output=20
+transition.<BR><BR><B>There is an independent 8-sample-bit output=20
+section</B><BR>
+<CENTER><IMG src=3D"http://www.slack.net/~ant/nes-emu/dmc/latency.gif"=20
+vspace=3D5><BR clear=3Dall>Start (large positive transition) and stop =
+(large=20
+negative transition) DMC at regular intervals</CENTER><BR>The DMC only =
+responds=20
+every 8 sample bit periods, and the sample always plays for a multiple =
+of 8=20
+sample bits, indicating an independent sample output section that can =
+only be=20
+configured every 8 sample bits, even when it's currently not playing =
+anything=20
+(silent).<BR><BR>The lowest DMC frequency results in an 8-bit sample =
+taking=20
+approximately 1.9 msec. By making the delays double this (3.8 msec =
+each), the=20
+latency becomes constant:<BR>
+<CENTER><IMG src=3D"http://www.slack.net/~ant/nes-emu/dmc/latency2.gif"=20
+vspace=3D5></CENTER><BR><PRE>                        ; latency.nes
+
+      ldy   #4          ; iterations
+
+    loop:
+      lda   #36         ; mark output
+      sta   $4011
+      lda   #$10        ; start DMC
+      sta   $4015
+
+      lda   #22         ; delay 2.2 msec
+      jsr   ms_delay
+
+      lda   #32         ; mark output
+      sta   $4011
+      lda   #0          ; stop DMC
+      sta   $4015
+
+      lda   #43         ; delay 4.3 msec
+      jsr   ms_delay
+
+      dey
+      bne   loop
+</PRE><BR><B>There is an intermediate buffer in addition to what the =
+8-bit=20
+sample output section uses</B><BR><BR>In the previous test, the stopping =
+latency=20
+was always over 8 samples, indicating an extra byte buffer which the =
+8-bit=20
+sample output section draws on. This test sets up a ramp sample in =
+memory and=20
+configures the DMC for it. It starts the DMC and marks the output. =
+<I>Then</I>=20
+it changes the sample value in memory to a neutral toggling value. The =
+output=20
+shows that the DMC sample doesn't start playing until well after it's =
+started=20
+(due to the previously demonstrated latency), so if the DMC didn't =
+buffer the=20
+sample value, it should use the neutral toggling sample. The output =
+shows that=20
+it uses the original value, indicating an additional byte buffer. The=20
+development cartridge I use contains RAM in the upper 32K address space =
+and it=20
+allows the CPU to modify it; with ROM the equivalent could be achieved =
+by=20
+switching banks.<BR>
+<CENTER><IMG src=3D"http://www.slack.net/~ant/nes-emu/dmc/buffer.gif"=20
+vspace=3D5></CENTER><BR><PRE>      lda   #$80        ; DMC sample at =
+$E000
+      sta   $4012
+      lda   #0          ; DMC sample length =3D 1 byte
+      sta   $4013
+
+      ldy   #4          ; iterations
+
+    loop:
+      lda   #$FF        ; set sample value to ramp
+      sta   $E000
+      lda   #$10        ; start DMC
+      sta   $4015
+
+      lda   #30         ; mark output
+      sta   $4011
+
+      lda   #$55        ; set sample value to neutral
+      sta   $E000
+
+      lda   #42         ; delay 4.2 msec
+      jsr   ms_delay
+
+      dey
+      bne   loop
+</PRE><BR><B>The intermediate buffer can only be emptied by the sample =
+output=20
+section</B><BR><BR>This test enables the DMC, then immediately disables =
+it, but=20
+an 8-bit sample is outputted anyway. This supports the existence of an=20
+intermediate buffer; it is filled immediately when the DMC is enabled, =
+and is=20
+only emptied when the sample output section needs a new byte.<BR>
+<CENTER><IMG =
+src=3D"http://www.slack.net/~ant/nes-emu/dmc/buffer_retained.gif"=20
+vspace=3D5></CENTER><BR><PRE>                        ; =
+buffer_retained.nes
+
+      lda   #$10        ; start
+      sta   $4015
+
+      lda   #$00        ; immediately stop
+      sta   $4015
+</PRE><BR><B>The status changes to "not playing" when all sample bytes =
+have been=20
+read</B><BR><BR>Since the 8-bit sample output unit and intermediate =
+buffer form=20
+an effective 2-byte buffer, the status can change to "not playing" up to =
+16=20
+sample bit periods before the last sample bit is added to the =
+DAC.<BR><BR>This=20
+test starts a 17-byte sample and polls the status. Once it changes to =
+"not=20
+playing", the output is marked with a transition.<BR>
+<CENTER><IMG src=3D"http://www.slack.net/~ant/nes-emu/dmc/status.gif"=20
+vspace=3D5></CENTER><BR><BR>The transition occurs immediately after the =
+last bit=20
+of the 15th sample byte is applied to the DAC, then the 16th and 17th =
+sample=20
+bytes are output.<BR><PRE>                        ; status.nes =
+(status_irq.nes for IRQ version)
+
+      lda   #$10        ; start DMC
+      sta   $4015
+
+    wait:
+      bit   $4015       ; wait for status to change to 0
+      bne   wait
+
+      lda   #0          ; mark output
+      sta   $4011
+</PRE>If the sample length is changed to 1 byte, the status changes to =
+"not=20
+playing" before the sample even starts! This is explained by the =
+intermediate=20
+buffer being filled immediately:<BR>
+<CENTER><IMG src=3D"http://www.slack.net/~ant/nes-emu/dmc/status2.gif"=20
+vspace=3D5></CENTER><BR><BR>
+<HR>
+<A href=3D"http://www.slack.net/~ant/nes-emu/">NES Sound Emulation =
+Home</A><BR><A=20
+name=3Dcontact><BR>blargg@mail.com</A><BR></BODY></HTML>
+
+------=_NextPart_000_0000_01C481F6.B2C83660
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://www.slack.net/~ant/nes-emu/dmc/latency.gif
+
+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
+
+------=_NextPart_000_0000_01C481F6.B2C83660
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://www.slack.net/~ant/nes-emu/dmc/latency2.gif
+
+R0lGODdhcQI9APUAAP////r6+vb29vHx8evr6+fn5+Li4t3d3dnZ2dTU1NDQ0MrKysXFxcDAwLy8
+vLe3t7Ozs62traioqKOjo5+fn5qampaWlpGRkYuLi4aGhoKCgn19fXl5eXR0dG9vb2lpaWVlZWBg
+YFxcXFdXV1JSUk5OTkhISENDQz8/Pzo6OjU1NTExMSsrKyYmJiIiIh0dHRgYGBQUFA8PDwkJCQUF
+BQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACwAAAAAcQI9AAAG/0CAcEgsGo/IpHLJ
+bDqf0Kh0Sq1ar9isdsvter/gsHhMLpvP6LR6zW673/C4fE6v2+/4vH7P7/v/gIGCg4SFhoeIiYqL
+jI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPE
+xcZuAgbHTQMrDwnLZAgH0UoFMyQXyrcOCwRWGC0uLBvbtTQZBwNVFxooMzXU1V4ULC41LAi3DDAa
+DOwTEGSQ8W8IAQWxWtSokcKFhgYFooTY9kEDkQcXvr2qYaIEDBksQDQw1+SEACERMhCJ0UIDgnXG
+DtCwByLDySggqAWAwOHiBP8CGltt6ODhxAkYL1JUkFcS5gESRGrMYNFig6sSQgIUoPCBRYwTGxw0
+YHLC4AgiMCaMcGG1VVkhAw4sSHGiBYsOHEgeeQtAAF8AKgS6+AtAL68HGIR0sACDxQsUHiSUHCLA
+BNoK91y4IgFzyIEPKqS6ABHB8JC/fAOgEAJhBZEGIVBELAX1yEEUJFCkSDFiAsIiq08PKSBiSAoi
+Gla8EKGSVO0jAiBIYMFChQkOEpgKQT1EwYchKoiQqFsDhC8Jko9Y+LCCRQ0VHCDsJRIcwACs24lw
+aKECRQzaSxhAgQYuyODCdRQIoNFf9TXQkxD1AXCCAwyMQENnAEBwgIKcEJb/hAQQeMACCu2Z8IAD
+LNA3BAQXCCdcAAmsEMAQAdBQwgMbanKAeU4EYMEIJ6igQgsjxEYEXxVM4KIQ4W03W2ELjVDCk7Fc
+IF8TFXSAAlUpbMCBBS2oKIQDzQFwnIsJyIYWiRpodwl+UFDggQoxxPDYkUNg8MCSgOW5pxAJ1EBC
+aBYQkUwlz0WxgAIYMEfEmQB4UJCEM+an2KQScJAACCq0JcQEH1SwVSQKeDpFBSA+OsQH+ghhwk0A
+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
+3NiN3viN4BiO4jiOshAEADs=
+
+------=_NextPart_000_0000_01C481F6.B2C83660
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://www.slack.net/~ant/nes-emu/dmc/buffer.gif
+
+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
+
+------=_NextPart_000_0000_01C481F6.B2C83660
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://www.slack.net/~ant/nes-emu/dmc/buffer_retained.gif
+
+R0lGODdhaQArAPUAAP////r6+vT09O/v7+np6eTk5N7e3tnZ2dPT087OzsjIyMPDw76+vri4uLOz
+s62traioqKKiop2dnZeXl5KSkoyMjIeHh4KCgnx8fHd3d3FxcWxsbGZmZmFhYVtbW1ZWVlJSUkdH
+R0FBQTw8PDc3NzExMSwsLCYmJiEhIRsbGxYWFgsLCwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACwAAAAAaQArAAAG/0CAcEgsGo/IpHLJ
+bDqf0Kh0Sq1ar9isdsvter/gsHhMLpvP6LR6zW673/C4fE6v26GYyCFwbw9KFCAiHkUgKyQdE0UD
+FR0SBAh9VggYQyFEB4QDDSUFRB0aER4pIkUnKCkkJwOSSgwXlkQPFEMWDUSlQ7lCBCBDFwytSRAQ
+ukS2Qw0WuMxDC5VCysJIFQ7GQx6eQgWE10K7ABLFvL7TRhiRQhrBQiRF7t4AHQdDGQlEI+ZG2UMM
+gBYdTBTJF20DEQmKhIwQgK8Mhg8eQpQYAUIVChIoUJQwocJEiY8jQpL4yMJjihVFLFRrYJDIBhEj
+TKzQto0FiBEpUhQRsUCBhGYFCyhM0PBAggQMFDCA6PAw4sSKpzBq5OgRJAUIDBYQKGCAD4ACXtcY
+YFBAQLohCDhowMDUggUIHJAioOBgAYOrWbd23RZWn9+/gAMLHky4sOHDiBMrXsy4sePHkCNLnky5
+suW/QQAAOw==
+
+------=_NextPart_000_0000_01C481F6.B2C83660
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://www.slack.net/~ant/nes-emu/dmc/status.gif
+
+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
+Qhv60IhOtKIXzehGqzcIADs=
+
+------=_NextPart_000_0000_01C481F6.B2C83660
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://www.slack.net/~ant/nes-emu/dmc/status2.gif
+
+R0lGODdhoAA7APUAAP////n5+fPz8+7u7ujo6OLi4tzc3NbW1tDQ0MvLy8XFxb+/v7m5ubOzs62t
+raioqKKiopycnJaWlpCQkIqKioWFhX9/f3l5eXNzc21tbWdnZ2JiYlxcXFZWVlBQUEpKSkZGRkBA
+QDo6OjQ0NC8vLykpKSMjIx0dHRcXFxEREQwMDAYGBgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACwAAAAAoAA7AAAG/0CAcEgsGo/IpHLJ
+bDqf0Kh0Sq1ar9isdsvter/gsHhMLpvP6LR6zW673/C4fE6v2+/4vH7P7/v/gIGCg4RwCQwNFRER
+hY1CAQQKiBgZHyQrJicoJRwcFxsQKywmJSGioyolLCOObgkCChcVHSApKqMnJCAeHA4TBgsBUgQB
+BayDvhwoH2QFCQ8ZKSYsLCcsJBoaCgtjIoQrEA4EHgdcCAYaJCqkIyMWCgMGbN54DB8h1hZECRtD
+FQ5VCgiQwIGFChIiSDBgIKDAHHpvCACQSGTEL2HHhESQMKSBPicEBkzQMIJFCRIUxO0B8aaCNWtF
+MgKQqW2IgQ5JBkhAgIEEtf8SGAAGAjGgzQER8gB8cDhEplNhQ0zsg0ABHwoMGCQEa4QBAZkEETqw
+YEAkwoQhF8g2rciWSIkKlqR5oJCgVZGuY3xC2OaBSE0hEM4KQcCBCDmJD6SWrfDArhK8YpxWhAoA
+gYYhEjgOUUAthQcIjqNADlOirRCZAUgAKDCBhVciBiiHhvJPzIAQpmcWWXFCRNbZWiCADrMAQ9sE
+DmQCYCAbOBbhYiYMF6LBRIoSFl47BwM9zAbt29FA0OxlBIoV4dckML6lgIMSb9Oz4ZklgYV1HIrK
+n8+eSoELLKAAQXP7qUGfFAFEIM2ABcZxUxQNgGCCBUk1KAdLTTygDAfcWFhcB4ZJEPAACgp5iIdy
+RAigAQsiEGjiQ0cwQOJ0L+KB2xAEYKACCBTVqMcxCISAAgU++jECBymM0GGRfVAAQY9MRinllFRW
+aeWVWGap5ZZcdunll2CGKeaYZJa5ZRAAOw==
+
+------=_NextPart_000_0000_01C481F6.B2C83660--

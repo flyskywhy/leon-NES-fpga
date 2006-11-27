@@ -1,0 +1,104 @@
+NES to Famicom adapter
+======================
+
+This data is obtained by checking out how Nasa "New Video Game
+Converter" works (hehe, I just love the names of these pirate
+companies). I opened the adapter and, as I thought, there were no
+components used. So, building this adapter is only a matter of getting
+a 72-pin NES female connector and a 60-pin Famicom male connector and
+soldering them together with wires as shown in the following diagram.
+
+
+
+NES 72- to Famicom 60-pin adapter
+---------------------------------
+
+Outside the box are the 72 pins of NES cartridge connector and inside
+are the corresponding Famicom pins.
+
+               TOP                    BOTTOM
+              +-----------------------------+
+     (GND) 01 |01&16 (GND)  .             NC| 37 (CLK)
+ (PRG A11) 02 |02 (PRG A11) .        (M2) 32| 38 (M2)
+ (PRG A10) 03 |03 (PRG A10) .   (PRG A12) 33| 39 (PRG A12)
+ (PRG A09) 04 |04 (PRG A09) .   (PRG A13) 34| 40 (PRG A13)
+ (PRG A08) 05 |05 (PRG A08) .   (PRG A14) 35| 41 (PRG A14)
+ (PRG A07) 06 |06 (PRG A07) .    (PRG D7) 36| 42 (PRG D7)
+ (PRG A06) 07 |07 (PRG A06) .    (PRG D6) 37| 43 (PRG D6)
+ (PRG A05) 08 |08 (PRG A05) .    (PRG D5) 38| 44 (PRG D5)
+ (PRG A04) 09 |09 (PRG A04) .    (PRG D4) 39| 45 (PRG D4)
+ (PRG A03) 10 |10 (PRG A03) .    (PRG D3) 40| 46 (PRG D3)
+ (PRG A02) 11 |11 (PRG A02) .    (PRG D2) 41| 47 (PRG D2)
+ (PRG A01) 12 |12 (PRG A01) .    (PRG D1) 42| 48 (PRG D1)
+ (PRG A00) 13 |13 (PRG A00) .    (PRG D0) 43| 49 (PRG D0)
+ (PRG R/W) 14 |14 (PRG R/W) .   (PRG /CE) 44| 50 (PRG /CE)
+    (/IRQ) 15 |15 (/IRQ)    .   (EXP) 45&46*| 51 (EXP 9)
+   (EXP 0) 16 |NC           .             NC| 52 (EXP 8)
+   (EXP 1) 17 |NC           .             NC| 53 (EXP 7)
+   (EXP 2) 18 |NC           .             NC| 54 (EXP 6)
+   (EXP 3) 19 |NC           .             NC| 55 (EXP 5)
+   (EXP 4) 20 |NC           .   (CHR /WR) 47| 56 (CHR /WR)
+ (CHR /RD) 21 |17 (CHR /RD) . (CIRAM /CE) 48| 57 (CIRAM /CE)
+ (CHR A10) 22 |18 (CHR A10) .   (CHR A13) 49| 58 (CHR A13)
+ (CHR A06) 23 |19 (CHR A06) .   (CHR A07) 50| 59 (CHR A07)
+ (CHR A05) 24 |20 (CHR A05) .   (CHR A08) 51| 60 (CHR A08)
+ (CHR A04) 25 |21 (CHR A04) .   (CHR A09) 52| 61 (CHR A09)
+ (CHR A03) 26 |22 (CHR A03) .   (CHR A11) 54| 62 (CHR A11)
+ (CHR A02) 27 |23 (CHR A02) .   (CHR A10) 53| 63 (CHR A10)
+ (CHR A01) 28 |24 (CHR A01) .   (CHR A12) 55| 64 (CHR A12)
+ (CHR A00) 29 |25 (CHR A00) .  (CHR /A13) 56| 65 (CHR /A13)
+  (CHR D0) 30 |26 (CHR D0)  .    (CHR D7) 57| 66 (CHR D7)
+  (CHR D1) 31 |27 (CHR D1)  .    (CHR D6) 58| 67 (CHR D6)
+  (CHR D2) 32 |28 (CHR D2)  .    (CHR D5) 59| 68 (CHR D5)
+  (CHR D3) 33 |29 (CHR D3)  .    (CHR D4) 60| 69 (CHR D4)
+(SECURITY) 34 |NC           .             NC| 70 (SECURITY)
+(SECURITY) 35 |NC           .             NC| 71 (SECURITY)
+     (+5V) 36 |30&31 (+5V)  .    (GND) 01&16| 72 (GND)
+              +-----------------------------+
+
+* Pins 45 and 46 on the Famicom connector are connected together.
+
+
+
+Notes
+-----
+
+1) NC means "No Connection" as you probably guessed.
+
+2) For some reason NES has pin 62 as CHR A11 and 63 as CHR A10 and not
+   vice versa as would seem more rational. In Famicom this situation
+   does not exist. Keep this in mind when building the adapter.
+
+
+
+Unconnected NES pins (and why they are unconnected)
+---------------------------------------------------
+
+Pins 16-20 and 52-55:
+
+   These are the pins that go to the expansion connector in the bottom of
+   the NES. As Famicom doesn't have (this type of) expansion connector,
+   these pins are left unconnected. Only the NES pin 51 is connected to
+   the two (one) expansion pin of the Famicom.
+
+Pins 34, 35 and 70, 71:
+
+   Famicom does not have the security chip so these are unnecessary.
+
+Pin 37:
+
+    I don't know the reason why the equivalent of this pin is not
+    found in Famicom.
+
+
+
+References
+----------
+
+- Nintendo family computer circuitry RE (famicom-circuitry.txt) by
+  Goroh (english translation by Ki)
+
+- NES Cart Types (rom.txt) by Kevin Horton
+
+- Famicom / Pegasus cartridge connector pinout (fam_pinout.txt) by
+  Siudym'2001

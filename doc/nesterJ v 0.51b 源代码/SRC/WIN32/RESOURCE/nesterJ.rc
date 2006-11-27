@@ -1,0 +1,1354 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// ﾆｭｰﾄﾗﾙ resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+#pragma code_page(932)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_NESTERICON          ICON    DISCARDABLE     "nesterJ.ico"
+IDI_ROM                 ICON    DISCARDABLE     "nes.ico"
+IDI_TWINFAM             ICON    DISCARDABLE     "twfam.ico"
+IDI_FDS                 ICON    DISCARDABLE     "fds.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAIN_ACCEL ACCELERATORS DISCARDABLE 
+BEGIN
+    "0",            ID_FILE_SLOT_0,         VIRTKEY, NOINVERT
+    "1",            ID_FILE_SLOT_1,         VIRTKEY, NOINVERT
+    "2",            ID_FILE_SLOT_2,         VIRTKEY, NOINVERT
+    "3",            ID_FILE_SLOT_3,         VIRTKEY, NOINVERT
+    "4",            ID_FILE_SLOT_4,         VIRTKEY, NOINVERT
+    "5",            ID_FILE_SLOT_5,         VIRTKEY, NOINVERT
+    "6",            ID_FILE_SLOT_6,         VIRTKEY, NOINVERT
+    "7",            ID_FILE_SLOT_7,         VIRTKEY, NOINVERT
+    "8",            ID_FILE_SLOT_8,         VIRTKEY, NOINVERT
+    "9",            ID_FILE_SLOT_9,         VIRTKEY, NOINVERT
+    "A",            ID_FILE_DISK_1A,        VIRTKEY, NOINVERT
+    "B",            ID_FILE_DISK_1B,        VIRTKEY, NOINVERT
+    "C",            ID_FILE_DISK_2A,        VIRTKEY, NOINVERT
+    "D",            ID_FILE_DISK_2B,        VIRTKEY, NOINVERT
+    "D",            ID_OPTIONS_DOUBLESIZE,  VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_FILE_DISK_EJECT,     VIRTKEY, NOINVERT
+    "R",            ID_FILE_SOFTRESET,      VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_KEY_DISABLE,         VIRTKEY, NOINVERT
+    VK_F1,          ID_HELP_ABOUT,          VIRTKEY, NOINVERT
+    VK_F11,         ID_FILE_SNDREC,         VIRTKEY, NOINVERT
+    VK_F12,         ID_FILE_SCREENSHOT,     VIRTKEY, NOINVERT
+    VK_F5,          ID_FILE_QUICK_SAVE,     VIRTKEY, NOINVERT
+    VK_F7,          ID_FILE_QUICK_LOAD,     VIRTKEY, NOINVERT
+    VK_RETURN,      ID_OPTIONS_FULLSCREEN,  VIRTKEY, ALT, NOINVERT
+END
+
+#endif    // ﾆｭｰﾄﾗﾙ resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// 日本語 resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
+#ifdef _WIN32
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#pragma code_page(932)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+#if defined(APSTUDIO_INVOKED) || defined(_JAPANESE)
+#if defined(APSTUDIO_INVOKED)
+IDR_MENU1$(_JAPANESE) MENU DISCARDABLE 
+#else
+IDR_MENU1 MENU DISCARDABLE 
+#endif
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "開く(&O)",                    ID_FILE_OPEN_ROM
+        MENUITEM "閉じる(&C)",                  ID_FILE_CLOSE_ROM
+        MENUITEM "リセット(&R)\tCtrl+R",        ID_FILE_SOFTRESET
+        MENUITEM "電源入れ直し(&P)",            ID_FILE_RESET
+        MENUITEM SEPARATOR
+        POPUP "ディスク入れ替え(&D)"
+        BEGIN
+            MENUITEM "イジェクト(&E)",              ID_FILE_DISK_EJECT
+            , GRAYED
+            MENUITEM "1枚目-A面(&A)",               ID_FILE_DISK_1A, GRAYED
+            MENUITEM "1枚目-B面(&B)",               ID_FILE_DISK_1B, GRAYED
+            MENUITEM "2枚目-A面(&C)",               ID_FILE_DISK_2A, GRAYED
+            MENUITEM "2枚目-B面(&D)",               ID_FILE_DISK_2B, GRAYED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "スクリーンショット(&T)\tF12", ID_FILE_SCREENSHOT
+        MENUITEM "WAVE録音(&W)\tF11",           ID_FILE_SNDREC
+        POPUP "ムービー"
+        BEGIN
+            MENUITEM "再生(&P)",                    ID_FILE_MOVIE_PLAY
+            , GRAYED
+            MENUITEM "記録開始(&R)",                ID_FILE_MOVIE_REC
+            , GRAYED
+            MENUITEM "停止(&S)",                    ID_FILE_MOVIE_STOP
+            , GRAYED
+        END
+        POPUP "ネットプレイ"
+        BEGIN
+            MENUITEM "サーバー (1P)",               ID_FILE_NETPLAY_ACCEPT
+            , GRAYED
+            MENUITEM "クライアント (2P)",           ID_FILE_NETPLAY_CONNECT
+            , GRAYED
+            MENUITEM "キャンセル",                  ID_FILE_NETPLAY_CANCEL
+            , GRAYED
+            MENUITEM SEPARATOR
+            MENUITEM "切断",                        ID_FILE_NETPLAY_CLOSE
+            , GRAYED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Load State(&L)...",           ID_FILE_LOAD_STATE
+        MENUITEM "Save State(&S)...",           ID_FILE_SAVE_STATE
+        MENUITEM SEPARATOR
+        MENUITEM "Quick Save\tF5",              ID_FILE_QUICK_SAVE
+        MENUITEM "Quick Load\tF7",              ID_FILE_QUICK_LOAD
+        POPUP "セーブスロット"
+        BEGIN
+            MENUITEM "&0",                          ID_FILE_SLOT_0
+            MENUITEM "&1",                          ID_FILE_SLOT_1
+            MENUITEM "&2",                          ID_FILE_SLOT_2
+            MENUITEM "&3",                          ID_FILE_SLOT_3
+            MENUITEM "&4",                          ID_FILE_SLOT_4
+            MENUITEM "&5",                          ID_FILE_SLOT_5
+            MENUITEM "&6",                          ID_FILE_SLOT_6
+            MENUITEM "&7",                          ID_FILE_SLOT_7
+            MENUITEM "&8",                          ID_FILE_SLOT_8
+            MENUITEM "&9",                          ID_FILE_SLOT_9
+        END
+        MENUITEM SEPARATOR
+        POPUP "最近使ったROM"
+        BEGIN
+            MENUITEM "Recent File 0",               ID_FILE_RECENT_0, GRAYED
+            MENUITEM "Recent File 1",               ID_FILE_RECENT_1, GRAYED
+            MENUITEM "Recent File 2",               ID_FILE_RECENT_2, GRAYED
+            MENUITEM "Recent File 3",               ID_FILE_RECENT_3, GRAYED
+            MENUITEM "Recent File 4",               ID_FILE_RECENT_4, GRAYED
+            MENUITEM "Recent File 5",               ID_FILE_RECENT_5, GRAYED
+            MENUITEM "Recent File 6",               ID_FILE_RECENT_6, GRAYED
+            MENUITEM "Recent File 7",               ID_FILE_RECENT_7, GRAYED
+            MENUITEM "Recent File 8",               ID_FILE_RECENT_8, GRAYED
+            MENUITEM "Recent File 9",               ID_FILE_RECENT_9, GRAYED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "終了(&X)",                    ID_FILE_EXIT
+    END
+    POPUP "&Option"
+    BEGIN
+        MENUITEM "動作設定(&P)",                ID_OPTIONS_PREFERENCES
+        , GRAYED
+        MENUITEM "グラフィック設定(&G)",        ID_OPTIONS_GRAPHICS, GRAYED
+        MENUITEM "サウンド設定(&S)",            ID_OPTIONS_SOUND, GRAYED
+        MENUITEM "コントローラー設定(&C)",      ID_OPTIONS_CONTROLLERS
+        , GRAYED
+        MENUITEM "フォルダ設定(&F)",            ID_OPTIONS_PATHS, GRAYED
+        MENUITEM SEPARATOR
+        POPUP "拡張機器の選択"
+        BEGIN
+            MENUITEM "None",                        ID_OPTIONS_EXCONTROLLER_00
+
+            MENUITEM SEPARATOR
+            MENUITEM "アルカノイド パドル",         ID_OPTIONS_EXCONTROLLER_02
+
+            MENUITEM "クレイジークライマー",        ID_OPTIONS_EXCONTROLLER_03
+
+            MENUITEM "Datach バーコードバトラー",   ID_OPTIONS_EXCONTROLLER_04
+
+            MENUITEM "ドレミッコ キーボード",       ID_OPTIONS_EXCONTROLLER_05
+
+            MENUITEM "エキサイティング ボクシング", ID_OPTIONS_EXCONTROLLER_06
+
+            MENUITEM "Family Basic キーボード",     ID_OPTIONS_EXCONTROLLER_07
+
+            MENUITEM "ファミリートレーナー (side A)", 
+                                                    ID_OPTIONS_EXCONTROLLER_08
+
+            MENUITEM "ファミリートレーナー (side B)", 
+                                                    ID_OPTIONS_EXCONTROLLER_09
+
+            MENUITEM "ハイパーショット",            ID_OPTIONS_EXCONTROLLER_10
+
+            MENUITEM "麻雀コントローラー",          ID_OPTIONS_EXCONTROLLER_11
+
+            MENUITEM "おえかキッズ タブレット",     ID_OPTIONS_EXCONTROLLER_12
+
+            MENUITEM "光線銃",                      ID_OPTIONS_EXCONTROLLER_13
+
+            MENUITEM "ぽっくんモグラー",            ID_OPTIONS_EXCONTROLLER_14
+
+            MENUITEM "Power Pad (side A)",          ID_OPTIONS_EXCONTROLLER_15
+
+            MENUITEM "Power Pad (side B)",          ID_OPTIONS_EXCONTROLLER_16
+
+            MENUITEM "Space Shadow Gun",            ID_OPTIONS_EXCONTROLLER_17
+
+            MENUITEM "トップライダー コントローラー", 
+                                                    ID_OPTIONS_EXCONTROLLER_18
+
+            MENUITEM "ターボファイル",              ID_OPTIONS_EXCONTROLLER_19
+
+            MENUITEM "VS Unisystem Zapper",         ID_OPTIONS_EXCONTROLLER_20
+
+        END
+        POPUP "拡張機器のコントロール"
+        BEGIN
+            MENUITEM "Datach Barcode Battler",      ID_OPTIONS_BARCODE_INPUT
+            POPUP "Data Recorder"
+            BEGIN
+                MENUITEM "Play Recorder",               ID_OPTIONS_TAPE_PLAY
+                MENUITEM "Rec Recorder",                ID_OPTIONS_TAPE_REC
+                MENUITEM "Stop Recorder",               ID_OPTIONS_TAPE_STOP
+            END
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "２倍表示(&D)\tCtrl+D",        ID_OPTIONS_DOUBLESIZE
+        MENUITEM "フルスクリーン(&F)\tAlt+Enter", ID_OPTIONS_FULLSCREEN
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "nesterJについて(&A)...\tF1",  ID_HELP_ABOUT
+    END
+END
+#endif
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+#if defined(APSTUDIO_INVOKED) || defined(_JAPANESE)
+#if defined(APSTUDIO_INVOKED)
+IDD_OPTIONS_GRAPHICS$(_JAPANESE) DIALOG DISCARDABLE  0, 0, 183, 269
+#else
+IDD_OPTIONS_GRAPHICS DIALOG DISCARDABLE  0, 0, 183, 269
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Graphics"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,86,252,48,14
+    CONTROL         "２倍表示(&D)",IDC_DOUBLESIZE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,4,4,53,10
+    CONTROL         "２倍表示で StretchBlt を使う",IDC_USESTRETCHBLT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,14,94,10
+    CONTROL         "スキャンラインを描画",IDC_EMULATETV,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,2,26,74,10
+    CONTROL         "拡張スプライト表示(&S)",IDC_SHOWSPRITES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,2,36,78,10
+    CONTROL         "240ラインすべてを表示(&A)",IDC_SHOWALLSCANLINES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,2,46,88,10
+    CONTROL         "白黒モード(&B)",IDC_BLACKANDWHITE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,2,56,54,10
+    GROUPBOX        "パレット",IDC_STATIC,2,68,178,100
+    CONTROL         "デフォルトのパレットを使用",IDC_DEFAULTPALETTE,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,6,80,92,10
+    CONTROL         "パレットをファイルから読み込む(&F)",IDC_READPALETTEFILE,
+                    "Button",BS_AUTORADIOBUTTON,6,96,116,10
+    CONTROL         "パレットの手動調整(&C)",IDC_CALCPALETTE,"Button",
+                    BS_AUTORADIOBUTTON,6,126,82,10
+    PUSHBUTTON      "...",IDC_REF_PALETTEFILE,166,108,12,12,WS_DISABLED
+    LTEXT           "Tint",IDC_LABEL_TINT,16,138,14,9,WS_DISABLED
+    CONTROL         "Slider1",IDC_TINT,"msctls_trackbar32",TBS_BOTH | 
+                    TBS_NOTICKS | WS_DISABLED | WS_TABSTOP,32,138,93,11
+    LTEXT           "Hue",IDC_LABEL_HUE,16,150,14,9,WS_DISABLED
+    CONTROL         "Slider1",IDC_HUE,"msctls_trackbar32",TBS_BOTH | 
+                    TBS_NOTICKS | WS_DISABLED | WS_TABSTOP,32,150,93,11
+    PUSHBUTTON      "Reset",ID_RESET,128,148,50,14,WS_DISABLED
+    GROUPBOX        "フルスクリーン設定",IDC_STATIC,2,172,178,78
+    LTEXT           "デバイス",IDC_STATIC,9,188,29,10
+    COMBOBOX        IDC_DEVICE,38,186,138,65,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "モード",IDC_STATIC,9,202,29,10
+    COMBOBOX        IDC_MODE,38,200,138,49,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    CONTROL         "拡大表示(&I)",IDC_FULLSCREENSCALING,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,6,214,118,10
+    CONTROL         "オーバースキャン描画(&O)",IDC_DRAWOVERSCAN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,6,225,90,10
+    CONTROL         "ROMを読み込んだらフルスクリーンに切り替える(&L)",
+                    IDC_FULLSCREENONLOAD,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,6,236,163,10
+    PUSHBUTTON      "デフォルトに戻す",IDC_DEFAULTS,6,252,74,14
+    PUSHBUTTON      "Cancel",IDCANCEL,138,252,44,14
+    EDITTEXT        IDC_PALETTEFILE,14,108,152,12,ES_AUTOHSCROLL | 
+                    WS_DISABLED | NOT WS_TABSTOP
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(_JAPANESE)
+#if defined(APSTUDIO_INVOKED)
+IDD_OPTIONS_SOUND$(_JAPANESE) DIALOG DISCARDABLE  0, 0, 182, 183
+#else
+IDD_OPTIONS_SOUND DIALOG DISCARDABLE  0, 0, 182, 183
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Sound"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,84,162,42,14
+    CONTROL         "サウンド有効(&E)",IDC_SOUNDENABLE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,4,4,59,10
+    GROUPBOX        "サンプリングレート",IDC_STATIC,85,62,66,30
+    COMBOBOX        IDC_SAMPLERATE,89,74,58,62,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    GROUPBOX        "フィルタ",IDC_STATIC,84,94,82,40
+    CONTROL         "none(&N)",IDC_SOUND_FILTER_NONE,"Button",
+                    BS_AUTORADIOBUTTON,88,102,36,10
+    CONTROL         "weighted low-pass(&W)",
+                    IDC_SOUND_FILTER_LOWPASS_WEIGHTED,"Button",
+                    BS_AUTORADIOBUTTON,88,112,76,10
+    CONTROL         "simple low-pass(&L)",IDC_SOUND_FILTER_LOWPASS,"Button",
+                    BS_AUTORADIOBUTTON,88,122,68,10
+    GROUPBOX        "チャンネル",IDC_STATIC,8,16,66,74
+    CONTROL         "矩形波１(&1)",IDC_RECTANGLE1,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,25,54,10
+    CONTROL         "矩形波２(&2)",IDC_RECTANGLE2,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,36,54,10
+    CONTROL         "三角波(&T)",IDC_TRIANGLE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,46,54,10
+    CONTROL         "ノイズ(&O)",IDC_NOISE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,56,54,10
+    CONTROL         "DPCM(&D)",IDC_DPCM,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,66,54,10
+    CONTROL         "拡張音源(&X)",IDC_EXT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,76,54,10
+    GROUPBOX        "バッファの大きさ",IDC_STATIC,8,96,66,32
+    LTEXT           "Frames:",IDC_STATIC,12,110,28,8
+    COMBOBOX        IDC_BUFFERLEN,43,107,27,62,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    PUSHBUTTON      "デフォルトに戻す",IDC_DEFAULTS,8,162,66,14
+    PUSHBUTTON      "Cancel",IDCANCEL,130,162,42,14
+    GROUPBOX        "量子化ビット",IDC_STATIC,85,28,66,30
+    COMBOBOX        IDC_SAMPLEBITS,89,40,58,50,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    GROUPBOX        "音質",IDC_STATIC,78,16,94,138
+    CONTROL         "理想三角波",IDC_IDEALTRIANGLE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,88,138,50,10
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(_JAPANESE)
+#if defined(APSTUDIO_INVOKED)
+IDD_OPTIONS_CONTROLLERS$(_JAPANESE) DIALOG DISCARDABLE  0, 0, 231, 275
+#else
+IDD_OPTIONS_CONTROLLERS DIALOG DISCARDABLE  0, 0, 231, 275
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Controllers"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,148,256,36,16
+    COMBOBOX        IDC_PLAYER,7,6,217,87,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_UP_DEVICE,64,28,160,87,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_UP_BUTTON,64,40,160,88,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_DOWN_DEVICE,64,56,160,88,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_DOWN_BUTTON,64,68,160,89,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_LEFT_DEVICE,64,84,160,85,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_LEFT_BUTTON,64,96,160,88,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_RIGHT_DEVICE,64,112,160,86,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_RIGHT_BUTTON,64,124,160,88,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_SELECT_DEVICE,64,140,160,88,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_SELECT_BUTTON,64,152,160,89,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_START_DEVICE,64,168,160,88,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_START_BUTTON,64,180,160,85,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_B_DEVICE,64,196,160,79,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_B_BUTTON,64,208,160,79,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_A_DEVICE,64,224,160,81,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_A_BUTTON,64,236,160,84,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    CTEXT           "Up",IDC_STATIC_UP,12,28,44,11
+    CTEXT           "Down",IDC_STATIC_DOWN,12,56,44,11
+    CTEXT           "Left",IDC_STATIC_LEFT,12,84,44,11
+    CTEXT           "Right",IDC_STATIC_RIGHT,12,112,44,11
+    CTEXT           "Select",IDC_STATIC_SELECT,12,140,44,11
+    CTEXT           "Start",IDC_STATIC_START,12,168,44,11
+    CTEXT           "B",IDC_STATIC_B,12,196,44,11
+    CTEXT           "A",IDC_STATIC_A,12,224,44,11
+    PUSHBUTTON      "デフォルトに戻す",IDC_DEFAULTS,4,256,64,16
+    PUSHBUTTON      "コントロールパネル(&C)",IDC_CONTROLPANEL,72,256,72,16
+    PUSHBUTTON      "Cancel",IDCANCEL,188,256,36,16
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(_JAPANESE)
+#if defined(APSTUDIO_INVOKED)
+IDD_HELP_ABOUT$(_JAPANESE) DIALOGEX 0, 0, 163, 197
+#else
+IDD_HELP_ABOUT DIALOGEX 0, 0, 163, 197
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About..."
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDFRAME,10,8,142,28,
+                    WS_EX_STATICEDGE
+    ICON            IDI_NESTERICON,IDC_STATIC,12,12,20,20
+    CTEXT           "nesterJ ver 0.51b",IDC_STATIC,30,20,100,8
+    ICON            IDI_TWINFAM,IDC_STATIC,132,12,20,20
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,28,40,104,24
+    CTEXT           "Based on ""nester public beta 3""\n(C)2000 Darren Ranalli",
+                    IDC_STATIC,32,44,96,16
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDFRAME,20,68,124,100
+    LTEXT           "Chief && Sub program\t: Screw\nMain program\t\t: Mikami Kana\n\n**Special Thanks**\n  Add mappers\t\t: T.Takeda",
+                    IDC_STATIC,24,72,116,44
+    LTEXT           "Caution :\n    ""nesterJ"" team is independent of\n    Mr.Ranalli.\n    Don't bother Darren Ranalli\n    about nesterJ !",
+                    IDC_STATIC,24,124,116,42
+    DEFPUSHBUTTON   "OK",IDOK,58,176,48,14
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(_JAPANESE)
+#if defined(APSTUDIO_INVOKED)
+IDD_OPTIONS_PREFERENCES$(_JAPANESE) DIALOGEX 0, 0, 207, 225
+#else
+IDD_OPTIONS_PREFERENCES DIALOGEX 0, 0, 207, 225
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Preferences"
+FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,90,206,50,14
+    PUSHBUTTON      ".NESファイルを関連付ける(&A)",IDC_ASSOCIATE,13,7,122,14
+    PUSHBUTTON      "関連付けの削除",IDC_UNDO,138,7,56,14
+    CONTROL         "バックグラウンドでの動作を許可する(&R)",IDC_RUNINBG,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,26,135,10
+    CONTROL         "一部のエラーを無視する",IDC_SKIPSOMEERRORS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,42,84,10
+    GROUPBOX        "フレームレート制御",IDC_STATIC,17,58,171,110
+    CONTROL         "フレームレートを制御する(&S)",IDC_SPEEDTHROTTLE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,25,73,145,11
+    CONTROL         "オートフレームスキップ(&F)",IDC_AUTOFRAMESKIP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,36,89,135,10
+    LTEXT           "倍速モード時のフレーム数",IDC_STATIC,64,108,78,8
+    CONTROL         "Slider1",IDC_FASTFPS,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_DISABLED | WS_TABSTOP,25,120,140,22,WS_EX_STATICEDGE
+    RTEXT           "0",IDC_FASTFPSVALUE,165,130,14,8
+    CONTROL         "倍速モードをトグル方式にする",IDC_TOGGLEFAST,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,36,150,134,10
+    GROUPBOX        "優先度",IDC_STATIC,52,172,90,30
+    COMBOBOX        IDC_PRIORITY,56,182,83,59,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    PUSHBUTTON      "デフォルトに戻す",IDC_DEFAULTS,6,206,74,14
+    PUSHBUTTON      "Cancel",IDCANCEL,152,206,50,14
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(_JAPANESE)
+#if defined(APSTUDIO_INVOKED)
+IDD_OPTIONS_PATHS$(_JAPANESE) DIALOGEX 0, 0, 195, 171
+#else
+IDD_OPTIONS_PATHS DIALOGEX 0, 0, 195, 171
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_ACCEPTFILES
+CAPTION "Paths"
+FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,82,150,52,16
+    LTEXT           "標準セーブファイルのフォルダ :",IDC_LABEL_SRAM,4,4,182,
+                    12
+    CONTROL         "",IDC_USE_SRAMPATH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,8,16,12,12
+    EDITTEXT        IDC_SRAMPATH,20,16,156,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_REF_SRAMPATH,176,16,12,11
+    LTEXT           "ステートセーブファイルのフォルダ :",IDC_LABEL_STATE,4,
+                    40,184,12
+    CONTROL         "",IDC_USE_STATEPATH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,8,52,12,12
+    EDITTEXT        IDC_STATEPATH,20,52,156,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_REF_STATEPATH,176,52,12,12
+    LTEXT           "スクリーンショットのフォルダ :",IDC_LABEL_SHOT,4,76,184,
+                    12
+    CONTROL         "",IDC_USE_SHOTPATH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,8,88,12,12
+    EDITTEXT        IDC_SHOTPATH,20,88,156,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_REF_SHOTPATH,176,88,12,12
+    LTEXT           "WAVE録音のフォルダ :",IDC_LABEL_WAVE,4,112,184,12
+    CONTROL         "",IDC_USE_WAVEPATH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,8,124,12,12
+    EDITTEXT        IDC_WAVEPATH,20,124,156,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_REF_WAVEPATH,176,124,12,12
+    PUSHBUTTON      "デフォルトに戻す",IDC_DEFAULTS,6,150,68,16
+    PUSHBUTTON      "Cancel",IDCANCEL,142,150,44,16
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(_JAPANESE)
+#if defined(APSTUDIO_INVOKED)
+IDD_DATACHBARCODE$(_JAPANESE) DIALOG DISCARDABLE  0, 0, 140, 53
+#else
+IDD_DATACHBARCODE DIALOG DISCARDABLE  0, 0, 140, 53
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Datach Barcode"
+FONT 9, "ＭＳ ゴシック"
+BEGIN
+    EDITTEXT        IDC_BARCODEVALUE,6,16,128,12,ES_NUMBER
+    LTEXT           "8桁か13桁の数値を入力してください",IDC_STATIC,4,4,134,8
+    DEFPUSHBUTTON   "OK",IDOK,10,34,58,14,WS_DISABLED
+    PUSHBUTTON      "キャンセル",IDCANCEL,74,34,56,14
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(_JAPANESE)
+#if defined(APSTUDIO_INVOKED)
+IDD_NETPLAY_SERVER$(_JAPANESE) DIALOG DISCARDABLE  0, 0, 110, 90
+#else
+IDD_NETPLAY_SERVER DIALOG DISCARDABLE  0, 0, 110, 90
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "NETPLAY SERVER"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    EDITTEXT        IDC_NETLATENCY,7,15,96,12,ES_NUMBER
+    LTEXT           "Input Network Latency",IDC_STATIC,3,3,102,8
+    EDITTEXT        IDC_IPPORT,7,48,96,12,ES_NUMBER
+    LTEXT           "Input Port",IDC_STATIC,3,34,102,8
+    DEFPUSHBUTTON   "OK",IDOK,4,68,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,57,68,50,14
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(_JAPANESE)
+#if defined(APSTUDIO_INVOKED)
+IDD_NETPLAY_SERVER1$(_JAPANESE) DIALOG DISCARDABLE  0, 0, 110, 90
+#else
+IDD_NETPLAY_SERVER1 DIALOG DISCARDABLE  0, 0, 110, 90
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "NETPLAY SERVER"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    EDITTEXT        IDC_NETLATENCY,7,15,96,12,ES_NUMBER
+    LTEXT           "Input Network Latency",IDC_STATIC,3,3,102,8
+    EDITTEXT        IDC_IPPORT,7,48,96,12,ES_NUMBER
+    LTEXT           "Input Port",IDC_STATIC,3,34,102,8
+    DEFPUSHBUTTON   "OK",IDOK,4,68,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,57,68,50,14
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(_JAPANESE)
+#if defined(APSTUDIO_INVOKED)
+IDD_NETPLAY_CLIENT$(_JAPANESE) DIALOG DISCARDABLE  0, 0, 110, 90
+#else
+IDD_NETPLAY_CLIENT DIALOG DISCARDABLE  0, 0, 110, 90
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "NETPLAY CLIENT"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    EDITTEXT        IDC_IPADDRESS,7,15,96,12
+    LTEXT           "Input IP Address",IDC_STATIC,3,3,102,8
+    EDITTEXT        IDC_IPPORT,7,48,96,12,ES_NUMBER
+    LTEXT           "Input Port",IDC_STATIC,3,34,102,8
+    DEFPUSHBUTTON   "OK",IDOK,4,68,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,57,68,50,14
+END
+#endif
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    "IDD_DATACHBARCODE$(_JAPANESE)", DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 133
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 46
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#if defined(APSTUDIO_INVOKED) || defined(_JAPANESE)
+#if defined(APSTUDIO_INVOKED)
+VS_VERSION_INFO$(_JAPANESE) VERSIONINFO
+#else
+VS_VERSION_INFO VERSIONINFO
+#endif
+ FILEVERSION 0,51,0,5
+ PRODUCTVERSION 0,51,0,5
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "041104b0"
+        BEGIN
+            VALUE "Comments", "\0"
+            VALUE "CompanyName", " \0"
+            VALUE "FileDescription", "nesterJ\0"
+            VALUE "FileVersion", "0.5105\0"
+            VALUE "InternalName", "nesterJ\0"
+            VALUE "LegalCopyright", "GNU General Public License Version 2\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "nesterJ.exe\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "nesterJ\0"
+            VALUE "ProductVersion", "0.51b\0"
+            VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x411, 1200
+    END
+END
+#endif
+
+#endif    // !_MAC
+
+#endif    // 日本語 resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// 英語 (ｱﾒﾘｶ) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+#if defined(APSTUDIO_INVOKED) || defined(_ENGLISH)
+#if defined(APSTUDIO_INVOKED)
+IDR_MENU1$(_ENGLISH) MENU DISCARDABLE 
+#else
+IDR_MENU1 MENU DISCARDABLE 
+#endif
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open ROM...",                ID_FILE_OPEN_ROM
+        MENUITEM "&Close ROM",                  ID_FILE_CLOSE_ROM
+        MENUITEM "&Reset\tCtrl+R",              ID_FILE_SOFTRESET
+        MENUITEM "&Power Switch",               ID_FILE_RESET
+        MENUITEM SEPARATOR
+        POPUP "&Disk Change"
+        BEGIN
+            MENUITEM "&Eject",                      ID_FILE_DISK_EJECT
+            , GRAYED
+            MENUITEM "1st Disk - Side A(&A)",       ID_FILE_DISK_1A, GRAYED
+            MENUITEM "1st Disk - Side B(&B)",       ID_FILE_DISK_1B, GRAYED
+            MENUITEM "2nd Disk - Side A(&C)",       ID_FILE_DISK_2A, GRAYED
+            MENUITEM "2nd Disk - Side B(&D)",       ID_FILE_DISK_2B, GRAYED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Screen Sho&t\tF12",           ID_OPTIONS_DOUBLESIZE
+        MENUITEM "&WAVE Recording\tF11",        ID_FILE_SNDREC
+        POPUP "Movie"
+        BEGIN
+            MENUITEM "P&lay",                       ID_FILE_MOVIE_PLAY
+            , GRAYED
+            MENUITEM "R&ec",                        ID_FILE_MOVIE_REC
+            , GRAYED
+            MENUITEM "S&top",                       ID_FILE_MOVIE_STOP
+            , GRAYED
+        END
+        POPUP "Netplay"
+        BEGIN
+            MENUITEM "Server (1P)",                 ID_FILE_NETPLAY_ACCEPT
+            , GRAYED
+            MENUITEM "Client (2P)",                 ID_FILE_NETPLAY_CONNECT
+            , GRAYED
+            MENUITEM "Cancel Connecting",           ID_FILE_NETPLAY_CANCEL
+            , GRAYED
+            MENUITEM SEPARATOR
+            MENUITEM "Disconnect",                  ID_FILE_NETPLAY_CLOSE
+            , GRAYED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Load State...",              ID_FILE_LOAD_STATE
+        MENUITEM "&Save State...",              ID_FILE_SAVE_STATE
+        MENUITEM SEPARATOR
+        MENUITEM "Quick Save\tF5",              ID_FILE_QUICK_SAVE
+        MENUITEM "Quick Load\tF7",              ID_FILE_QUICK_LOAD
+        POPUP "Savestate Slot"
+        BEGIN
+            MENUITEM "&0",                          ID_FILE_SLOT_0
+            MENUITEM "&1",                          ID_FILE_SLOT_1
+            MENUITEM "&2",                          ID_FILE_SLOT_2
+            MENUITEM "&3",                          ID_FILE_SLOT_3
+            MENUITEM "&4",                          ID_FILE_SLOT_4
+            MENUITEM "&5",                          ID_FILE_SLOT_5
+            MENUITEM "&6",                          ID_FILE_SLOT_6
+            MENUITEM "&7",                          ID_FILE_SLOT_7
+            MENUITEM "&8",                          ID_FILE_SLOT_8
+            MENUITEM "&9",                          ID_FILE_SLOT_9
+        END
+        MENUITEM SEPARATOR
+        POPUP "Recent ROMs"
+        BEGIN
+            MENUITEM "Recent File 0",               ID_FILE_RECENT_0, GRAYED
+            MENUITEM "Recent File 1",               ID_FILE_RECENT_1, GRAYED
+            MENUITEM "Recent File 2",               ID_FILE_RECENT_2, GRAYED
+            MENUITEM "Recent File 3",               ID_FILE_RECENT_3, GRAYED
+            MENUITEM "Recent File 4",               ID_FILE_RECENT_4, GRAYED
+            MENUITEM "Recent File 5",               ID_FILE_RECENT_5, GRAYED
+            MENUITEM "Recent File 6",               ID_FILE_RECENT_6, GRAYED
+            MENUITEM "Recent File 7",               ID_FILE_RECENT_7, GRAYED
+            MENUITEM "Recent File 8",               ID_FILE_RECENT_8, GRAYED
+            MENUITEM "Recent File 9",               ID_FILE_RECENT_9, GRAYED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_FILE_EXIT
+    END
+    POPUP "&Option"
+    BEGIN
+        MENUITEM "&Preferences...",             ID_OPTIONS_PREFERENCES
+        , GRAYED
+        MENUITEM "&Graphics...",                ID_OPTIONS_GRAPHICS, GRAYED
+        MENUITEM "&Sounds...",                  ID_OPTIONS_SOUND, GRAYED
+        MENUITEM "&Controllers...",             ID_OPTIONS_CONTROLLERS
+        , GRAYED
+        MENUITEM "&Folders...",                 ID_OPTIONS_PATHS, GRAYED
+        MENUITEM SEPARATOR
+        POPUP "Select Device"
+        BEGIN
+            MENUITEM "None",                        ID_OPTIONS_EXCONTROLLER_00
+
+            MENUITEM SEPARATOR
+            MENUITEM "Arkanoid Paddle",             ID_OPTIONS_EXCONTROLLER_02
+
+            MENUITEM "Clazy Climber Controler",     ID_OPTIONS_EXCONTROLLER_03
+
+            MENUITEM "Datach Barcode Battler",      ID_OPTIONS_EXCONTROLLER_04
+
+            MENUITEM "Doremikko Key Board",         ID_OPTIONS_EXCONTROLLER_05
+
+            MENUITEM "Exciting Boxing",             ID_OPTIONS_EXCONTROLLER_06
+
+            MENUITEM "Family Basic Key Board",      ID_OPTIONS_EXCONTROLLER_07
+
+            MENUITEM "Family Trainer (side A)",     ID_OPTIONS_EXCONTROLLER_08
+
+            MENUITEM "Family Trainer (side B)",     ID_OPTIONS_EXCONTROLLER_09
+
+            MENUITEM "Hyper Shot",                  ID_OPTIONS_EXCONTROLLER_10
+
+            MENUITEM "Mahjong Controller",          ID_OPTIONS_EXCONTROLLER_11
+
+            MENUITEM "Oeka Kids Tablet",            ID_OPTIONS_EXCONTROLLER_12
+
+            MENUITEM "Optical Gun",                 ID_OPTIONS_EXCONTROLLER_13
+
+            MENUITEM "Pokkun Moguraa",              ID_OPTIONS_EXCONTROLLER_14
+
+            MENUITEM "Power Pad (side A)",          ID_OPTIONS_EXCONTROLLER_15
+
+            MENUITEM "Power Pad (side B)",          ID_OPTIONS_EXCONTROLLER_16
+
+            MENUITEM "Space Shadow Gun",            ID_OPTIONS_EXCONTROLLER_17
+
+            MENUITEM "Top Rider Controller",        ID_OPTIONS_EXCONTROLLER_18
+
+            MENUITEM "Turbo File",                  ID_OPTIONS_EXCONTROLLER_19
+
+            MENUITEM "VS Unisystem Zapper",         ID_OPTIONS_EXCONTROLLER_20
+
+        END
+        POPUP "Control Device"
+        BEGIN
+            MENUITEM "Datach Barcode Battler",      ID_OPTIONS_BARCODE_INPUT
+            POPUP "Data Recorder"
+            BEGIN
+                MENUITEM "Play Recorder",               ID_OPTIONS_EXCONTROLLER_17
+
+                MENUITEM "Rec Recorder",                ID_OPTIONS_EXCONTROLLER_18
+
+                MENUITEM "Stop Recorder",               ID_OPTIONS_TAPE_STOP
+            END
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Double Size\tCtrl+D",         ID_OPTIONS_DOUBLESIZE
+        MENUITEM "&Full-Screen\tAlt+Enter",     ID_OPTIONS_FULLSCREEN
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About...\tF1",               ID_HELP_ABOUT
+    END
+END
+#endif
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+#if defined(APSTUDIO_INVOKED) || defined(_ENGLISH)
+#if defined(APSTUDIO_INVOKED)
+IDD_DATACHBARCODE$(_ENGLISH) DIALOG DISCARDABLE  0, 0, 110, 52
+#else
+IDD_DATACHBARCODE DIALOG DISCARDABLE  0, 0, 110, 52
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Datach Barcode"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_BARCODEVALUE,8,14,96,12,ES_NUMBER
+    LTEXT           "Input 8 or 13 digits",IDC_STATIC,4,4,68,8
+    DEFPUSHBUTTON   "OK",IDOK,4,34,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,58,34,50,14
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(_ENGLISH)
+#if defined(APSTUDIO_INVOKED)
+IDD_HELP_ABOUT$(_ENGLISH) DIALOGEX 0, 0, 190, 190
+#else
+IDD_HELP_ABOUT DIALOGEX 0, 0, 190, 190
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About..."
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDFRAME,18,6,154,30,
+                    WS_EX_STATICEDGE
+    ICON            IDI_NESTERICON,IDC_STATIC,22,10,20,20
+    CTEXT           "nesterJ ver 0.51b",IDC_STATIC,44,18,104,8
+    ICON            IDI_TWINFAM,IDC_STATIC,148,10,20,20
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,40,40,110,24
+    CTEXT           "Based on ""nester public beta 3""\n(C)2000 Darren Ranalli",
+                    IDC_STATIC,44,42,102,18
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDFRAME,14,66,160,100
+    LTEXT           "Chief && Sub program\t: Screw\nMain program\t\t: Mikami Kana\n\n**Special Thanks**\n  Add mappers\t\t: T.Takeda",
+                    IDC_STATIC,28,70,136,50
+    LTEXT           "Caution :\n    ""neseterJ"" team is independent of\n    Mr. Ranalli.\n    Don't bother Darren Ranalli\n    about ""nesterJ"" !",
+                    IDC_STATIC,28,122,136,40
+    DEFPUSHBUTTON   "OK",IDOK,72,174,48,12
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(_ENGLISH)
+#if defined(APSTUDIO_INVOKED)
+IDD_OPTIONS_CONTROLLERS$(_ENGLISH) DIALOG DISCARDABLE  0, 0, 231, 275
+#else
+IDD_OPTIONS_CONTROLLERS DIALOG DISCARDABLE  0, 0, 231, 275
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Controllers"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,148,256,36,12
+    COMBOBOX        IDC_PLAYER,7,6,217,87,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_UP_DEVICE,64,28,160,87,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_UP_BUTTON,64,40,160,88,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_DOWN_DEVICE,64,56,160,88,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_DOWN_BUTTON,64,68,160,89,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_LEFT_DEVICE,64,84,160,85,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_LEFT_BUTTON,64,96,160,88,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_RIGHT_DEVICE,64,112,160,86,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_RIGHT_BUTTON,64,124,160,88,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_SELECT_DEVICE,64,140,160,88,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_SELECT_BUTTON,64,152,160,89,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_START_DEVICE,64,168,160,88,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_START_BUTTON,64,180,160,85,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_B_DEVICE,64,196,160,79,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_B_BUTTON,64,208,160,79,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_A_DEVICE,64,224,160,81,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_A_BUTTON,64,236,160,84,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    CTEXT           "Up",IDC_STATIC_UP,12,32,44,8
+    CTEXT           "Down",IDC_STATIC_DOWN,12,58,44,8
+    CTEXT           "Left",IDC_STATIC_LEFT,12,88,44,8
+    CTEXT           "Right",IDC_STATIC_RIGHT,12,116,44,8
+    CTEXT           "Select",IDC_STATIC_SELECT,12,144,44,8
+    CTEXT           "Start",IDC_STATIC_START,12,172,44,8
+    CTEXT           "B",IDC_STATIC_B,12,198,44,8
+    CTEXT           "A",IDC_STATIC_A,12,226,44,8
+    PUSHBUTTON      "Set Defaults",IDC_DEFAULTS,4,256,64,12
+    PUSHBUTTON      "&Control Pannel",IDC_CONTROLPANEL,72,256,72,12
+    PUSHBUTTON      "Cancel",IDCANCEL,188,256,36,12
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(_ENGLISH)
+#if defined(APSTUDIO_INVOKED)
+IDD_OPTIONS_GRAPHICS$(_ENGLISH) DIALOG DISCARDABLE  0, 0, 188, 262
+#else
+IDD_OPTIONS_GRAPHICS DIALOG DISCARDABLE  0, 0, 188, 262
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Graphics"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,88,248,48,12
+    CONTROL         "&Double size",IDC_DOUBLESIZE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,4,4,53,10
+    CONTROL         "Emulate TV scanlines",IDC_EMULATETV,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,4,26,80,10
+    CONTROL         "Use StretchBlt in double size",IDC_USESTRETCHBLT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,12,16,104,10
+    CONTROL         "Show more than 8 sprites per line",IDC_SHOWSPRITES,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,36,120,10
+    CONTROL         "Show &all 240 scanlines",IDC_SHOWALLSCANLINES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,4,46,88,10
+    CONTROL         "&Black and white mode",IDC_BLACKANDWHITE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,4,56,86,10
+    GROUPBOX        "Palette",IDC_STATIC,2,68,184,92
+    CONTROL         "Use default palette",IDC_DEFAULTPALETTE,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,6,80,92,10
+    CONTROL         "Read palette from &file",IDC_READPALETTEFILE,"Button",
+                    BS_AUTORADIOBUTTON,6,94,116,10
+    CONTROL         "&Calculate palette",IDC_CALCPALETTE,"Button",
+                    BS_AUTORADIOBUTTON,6,120,82,10
+    PUSHBUTTON      "...",IDC_REF_PALETTEFILE,164,104,16,12,WS_DISABLED
+    LTEXT           "Tint",IDC_LABEL_TINT,16,132,14,9,WS_DISABLED
+    CONTROL         "Slider1",IDC_TINT,"msctls_trackbar32",TBS_BOTH | 
+                    TBS_NOTICKS | WS_DISABLED | WS_TABSTOP,32,132,93,11
+    LTEXT           "Hue",IDC_LABEL_HUE,16,144,14,9,WS_DISABLED
+    CONTROL         "Slider1",IDC_HUE,"msctls_trackbar32",TBS_BOTH | 
+                    TBS_NOTICKS | WS_DISABLED | WS_TABSTOP,32,144,93,11
+    PUSHBUTTON      "Reset",ID_RESET,128,142,52,12,WS_DISABLED
+    GROUPBOX        "Fullscreen",IDC_STATIC,2,166,184,78
+    LTEXT           "Device",IDC_STATIC,8,180,29,10
+    COMBOBOX        IDC_DEVICE,37,178,138,65,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Mode",IDC_STATIC,8,194,29,10
+    COMBOBOX        IDC_MODE,37,192,138,49,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    CONTROL         "Use &integer scaling (2x, 3x, 4x...)",
+                    IDC_FULLSCREENSCALING,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,6,210,118,10
+    CONTROL         "Draw &overscan",IDC_DRAWOVERSCAN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,6,220,75,10
+    CONTROL         "Switch to fullscreen on ROM load",IDC_FULLSCREENONLOAD,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,231,130,10
+    PUSHBUTTON      "Set Defaults",IDC_DEFAULTS,8,248,74,12
+    PUSHBUTTON      "Cancel",IDCANCEL,140,248,44,12
+    EDITTEXT        IDC_PALETTEFILE,14,104,152,12,ES_AUTOHSCROLL | 
+                    WS_DISABLED | NOT WS_TABSTOP
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(_ENGLISH)
+#if defined(APSTUDIO_INVOKED)
+IDD_OPTIONS_PATHS$(_ENGLISH) DIALOGEX 0, 0, 194, 166
+#else
+IDD_OPTIONS_PATHS DIALOGEX 0, 0, 194, 166
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_ACCEPTFILES
+CAPTION "Paths"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,84,148,52,14
+    LTEXT           "SRAM (*.sav) folder :",IDC_LABEL_SRAM,4,4,186,10
+    CONTROL         "",IDC_USE_SRAMPATH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,8,16,12,12
+    EDITTEXT        IDC_SRAMPATH,20,16,156,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_REF_SRAMPATH,176,16,14,11
+    LTEXT           "State save folder :",IDC_LABEL_STATE,4,40,186,10
+    CONTROL         "",IDC_USE_STATEPATH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,8,52,12,12
+    EDITTEXT        IDC_STATEPATH,20,52,156,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_REF_STATEPATH,176,52,14,12
+    LTEXT           "Screen Shot folder :",IDC_LABEL_SHOT,4,76,186,12
+    CONTROL         "",IDC_USE_SHOTPATH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,8,87,12,14
+    EDITTEXT        IDC_SHOTPATH,20,89,156,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_REF_SHOTPATH,176,89,14,12
+    LTEXT           "Wave folder :",IDC_LABEL_WAVE,4,112,186,10
+    CONTROL         "",IDC_USE_WAVEPATH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,8,124,12,12
+    EDITTEXT        IDC_WAVEPATH,20,124,156,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_REF_WAVEPATH,176,124,14,12
+    PUSHBUTTON      "Set Defaults",IDC_DEFAULTS,8,148,68,14
+    PUSHBUTTON      "Cancel",IDCANCEL,144,148,44,14
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(_ENGLISH)
+#if defined(APSTUDIO_INVOKED)
+IDD_OPTIONS_PREFERENCES$(_ENGLISH) DIALOGEX 0, 0, 207, 222
+#else
+IDD_OPTIONS_PREFERENCES DIALOGEX 0, 0, 207, 222
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Preferences"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,90,206,50,12
+    PUSHBUTTON      "&Associate *.NES files with nesterJ",IDC_ASSOCIATE,13,7,
+                    122,14
+    PUSHBUTTON      "UNDO",IDC_UNDO,138,7,56,14
+    CONTROL         "&Run in background",IDC_RUNINBG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,26,176,10
+    CONTROL         "Skip some errors",IDC_SKIPSOMEERRORS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,42,176,10
+    GROUPBOX        "Speed Controlling",IDC_STATIC,17,58,171,104
+    CONTROL         "Speed throttling (limit frame rate to 60Hz)",
+                    IDC_SPEEDTHROTTLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    25,73,155,11
+    CONTROL         "Auto-&Frameskip",IDC_AUTOFRAMESKIP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,36,89,146,10
+    CTEXT           "Frames/sec on Fast FWD",IDC_STATIC,46,106,102,8
+    CONTROL         "Slider1",IDC_FASTFPS,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_DISABLED | WS_TABSTOP,25,115,140,22,WS_EX_STATICEDGE
+    RTEXT           "0",IDC_FASTFPSVALUE,165,125,14,8
+    CONTROL         "Toggled Fast FWD",IDC_TOGGLEFAST,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,36,144,146,10
+    GROUPBOX        "Process Priority",IDC_STATIC,52,172,90,26
+    COMBOBOX        IDC_PRIORITY,56,182,83,59,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    PUSHBUTTON      "Set Defaults",IDC_DEFAULTS,6,206,74,12
+    PUSHBUTTON      "Cancel",IDCANCEL,152,206,50,12
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(_ENGLISH)
+#if defined(APSTUDIO_INVOKED)
+IDD_OPTIONS_SOUND$(_ENGLISH) DIALOG DISCARDABLE  0, 0, 188, 181
+#else
+IDD_OPTIONS_SOUND DIALOG DISCARDABLE  0, 0, 188, 181
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Sound"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,90,164,42,12
+    CONTROL         "&Enable Sound",IDC_SOUNDENABLE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,4,4,59,10
+    GROUPBOX        "Channels",IDC_STATIC,8,16,72,84
+    CONTROL         "Rectangle &1",IDC_RECTANGLE1,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,24,64,12
+    CONTROL         "Rectangle &2",IDC_RECTANGLE2,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,36,64,12
+    CONTROL         "&Triangle",IDC_TRIANGLE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,48,64,12
+    CONTROL         "N&oise",IDC_NOISE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    12,60,64,12
+    CONTROL         "&DPCM",IDC_DPCM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    12,72,64,12
+    CONTROL         "E&xtra Channel",IDC_EXT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,84,64,12
+    GROUPBOX        "Buffer length",IDC_STATIC,8,106,72,32
+    LTEXT           "Frames:",IDC_STATIC,14,121,28,8
+    COMBOBOX        IDC_BUFFERLEN,42,119,31,62,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    GROUPBOX        "Quality",IDC_STATIC,86,16,94,142
+    GROUPBOX        "Bit Rate",IDC_STATIC,92,26,72,30
+    COMBOBOX        IDC_SAMPLEBITS,96,38,64,50,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    GROUPBOX        "Sample Rate",IDC_STATIC,92,60,72,30
+    COMBOBOX        IDC_SAMPLERATE,98,72,62,62,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    GROUPBOX        "Filter",IDC_STATIC,92,94,82,44
+    CONTROL         "&none",IDC_SOUND_FILTER_NONE,"Button",
+                    BS_AUTORADIOBUTTON,98,104,32,10
+    CONTROL         "&weighted low-pass",IDC_SOUND_FILTER_LOWPASS_WEIGHTED,
+                    "Button",BS_AUTORADIOBUTTON,98,114,70,10
+    CONTROL         "simple &low-pass",IDC_SOUND_FILTER_LOWPASS,"Button",
+                    BS_AUTORADIOBUTTON,98,124,62,10
+    CONTROL         "Ideal Triangle",IDC_IDEALTRIANGLE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,98,144,60,10
+    PUSHBUTTON      "Set Defaults",IDC_DEFAULTS,8,164,74,12
+    PUSHBUTTON      "Cancel",IDCANCEL,136,164,42,12
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(_ENGLISH)
+#if defined(APSTUDIO_INVOKED)
+IDD_NETPLAY_SERVER$(_ENGLISH) DIALOG DISCARDABLE  0, 0, 110, 90
+#else
+IDD_NETPLAY_SERVER DIALOG DISCARDABLE  0, 0, 110, 90
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "NETPLAY SERVER"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_NETLATENCY,7,15,96,12,ES_NUMBER
+    LTEXT           "Input Network Latency",IDC_STATIC,3,3,102,8
+    EDITTEXT        IDC_IPPORT,7,48,96,12,ES_NUMBER
+    LTEXT           "Input Port",IDC_STATIC,3,34,102,8
+    DEFPUSHBUTTON   "OK",IDOK,4,68,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,57,68,50,14
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(_ENGLISH)
+#if defined(APSTUDIO_INVOKED)
+IDD_NETPLAY_SERVER1$(_ENGLISH) DIALOG DISCARDABLE  0, 0, 110, 90
+#else
+IDD_NETPLAY_SERVER1 DIALOG DISCARDABLE  0, 0, 110, 90
+#endif
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "NETPLAY SERVER"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_NETLATENCY,7,15,96,12,ES_NUMBER
+    LTEXT           "Input Network Latency",IDC_STATIC,3,3,102,8
+    EDITTEXT        IDC_IPPORT,7,48,96,12,ES_NUMBER
+    LTEXT           "Input Port",IDC_STATIC,3,34,102,8
+    DEFPUSHBUTTON   "OK",IDOK,4,68,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,57,68,50,14
+END
+#endif
+
+IDD_NETPLAY_CLIENT DIALOG DISCARDABLE  0, 0, 110, 90
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "NETPLAY CLIENT"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_IPADDRESS,7,15,96,12
+    LTEXT           "Input IP Address",IDC_STATIC,3,3,102,8
+    EDITTEXT        IDC_IPPORT,7,48,96,12,ES_NUMBER
+    LTEXT           "Input Port",IDC_STATIC,3,34,102,8
+    DEFPUSHBUTTON   "OK",IDOK,4,68,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,57,68,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    "IDD_DATACHBARCODE$(_ENGLISH)", DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 103
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 45
+    END
+
+    "IDD_HELP_ABOUT$(_ENGLISH)", DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 183
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 183
+    END
+
+    "IDD_OPTIONS_CONTROLLERS$(_ENGLISH)", DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 224
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 268
+    END
+
+    "IDD_OPTIONS_GRAPHICS$(_ENGLISH)", DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 181
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 255
+    END
+
+    "IDD_OPTIONS_PATHS$(_ENGLISH)", DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 187
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 159
+    END
+
+    "IDD_OPTIONS_PREFERENCES$(_ENGLISH)", DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 199
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 215
+    END
+
+    "IDD_OPTIONS_SOUND$(_ENGLISH)", DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 181
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 174
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#if defined(APSTUDIO_INVOKED) || defined(_ENGLISH)
+#if defined(APSTUDIO_INVOKED)
+VS_VERSION_INFO$(_ENGLISH) VERSIONINFO
+#else
+VS_VERSION_INFO VERSIONINFO
+#endif
+ FILEVERSION 0,51,0,5
+ PRODUCTVERSION 0,51,0,5
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "\0"
+            VALUE "CompanyName", " \0"
+            VALUE "FileDescription", "nesterJ\0"
+            VALUE "FileVersion", "0.5105\0"
+            VALUE "InternalName", "nesterJ\0"
+            VALUE "LegalCopyright", "GNU General Public License Version 2\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "nesterJ.exe\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "nesterJ\0"
+            VALUE "ProductVersion", "0.51b\0"
+            VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+#endif
+
+#endif    // !_MAC
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#endif    // 英語 (ｱﾒﾘｶ) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

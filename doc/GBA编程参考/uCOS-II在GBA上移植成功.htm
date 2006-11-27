@@ -1,0 +1,268 @@
+<!----------------------------------------------
+
+	Powered by DvNews
+	http://www.aspsky.net/
+
+-------------------------------------------------->
+
+<html>
+<head>
+<title>单片机C语言首页_C51BBS论坛 --- uCOS-II在GBA上移植成功</title>
+<meta http-equiv="Content-type" content="text/html;charset=GB2312">
+<meta name=keywords content="动网新闻.net,asp.net,新闻系统">
+<link rel="stylesheet" href="style/studio28/style.css" type="text/css">
+<script language="JavaScript">
+var currentpos,timer; 
+function initializeScroll() { timer=setInterval("scrollwindow()",80);} 
+function scrollclear(){clearInterval(timer);}
+function scrollwindow() {currentpos=document.body.scrollTop;window.scroll(0,++currentpos);if (currentpos != document.body.scrollTop) sc();} 
+document.onmousedown=scrollclear
+document.ondblclick=initializeScroll
+</script>
+</head>
+<body>
+<span id="printScript" name="printScript">
+<script language=javascript>
+function ContentSize(size)
+{
+	var obj=document.all.BodyLabel;
+	obj.style.fontSize=size+"px";
+}
+</script>
+</span>
+<script language=javascript src="inc/print.js"></script>
+
+<table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
+  <tr> 
+    <td>&nbsp;</td>
+    <td width="41" rowspan="3">&nbsp;</td>
+    <td width="566" rowspan="3"><div align="right"><a href="/c51bbs/c51bbs2002/allindex.htm"><img src="../images/head_7.jpg" width="192" height="45" border="0"></a></div></td>
+  </tr>
+  <tr>
+    <td height="22"><div align="right"><a href="/c51bbs/find.asp" target=_blank><img src="../images/c51bbslogin.gif" width="166" height="22" border="0"></a></div></td>
+  </tr>
+  <tr> 
+    <td><img src="../images/point_wihte.gif" width="50" height="3" align="top"></td>
+  </tr>
+</table>
+<table class="twidth" align=center cellpadding=0 cellspacing=0 >
+<tr>
+<td class="navbar-left">
+</td>
+<td class="navbar">
+	<script Language=Javascript1.2 src="inc/popmenu.js"></script>
+<DIV class=menuskin id=popmenu 
+      onmouseover="clearhidemenu();highlightmenu(event,'on')" 
+      onmouseout="highlightmenu(event,'off');dynamichide(event)" style="Z-index:100"></DIV>
+
+<script language=javascript1.2>
+linkset[0]=new Array()
+linkset[0][0]='<div class="menuitems"><a href="list.aspx?cid=13">C51BOX仿真器</a></div>'
+linkset[0][1]='<div class="menuitems"><a href="list.aspx?cid=14">字模3软件</a></div>'
+linkset[0][2]='<div class="menuitems"><a href="list.aspx?cid=15">C51BBS离线版</a></div>'
+linkset[0][3]='<div class="menuitems"><a href="list.aspx?cid=16">C51BBS论坛源码</a></div>'
+</script><a href="default.aspx" class='navlink' >首页</a> <img src=style/news/navbar_Separator.gif align=absmiddle> <a href="http://www.c51bbs.com/c51bbs/find.asp" class='navlink' >单片机C语言论坛</a> <img src=style/news/navbar_Separator.gif align=absmiddle> <a href="list.aspx?cid=5" class='navlink'  onmouseover=showmenu(event,0,1,false) onmouseout=delayhidemenu() >产品信息</a> <img src=style/news/navbar_Separator.gif align=absmiddle> <a href="list.aspx?cid=10" class='thisclass' >ARM7编程入门</a> <img src=style/news/navbar_Separator.gif align=absmiddle> <a href="list.aspx?cid=9" class='navlink' >C51常见问答</a> <img src=style/news/navbar_Separator.gif align=absmiddle> <a href="list.aspx?cid=8" class='navlink' >C51源程序</a> <img src=style/news/navbar_Separator.gif align=absmiddle> <a href="list.aspx?cid=7" class='navlink' >论坛精华</a> <img src=style/news/navbar_Separator.gif align=absmiddle> <a href="list.aspx?cid=6" class='navlink' >精品共享</a> <img src=style/news/navbar_Separator.gif align=absmiddle> <a href="http://www.gamebios.com" class='navlink' >GBA火线烧录器</a>
+</td>
+<td class="navbar-right">
+</td>
+</tr>
+</table>
+
+&nbsp;
+
+<div id="printBody" name="printBody">
+
+
+<table class="twidth" align=center cellspacing=0>
+<tr>
+<td class="summary-title">
+	&nbsp; <a href='default.aspx'>单片机C语言首页_C51BBS论坛</a> → <a href='list.aspx?cid=10'>ARM7编程入门</a>
+</td>
+</tr>
+<tr ><td valign=top class="tdbg">
+	<br><center class="aTitle">uCOS-II在GBA上移植成功</center>
+	<table width=97% >
+		<td align=right>
+		作者：<span id="AuthorLabel">mail2li</span><br>
+		</td></tr>
+	</table>
+	
+	
+	<span id="BodyLabel" class="content" style="display:block;padding:0px 10px"><TABLE cellSpacing=0 cellPadding=0 width="100%" border=0>
+<TBODY>
+<TR>
+<TD><SPAN id=spancontent>
+<H3>ARM编程:uCOS-II在GBA上移植成功&nbsp;并发布于FTP上&nbsp;请各位多多指教 [mail2li] <FONT color=#d5d5d5>2003-11-28&nbsp;14:40:08</FONT></H3>
+<P>关于本移植：<BR><BR>&nbsp;&nbsp;这个移植&nbsp;主要参考了uCOS-II&nbsp;在skyeye上的移植版本<BR>&nbsp;&nbsp;基本实现思想是沿袭他们的<BR><BR>&nbsp;&nbsp;skyeye是一个开源软件&nbsp;可以在&nbsp;Linux和Windows平台上实现软件仿真ARM7DTMI核<BR>&nbsp;&nbsp;具体可以参考&nbsp;http://hpclab.cs.tsinghua.edu.cn/~skyeye/<BR><BR><BR>&nbsp;&nbsp;对于我移植后的&nbsp;具体的改变等&nbsp;可以参考我写的注释<BR>&nbsp;&nbsp;(基本上我的注释都是中文或者不通的英文&nbsp;汗)<BR><BR>&nbsp;&nbsp;用户代码部分&nbsp;大多沿用了我以前发布的GBA&nbsp;for&nbsp;ADS1.2&nbsp;工程模板(可以在<BR>www.C51BBS.com上找到)<BR><BR>1.&nbsp;&nbsp;解压本压缩包到一个目录下<BR>&nbsp;&nbsp;目录结构会如下:<BR>&nbsp;&nbsp;&nbsp;&nbsp;┣readme.TXT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;本文档<BR>&nbsp;&nbsp;&nbsp;&nbsp;┃<BR>&nbsp;&nbsp;&nbsp;&nbsp;┣uCOS.mcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;ADS1.2工程文件<BR>&nbsp;&nbsp;&nbsp;&nbsp;┃<BR>&nbsp;&nbsp;&nbsp;&nbsp;┣SOURCE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;源码目录<BR>&nbsp;&nbsp;&nbsp;&nbsp;┃&nbsp;&nbsp;&nbsp;&nbsp;┃<BR>&nbsp;&nbsp;&nbsp;&nbsp;┃&nbsp;&nbsp;&nbsp;&nbsp;┣uCOS_SRC&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;uCOS-II源码(空的&nbsp;^_^)<BR>&nbsp;&nbsp;&nbsp;&nbsp;┃&nbsp;&nbsp;&nbsp;&nbsp;┃<BR>&nbsp;&nbsp;&nbsp;&nbsp;┃&nbsp;&nbsp;&nbsp;&nbsp;┣uCOS_PORT&nbsp;&nbsp;&nbsp;:&nbsp;GBA上移植有关源码<BR>&nbsp;&nbsp;&nbsp;&nbsp;┃&nbsp;&nbsp;&nbsp;&nbsp;┃<BR>&nbsp;&nbsp;&nbsp;&nbsp;┃&nbsp;&nbsp;&nbsp;&nbsp;┣USER_SRC&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;用户程序源码<BR>&nbsp;&nbsp;&nbsp;&nbsp;┃&nbsp;&nbsp;&nbsp;&nbsp;┃<BR>&nbsp;&nbsp;&nbsp;&nbsp;┃&nbsp;&nbsp;&nbsp;&nbsp;┗DOC&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;文档(空的&nbsp;-_-b)<BR>&nbsp;&nbsp;&nbsp;&nbsp;┃<BR>&nbsp;&nbsp;&nbsp;&nbsp;┗TOOLS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;模拟器啊什么的<BR><BR>&nbsp;&nbsp;&nbsp;&nbsp;注:&nbsp;好像uCOS的作者不许发布移植的人&nbsp;在发布移植的时候将uCOS的源码一并给出<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(其实是为了多卖钱罢&nbsp;^o^&nbsp;)<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;所以&nbsp;我也不提供uCOS-II的源码了&nbsp;反正他的源码网上到处是的<BR><BR>2.&nbsp;&nbsp;因为&nbsp;uCOS_SRC&nbsp;目录为空<BR>&nbsp;&nbsp;所以需要你自行到网上或别的什么地方找份uCOS-II的源码(最好V2.5以上)&nbsp;我是用V2.62<BR>移植的<BR>&nbsp;&nbsp;然后把"SOFTWARE\uCOS-II\SOURCE"下的那些程序&nbsp;copy&nbsp;到这个目录下<BR><BR>3.&nbsp;&nbsp;在ADS1.2中打开ucos.mcp<BR>&nbsp;&nbsp;项目工程文件的目录结构应该是这样的:<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┣uCOS_SRC<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┃&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┗ucos_ii.c<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┣uCOS_PORT<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┃&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┣Os_cpu_c.c<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┃&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┣os_debug.c(这个是在V2.62以后增加的&nbsp;可以对低版本的其自动不编译<BR>进去)<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┃&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┗Os_cpu_a.s<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┗USER_SRC<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┣boot.s<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┣irq.c<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┣user_io.c<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┣User_LCD.c<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┗main.c<BR><BR>4.&nbsp;&nbsp;编译&nbsp;在模拟器中运行&nbsp;:)<BR><BR>5.&nbsp;&nbsp;如果要下载到你的GBA中运行&nbsp;必须用gbafix.exe对*.GBA修正头部<BR>&nbsp;&nbsp;具体的可以参见我在C51bbS发布的GBA&nbsp;ADS1.2工程模板的说明文档<BR><BR>6.&nbsp;&nbsp;ext1.c&nbsp;和ext2.c是对uCOS-II发布版本中头两个例程的移植<BR>&nbsp;&nbsp;也附带了两个GBA&nbsp;大家可以看看运行效果<BR><BR><BR>关于我对移植uCOS&nbsp;in&nbsp;GBA&nbsp;的一些感想：<BR>&nbsp;&nbsp;1.&nbsp;&nbsp;GBA总体来说&nbsp;速度较慢&nbsp;如果&nbsp;任务负荷过重&nbsp;很容易造成系统崩溃&nbsp;特别是我现在很大<BR>的开销是在显示上:<BR>&nbsp;&nbsp;&nbsp;&nbsp;在GBA显示mode3下&nbsp;逐点描绘&nbsp;显示是很慢的(以后可以考虑使用较快的txt模式显示文本<BR>会好很多的)<BR>&nbsp;&nbsp;&nbsp;&nbsp;对此&nbsp;可以看样例2的下场&nbsp;sigh……<BR>&nbsp;&nbsp;2.&nbsp;&nbsp;ARM因为irq_mode&nbsp;和普通的user_mode下&nbsp;sp&nbsp;和&nbsp;lr&nbsp;的自动切换保护&nbsp;反而给uCOS移植<BR>带来了一定的麻烦&nbsp;&nbsp;&nbsp;&nbsp;对此&nbsp;可以看我在OS_CPU_A.S文件中留的注释&nbsp;同时&nbsp;也给将代码置于<BR>GBA烧录卡上带来了麻烦<BR>&nbsp;&nbsp;&nbsp;&nbsp;(现在的这个移植版本是不能在GBA卡上运行的，即不能在FLASH中运行)<BR>&nbsp;&nbsp;3.&nbsp;&nbsp;考虑到GBA有个很大的彩屏&nbsp;下步自然是考虑将gui加上&nbsp;希望有这方面经验(ucos-gui<BR>移植编程等)的同好者<BR>&nbsp;&nbsp;&nbsp;&nbsp;与我合作。<BR>&nbsp;&nbsp;&nbsp;&nbsp;或者你独立进行&nbsp;然后发布移植出来也欢迎&nbsp;:-D<BR>&nbsp;&nbsp;4.&nbsp;&nbsp;很多模拟器不能很好的处理中断&nbsp;造成本代码无法运行&nbsp;推荐使用的模拟器是我在tool<BR>目录下提供的VBA<BR>&nbsp;&nbsp;&nbsp;&nbsp;最好&nbsp;你能在你的GBA上运行代码<BR>&nbsp;&nbsp;&nbsp;&nbsp;提供的三个gba文件(在tools目录下)<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ucos.gba&nbsp;是个最简单的样例&nbsp;对应代码&nbsp;main.c<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我在我是GBA上运行了大约5000秒&nbsp;没有出问题<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ext1.gba&nbsp;&nbsp;ucos书上的例程1的移植&nbsp;对应代码&nbsp;ext1.c<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;大约运行了1分钟&nbsp;就算了&nbsp;呵呵&nbsp;显示太糟糕了<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ext2.gba&nbsp;&nbsp;书上例程2的移植&nbsp;对应代码&nbsp;ext2.c&nbsp;(注意&nbsp;要把OS_TICKS_PER_SEC宏改为<BR>10)<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在我的GBA上运行了2个小时&nbsp;同样没出问题<BR><BR>最后&nbsp;关于版权等的声明:<BR>&nbsp;&nbsp;1.&nbsp;&nbsp;本发布的程序等&nbsp;仅供学习使用<BR><BR>&nbsp;&nbsp;&nbsp;&nbsp;除了我声明的完全由我自己写的代码外<BR><BR>&nbsp;&nbsp;&nbsp;&nbsp;其他的部分&nbsp;都不得用在你的产品中或自行发布<BR>&nbsp;&nbsp;&nbsp;&nbsp;由此&nbsp;产生的一切后果&nbsp;于我无关<BR><BR>&nbsp;&nbsp;2.&nbsp;&nbsp;GBA、uCOS-II等&nbsp;都是有版权保护的产品&nbsp;如果有任何使用的打算&nbsp;请你自己去看他的<BR>产品授权<BR>&nbsp;&nbsp;&nbsp;&nbsp;由于使用产生的一切后果&nbsp;于我无关<BR><BR>&nbsp;&nbsp;3.&nbsp;&nbsp;对于我声明的代码等&nbsp;请保留我的声明和名字&nbsp;多谢<BR><BR><BR>如果你在使用中&nbsp;有什么问题&nbsp;特别是有bug务必请<BR>E-mail我:&nbsp;mail2li@163.com<BR>或在&nbsp;www.C51BBS.com&nbsp;上发贴&nbsp;我在&nbsp;C51BBS&nbsp;上的ID也是&nbsp;mail2li<BR><BR><BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;李强&nbsp;(&nbsp;mail2li&nbsp;in&nbsp;www.C51BBS.com&nbsp;)<BR><BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mail2li@21cn.com&nbsp;or&nbsp;mail2li@163.com<BR><BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2003-11-28<BR></P>
+<UL>
+<LI><B>在模拟器上的截图(附图)(附图)(附图) [mail2li] <FONT color=#d5d5d5>2003-11-28&nbsp;14:45:11</FONT></B> 
+<P><IMG src="c51bbs/upload/3322874.jpg"><BR><IMG src="c51bbs/upload/33214810.jpg"><BR><IMG src="c51bbs/upload/33220431.jpg"><BR><BR></P>
+<LI><B>下载路径 [mail2li] <FONT color=#d5d5d5>2003-11-28&nbsp;15:41:27</FONT></B> 
+<P>ftp://www.ls-labs.com/文件上载区/uCOS&nbsp;for&nbsp;GBA.zip<BR>用户名称:c51bbs<BR>密码:c51bbs<BR></P></LI></UL></SPAN></TD></TR></TBODY></TABLE><div style='width:100%;text-align:right;'><a href='http://www.9seek.com/news/show.aspx?id=566&cid=11' target='_blank' title='Powered by DvNews'><font style='font-size:11px;background:#FFFFFF;text-decoration:none;' face='Tahoma,Arial' color='black'>DvNews</font></a></div></span><br><br>
+	
+	
+	<table width="97%" cellpadding=0 cellspacing=0 style="table-layout:fixed;word-break:break-all">
+	<tr><td align=right>
+		<table><tr>
+		<td>
+		来源：<span id="SourceLabel">C51BBS论坛</span><br>
+		阅读：<span id="HitsLabel">6544</span> 次<br>
+		日期：<span id="TimeLabel">2003-11-28</span><br><br>
+		</td></tr>
+		</table>
+	</td></tr>
+	<tr><td align=right>
+		【 <a href="remark.aspx?ID=74" target=_blank>评论</a> 】
+		【 <a href="mail.aspx?ID=74" target=_blank>推荐</a> 】
+		【 <a href="javascript:doPrint()">打印</a> 】
+		【 字体：<a href="javascript:ContentSize(16)">大</a> <a href="javascript:ContentSize(14)">中</a> <a href="javascript:ContentSize(12)">小</a> 】
+	</td></tr>
+	</table>
+	
+	<table width=97% align=center>
+		<tr><td>
+		上一篇：<a href='show.aspx?id=68&cid=10'>[ARM7]ADS1.2下GBA的项目工程模板 </a><br>
+		下一篇：<a href='show.aspx?id=78&cid=10'>有关硬件寄存器、volatile、和不该发生的C编译器优化</a>
+		</td></tr>
+	</table>
+</td></tr>
+<tbody id="printHide" name="printHide" >
+<tr>
+<td class="summary-title">&nbsp; &gt;&gt; 相关新闻
+	&nbsp; &nbsp; &nbsp; 
+	
+</td></tr>
+<tr valign=top class="tdbg">
+<td style="padding:5px 2px">
+	&nbsp;
+</td></tr>
+
+
+<tr>
+<td class="summary-title">&nbsp; &gt;&gt; <a href="remark.aspx?id=74" target=_blank>点击查看全部留言...</a>
+</td></tr>
+<tr valign=top class="tdbg">
+<td style="padding:5px 2px">
+	&nbsp;<img src=pic/face1.gif> 对阿！我找不到文件了，麻烦你再放一次吧！<br>&nbsp;<img src=pic/face1.gif> 我试试看<br>&nbsp;<img src=pic/face1.gif> UC/OS在哪有下载啊？哪位朋友能告诉我啊？本人不盛感激！！<br>&nbsp;<img src=pic/face1.gif> mail2li你好，我是新手，在网上也没有找到uc-gui的使用手册，希望你能帮我一下，谢谢！<br>&nbsp;<img src=pic/face1.gif> 没有了！
+&nbsp;
+</td></tr>
+
+
+<tr>
+	<td align=center class="summary-title">
+	发表意见和建议
+	</td>
+	<tr>
+	<form name="remarkForm" action="remark.aspx?id=74" method="post" onsubmit="return checkRemark();">
+	<td class="tdbg">
+		<table width=100% cellpadding=5 cellspacing=0 border=0>
+		<tr><td>
+			<script>
+			function checkRemark()
+			{
+			var form=document.all.remarkForm;
+			if (form.body.value=="")
+			{	alert("请填写评论内容");
+				form.body.focus();
+				return false;
+			}
+			if (form.username.value=="")
+			{	alert("请填写姓名");
+				form.username.focus();
+				return false;
+			}
+			if (form.body.value.length>200)
+			{	alert("评论内容不可以超过200字");
+				form.body.focus();
+				return false;
+			}
+			if (form.username.value.length>10)
+			{	alert("姓名不可以超过10个字");
+				form.username.focus();
+				return false;
+			}
+			form.submit.disabled=true;
+			return true;
+			}
+			function showLen(obj)
+			{
+				document.all.bodyLen.innerText=obj.value.length;
+			}
+			</script>
+			<input type="radio" name="face" value="1" checked="True"><img src=pic/face1.gif>
+			<input type="radio" name="face" value="2"><img src=pic/face2.gif>
+			<input type="radio" name="face" value="3"><img src=pic/face3.gif>
+			<input type="radio" name="face" value="4"><img src=pic/face4.gif>
+			<input type="radio" name="face" value="5"><img src=pic/face5.gif>
+			<input type="radio" name="face" value="6"><img src=pic/face6.gif>
+			<input type="radio" name="face" value="7"><img src=pic/face7.gif>
+			<input type="radio" name="face" value="8"><img src=pic/face8.gif>
+			<input type="radio" name="face" value="9"><img src=pic/face9.gif><br>
+			<input type="radio" name="face" value="10"><img src=pic/face10.gif>
+			<input type="radio" name="face" value="11"><img src=pic/face11.gif>
+			<input type="radio" name="face" value="12"><img src=pic/face12.gif>
+			<input type="radio" name="face" value="13"><img src=pic/face13.gif>
+			<input type="radio" name="face" value="14"><img src=pic/face14.gif>
+			<input type="radio" name="face" value="15"><img src=pic/face15.gif>
+			<input type="radio" name="face" value="16"><img src=pic/face16.gif>
+			<input type="radio" name="face" value="17"><img src=pic/face17.gif>
+			<input type="radio" name="face" value="18"><img src=pic/face18.gif><br>
+			点评：
+			<textarea name="body" cols="40" Rows="4" onkeydown="showLen(this)" onkeyup="showLen(this)"></textarea> 字数<span id="bodyLen">0</span>
+			<br>
+			姓名：
+			<input type=text name="username" value="" MaxLength=15 size=10 >
+			<input type=submit name=submit value=" 发 表 " >
+			
+			<br><br>
+			<input type='hidden' name='clientDate' id='clientDate'>
+<script language=javascript>
+ d=new Date();
+document.all.clientDate.value=d.getYear()+","+d.getMonth()+","+d.getDate()+","+ d.getHours() +","+ d.getMinutes() +","+ d.getSeconds();
+</script>
+		</td>
+		<td width=350>
+		<ul style="list-style-type:square;margin-left:1em;line-height:150%">
+		<li>尊重网上道德，遵守中华人民共和国的各项有关法律法规<li>			承担一切因您的行为而直接或间接导致的民事或刑事法律责任<li>			本站管理人员有权保留或删除其管辖留言中的任意内容<li>			本站有权在网站内转载或引用您的评论<li>			参与本评论即表明您已经阅读并接受上述条款
+		</ul>
+		</td></tr>
+		</table>
+	</td>
+	</form>
+</tr>
+</tbody>
+</table>
+</div>
+
+<table  class="twidth" align=center cellpadding=0 cellspacing=0>
+	<tr><td height=20></td></tr>
+	<tr><td class="footline"></td></tr>
+	<tr align=center height=60 style="line-height:130%"><td>
+	<br><table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
+  <tr> 
+    <td width="100">&nbsp;</td>
+    <td width="550" bgcolor="#FFFFFF" class="9pix">
+<div align="center"><a href="about.htm"><font color="#666666">关于C51BBS</font></a><font color="#666666"> 
+        |</font> <a href="AD/ad.htm"><font color="#666666">在C51BBS刊登广告</font></a> 
+        <font color="#666666">|</font> <a href="contact.htm"><font color="#666666">联系方式</font></a> 
+        <font color="#666666">|</font> <a href="membernewsadd.aspx"><font color="#666666"> 
+        网友投稿</font></a><font color="#666666"><span class="9pix"></span></font></div></td>
+    <td width="100"><div align="right" class="9pix"><font color="#0066CC">&nbsp;&nbsp;<font color="#666666">版面设计：DJ</font></font></div></td>
+  </tr>
+</table>
+<table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
+  <tr> 
+    <td> <div align="center"></div>
+      <div align="center" class="9pix<font color="#666666"><font color="#666666">版权所有 </font>&copy;1999-2004 
+        </font><font color="#0066CC">单片机C语言网站 </font><a href="mailto:c51bbs@vip.163.com"><font color="#0066CC">版主：龙啸九天</font></a><font color="#666666"><font color="#666666"> 
+        E-mail: <font color="#666666"><a href="mailto:c51bbs@vip.163.com"><font color="#0066CC">c51bbs@vip</font>.<font color="#0066C6">163.com</font></a></font></font></font></div></td>
+  </tr>
+</table>
+Powerby <a href='http://www.9seek.com/news/show.aspx?id=566&cid=11' target='_blank' title='-----------------------------------------    << &#13;&#10; &#21160;&#32593;&#26032;&#38395;.Net（Asp.net + C#）&#13;&#10;---------------------&#13;&#10; Version: 2.6 free version &#13;&#10; For personal and non-commercial use! &#13;&#10;--------------------- &#13;&#10;-----------------------------------------    <<'>DvNews 2.6</a>
+	</td></tr>
+</table>
+
+
+
+</body>
+<html>

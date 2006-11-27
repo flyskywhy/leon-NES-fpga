@@ -1,0 +1,18 @@
+1 Using Kaleid
+2 Guide To Converting Graphics=IDH_GUIDE
+2 How To Convert A 16 Color BMP Image=IDH_CONVERT16
+2 How To Convert A 256 Color BMP Image=IDH_CONVERT256
+2 How To Convert A 16777216 Color BMP Image=IDH_CONVERT32768
+2 How To Convert A 256 Color Bitmap To 16 Colors=IDH_CONVERT25616
+1 Working With Bitmaps
+2 How To Open A Bitmap Image File=IDH_OPEN
+1 Creating and Modifying the Clip Box
+2 How To Use The Free Hand Box Tool To Create A Box=IDH_FREEHAND
+2 How To Use The Drag Box Tool To Move The Box=IDH_DRAG
+2 How To Specify Box Size Using Box Controls=IDH_BOXRESIZE
+2 How To Move Box Using Box Using Box Controls=IDH_BOXMOVE
+2 How To Select Preset Clip Box Sizes Using Mark Tools=IDH_MARK
+1 View Palette
+2 How To View 16 or 256 Color Palette=IDH_PALETTE
+1 Known Problems And Bugs
+2 Bug Report=IDH_BUGS

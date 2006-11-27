@@ -1,0 +1,270 @@
+<!----------------------------------------------
+
+	Powered by DvNews
+	http://www.aspsky.net/
+
+-------------------------------------------------->
+
+<html>
+<head>
+<title>单片机C语言首页_C51BBS论坛 --- ARM7编程入门－－从GBA开始（一）</title>
+<meta http-equiv="Content-type" content="text/html;charset=GB2312">
+<meta name=keywords content="动网新闻.net,asp.net,新闻系统">
+<link rel="stylesheet" href="style/studio28/style.css" type="text/css">
+<script language="JavaScript">
+var currentpos,timer; 
+function initializeScroll() { timer=setInterval("scrollwindow()",80);} 
+function scrollclear(){clearInterval(timer);}
+function scrollwindow() {currentpos=document.body.scrollTop;window.scroll(0,++currentpos);if (currentpos != document.body.scrollTop) sc();} 
+document.onmousedown=scrollclear
+document.ondblclick=initializeScroll
+</script>
+</head>
+<body>
+<span id="printScript" name="printScript">
+<script language=javascript>
+function ContentSize(size)
+{
+	var obj=document.all.BodyLabel;
+	obj.style.fontSize=size+"px";
+}
+</script>
+</span>
+<script language=javascript src="inc/print.js"></script>
+
+<table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
+  <tr> 
+    <td>&nbsp;</td>
+    <td width="41" rowspan="3">&nbsp;</td>
+    <td width="566" rowspan="3"><div align="right"><a href="/c51bbs/c51bbs2002/allindex.htm"><img src="../images/head_7.jpg" width="192" height="45" border="0"></a></div></td>
+  </tr>
+  <tr>
+    <td height="22"><div align="right"><a href="/c51bbs/find.asp" target=_blank><img src="../images/c51bbslogin.gif" width="166" height="22" border="0"></a></div></td>
+  </tr>
+  <tr> 
+    <td><img src="../images/point_wihte.gif" width="50" height="3" align="top"></td>
+  </tr>
+</table>
+<table class="twidth" align=center cellpadding=0 cellspacing=0 >
+<tr>
+<td class="navbar-left">
+</td>
+<td class="navbar">
+	<script Language=Javascript1.2 src="inc/popmenu.js"></script>
+<DIV class=menuskin id=popmenu 
+      onmouseover="clearhidemenu();highlightmenu(event,'on')" 
+      onmouseout="highlightmenu(event,'off');dynamichide(event)" style="Z-index:100"></DIV>
+
+<script language=javascript1.2>
+linkset[0]=new Array()
+linkset[0][0]='<div class="menuitems"><a href="list.aspx?cid=13">C51BOX仿真器</a></div>'
+linkset[0][1]='<div class="menuitems"><a href="list.aspx?cid=14">字模3软件</a></div>'
+linkset[0][2]='<div class="menuitems"><a href="list.aspx?cid=15">C51BBS离线版</a></div>'
+linkset[0][3]='<div class="menuitems"><a href="list.aspx?cid=16">C51BBS论坛源码</a></div>'
+</script><a href="default.aspx" class='navlink' >首页</a> <img src=style/news/navbar_Separator.gif align=absmiddle> <a href="http://www.c51bbs.com/c51bbs/find.asp" class='navlink' >单片机C语言论坛</a> <img src=style/news/navbar_Separator.gif align=absmiddle> <a href="list.aspx?cid=5" class='navlink'  onmouseover=showmenu(event,0,1,false) onmouseout=delayhidemenu() >产品信息</a> <img src=style/news/navbar_Separator.gif align=absmiddle> <a href="list.aspx?cid=10" class='thisclass' >ARM7编程入门</a> <img src=style/news/navbar_Separator.gif align=absmiddle> <a href="list.aspx?cid=9" class='navlink' >C51常见问答</a> <img src=style/news/navbar_Separator.gif align=absmiddle> <a href="list.aspx?cid=8" class='navlink' >C51源程序</a> <img src=style/news/navbar_Separator.gif align=absmiddle> <a href="list.aspx?cid=7" class='navlink' >论坛精华</a> <img src=style/news/navbar_Separator.gif align=absmiddle> <a href="list.aspx?cid=6" class='navlink' >精品共享</a> <img src=style/news/navbar_Separator.gif align=absmiddle> <a href="http://www.gamebios.com" class='navlink' >GBA火线烧录器</a>
+</td>
+<td class="navbar-right">
+</td>
+</tr>
+</table>
+
+&nbsp;
+
+<div id="printBody" name="printBody">
+
+
+<table class="twidth" align=center cellspacing=0>
+<tr>
+<td class="summary-title">
+	&nbsp; <a href='default.aspx'>单片机C语言首页_C51BBS论坛</a> → <a href='list.aspx?cid=10'>ARM7编程入门</a>
+</td>
+</tr>
+<tr ><td valign=top class="tdbg">
+	<br><center class="aTitle">ARM7编程入门－－从GBA开始（一）</center>
+	<table width=97% >
+		<td align=right>
+		作者：<span id="AuthorLabel">龙啸九天</span><br>
+		</td></tr>
+	</table>
+	
+	
+	<span id="BodyLabel" class="content" style="display:block;padding:0px 10px"><P>　　ARM是什么？<BR>　　ARM是英国ARM开发的32位CPU核，全球厂商都可以获得授权生产ARM芯片。而且价格出乎意料得便宜，比如做网络应用的4510只需45元人民币，这样低端产品可以采用8051等8位单片机，而中高端产品采用ARM是非常明智的选择。</P>
+<P>　　现在很多人开始学习ARM，开始都是买ARM实验板和JTAG仿真器，论坛上的讨论还大多停留在硬件调试阶段。我觉得，和51一样，学习重点应该在软件编程上，硬件部分都有成熟电路，熟悉以后自然水到渠成。</P>
+<P>　　其实，Game Boy Advance (GBA) 是一款很好的ARM7实验平台，GBA是一款掌上游戏机，采用ARM7 CPU内核，有240&#215;160 64K色彩色液晶、立体声系统、按键、DMA、通讯口、32K的CPU高速RAM(32Bit)和256K外RAM(16Bit)，还有可外接的游戏卡，可扩充256Mbit的FLASH ROM和用于保存进度的128K EEPROM(或FLASH、带电池的SRAM)。<BR><BR>　　GBA用什么开发？</P>
+<P>　　ARM C编译器用SDT2.51、ADS1.2、Metaware for ARM都可以，但不推荐GCC，因为GCC编译效率太差。GBA官方使用的开发系统是Metaware for ARM，相关帖子：<A href="show.aspx?id=43&amp;cid=10">show.aspx?id=43&amp;cid=10</A>&nbsp;，SDT2.51已经不再升级，ADS1.2的IDE和帮助系统实在不好用，建议试试Metaware，是著名的HighC编译内核，编译效率和ADS不相上下。</P>
+<P>　　实验环境可以是GBA模拟器：VisualboyAdvance ,官方下载地址：<A href="http://vboy.emuhq.com/downloads.shtml">http://vboy.emuhq.com/downloads.shtml</A>&nbsp;<BR>将编译出来的ELF或BIN文件用模拟器打开就可以在PC上运行ARM程序。</P>
+<P>　　当然更有趣的是用实际的GBA游戏机来实验程序，GBA现在有2种款式，见下图，早期的GBA不带背光，价格较便宜，550元左右，新出的GBA SP，带背光，870元左右。<BR><BR>　　另外，还要配一条下载线将BIN文件下载到GBA中，这条下载线C51BBS即将推出，售价100元左右。另外，随后还会继续开发，让下载线具有DEBUG功能，可以使用Metaware IDE中的调试环境单步调试源程序。（待续）</P>
+<P><BR>以下是一些GBA开发的相关资源</P>
+<P>Game Boy Advance (GBA) 是&nbsp;任天堂的掌上游戏机<A href="http://www.nintendo.com/systems/gba/index.jsp" target=_blank><FONT color=#024ac9><BR>http://www.nintendo.com/systems/gba/index.jsp</FONT></A><BR><BR>Game Boy Advance 国外开发网站<BR><A href="http://www.gbadev.org/" target=_blank><FONT color=#024ac9>http://www.gbadev.org/</FONT></A></P>
+<P>GBA探索日记,,绝对经典的中文gba好文章<A href="http://member.netease.com/~qinj/gpgame/docs/program/gba/index.htm" target=_blank><FONT color=#024ac9><BR>http://member.netease.com/~qinj/gpgame/docs/program/gba/index.htm</FONT></A></P>
+<P>一些GBA的图片：<BR></P><PRE class=font><IMG src="c51bbs/upload/30163036.jpg">
+<IMG src="c51bbs/upload/30133038.jpg">
+<IMG src="c51bbs/upload/30133720.jpg">
+<IMG src="c51bbs/upload/30130119.jpg">
+</PRE><div style='width:100%;text-align:right;'><a href='http://www.9seek.com/news/show.aspx?id=566&cid=11' target='_blank' title='Powered by DvNews'><font style='font-size:11px;background:#FFFFFF;text-decoration:none;' face='Tahoma,Arial' color='black'>DvNews</font></a></div></span><br><br>
+	
+	
+	<table width="97%" cellpadding=0 cellspacing=0 style="table-layout:fixed;word-break:break-all">
+	<tr><td align=right>
+		<table><tr>
+		<td>
+		来源：<span id="SourceLabel"></span><br>
+		阅读：<span id="HitsLabel">17684</span> 次<br>
+		日期：<span id="TimeLabel">2003-11-1</span><br><br>
+		</td></tr>
+		</table>
+	</td></tr>
+	<tr><td align=right>
+		【 <a href="remark.aspx?ID=56" target=_blank>评论</a> 】
+		【 <a href="mail.aspx?ID=56" target=_blank>推荐</a> 】
+		【 <a href="javascript:doPrint()">打印</a> 】
+		【 字体：<a href="javascript:ContentSize(16)">大</a> <a href="javascript:ContentSize(14)">中</a> <a href="javascript:ContentSize(12)">小</a> 】
+	</td></tr>
+	</table>
+	
+	<table width=97% align=center>
+		<tr><td>
+		上一篇：<a href='show.aspx?id=43&cid=10'>超越SDT、ADS的ARM开发系统：Meteware for ARM 4.5a下载</a><br>
+		下一篇：<a href='show.aspx?id=62&cid=10'>MetaWare For ARM 4.5 安装详细指南</a>
+		</td></tr>
+	</table>
+</td></tr>
+<tbody id="printHide" name="printHide" >
+<tr>
+<td class="summary-title">&nbsp; &gt;&gt; 相关新闻
+	&nbsp; &nbsp; &nbsp; 
+	
+</td></tr>
+<tr valign=top class="tdbg">
+<td style="padding:5px 2px">
+	&nbsp;
+</td></tr>
+
+
+<tr>
+<td class="summary-title">&nbsp; &gt;&gt; <a href="remark.aspx?id=56" target=_blank>点击查看全部留言...</a>
+</td></tr>
+<tr valign=top class="tdbg">
+<td style="padding:5px 2px">
+	&nbsp;<img src=pic/face3.gif> 二呢？<br>&nbsp;<img src=pic/face7.gif> 一般是很好用的~~<br>&nbsp;<img src=pic/face13.gif> no!<br>&nbsp;<img src=pic/face5.gif> 我平时是用 C51 系列和 PIC 系列单片机做音响产品控制的，但它的速度没法做音频处理，想学另外的 DSP 芯片又找不到 C 语言的编译器就不知 ARM 能否可以做 DSP? <br>&nbsp;<img src=pic/face1.gif> 可以实现数字音频处理（DSP）吗？&nbsp;
+</td></tr>
+
+
+<tr>
+	<td align=center class="summary-title">
+	发表意见和建议
+	</td>
+	<tr>
+	<form name="remarkForm" action="remark.aspx?id=56" method="post" onsubmit="return checkRemark();">
+	<td class="tdbg">
+		<table width=100% cellpadding=5 cellspacing=0 border=0>
+		<tr><td>
+			<script>
+			function checkRemark()
+			{
+			var form=document.all.remarkForm;
+			if (form.body.value=="")
+			{	alert("请填写评论内容");
+				form.body.focus();
+				return false;
+			}
+			if (form.username.value=="")
+			{	alert("请填写姓名");
+				form.username.focus();
+				return false;
+			}
+			if (form.body.value.length>200)
+			{	alert("评论内容不可以超过200字");
+				form.body.focus();
+				return false;
+			}
+			if (form.username.value.length>10)
+			{	alert("姓名不可以超过10个字");
+				form.username.focus();
+				return false;
+			}
+			form.submit.disabled=true;
+			return true;
+			}
+			function showLen(obj)
+			{
+				document.all.bodyLen.innerText=obj.value.length;
+			}
+			</script>
+			<input type="radio" name="face" value="1" checked="True"><img src=pic/face1.gif>
+			<input type="radio" name="face" value="2"><img src=pic/face2.gif>
+			<input type="radio" name="face" value="3"><img src=pic/face3.gif>
+			<input type="radio" name="face" value="4"><img src=pic/face4.gif>
+			<input type="radio" name="face" value="5"><img src=pic/face5.gif>
+			<input type="radio" name="face" value="6"><img src=pic/face6.gif>
+			<input type="radio" name="face" value="7"><img src=pic/face7.gif>
+			<input type="radio" name="face" value="8"><img src=pic/face8.gif>
+			<input type="radio" name="face" value="9"><img src=pic/face9.gif><br>
+			<input type="radio" name="face" value="10"><img src=pic/face10.gif>
+			<input type="radio" name="face" value="11"><img src=pic/face11.gif>
+			<input type="radio" name="face" value="12"><img src=pic/face12.gif>
+			<input type="radio" name="face" value="13"><img src=pic/face13.gif>
+			<input type="radio" name="face" value="14"><img src=pic/face14.gif>
+			<input type="radio" name="face" value="15"><img src=pic/face15.gif>
+			<input type="radio" name="face" value="16"><img src=pic/face16.gif>
+			<input type="radio" name="face" value="17"><img src=pic/face17.gif>
+			<input type="radio" name="face" value="18"><img src=pic/face18.gif><br>
+			点评：
+			<textarea name="body" cols="40" Rows="4" onkeydown="showLen(this)" onkeyup="showLen(this)"></textarea> 字数<span id="bodyLen">0</span>
+			<br>
+			姓名：
+			<input type=text name="username" value="" MaxLength=15 size=10 >
+			<input type=submit name=submit value=" 发 表 " >
+			
+			<br><br>
+			<input type='hidden' name='clientDate' id='clientDate'>
+<script language=javascript>
+ d=new Date();
+document.all.clientDate.value=d.getYear()+","+d.getMonth()+","+d.getDate()+","+ d.getHours() +","+ d.getMinutes() +","+ d.getSeconds();
+</script>
+		</td>
+		<td width=350>
+		<ul style="list-style-type:square;margin-left:1em;line-height:150%">
+		<li>尊重网上道德，遵守中华人民共和国的各项有关法律法规<li>			承担一切因您的行为而直接或间接导致的民事或刑事法律责任<li>			本站管理人员有权保留或删除其管辖留言中的任意内容<li>			本站有权在网站内转载或引用您的评论<li>			参与本评论即表明您已经阅读并接受上述条款
+		</ul>
+		</td></tr>
+		</table>
+	</td>
+	</form>
+</tr>
+</tbody>
+</table>
+</div>
+
+<table  class="twidth" align=center cellpadding=0 cellspacing=0>
+	<tr><td height=20></td></tr>
+	<tr><td class="footline"></td></tr>
+	<tr align=center height=60 style="line-height:130%"><td>
+	<br><table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
+  <tr> 
+    <td width="100">&nbsp;</td>
+    <td width="550" bgcolor="#FFFFFF" class="9pix">
+<div align="center"><a href="about.htm"><font color="#666666">关于C51BBS</font></a><font color="#666666"> 
+        |</font> <a href="AD/ad.htm"><font color="#666666">在C51BBS刊登广告</font></a> 
+        <font color="#666666">|</font> <a href="contact.htm"><font color="#666666">联系方式</font></a> 
+        <font color="#666666">|</font> <a href="membernewsadd.aspx"><font color="#666666"> 
+        网友投稿</font></a><font color="#666666"><span class="9pix"></span></font></div></td>
+    <td width="100"><div align="right" class="9pix"><font color="#0066CC">&nbsp;&nbsp;<font color="#666666">版面设计：DJ</font></font></div></td>
+  </tr>
+</table>
+<table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
+  <tr> 
+    <td> <div align="center"></div>
+      <div align="center" class="9pix<font color="#666666"><font color="#666666">版权所有 </font>&copy;1999-2004 
+        </font><font color="#0066CC">单片机C语言网站 </font><a href="mailto:c51bbs@vip.163.com"><font color="#0066CC">版主：龙啸九天</font></a><font color="#666666"><font color="#666666"> 
+        E-mail: <font color="#666666"><a href="mailto:c51bbs@vip.163.com"><font color="#0066CC">c51bbs@vip</font>.<font color="#0066C6">163.com</font></a></font></font></font></div></td>
+  </tr>
+</table>
+Powerby <a href='http://www.9seek.com/news/show.aspx?id=566&cid=11' target='_blank' title='-----------------------------------------    << &#13;&#10; &#21160;&#32593;&#26032;&#38395;.Net（Asp.net + C#）&#13;&#10;---------------------&#13;&#10; Version: 2.6 free version &#13;&#10; For personal and non-commercial use! &#13;&#10;--------------------- &#13;&#10;-----------------------------------------    <<'>DvNews 2.6</a>
+	</td></tr>
+</table>
+
+
+
+</body>
+<html>

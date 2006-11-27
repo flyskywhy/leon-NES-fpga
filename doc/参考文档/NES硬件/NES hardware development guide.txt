@@ -1,0 +1,1908 @@
+********************************
+*NES hardware development guide*
+********************************
+Brad Taylor (BTTDgroup@hotmail.com)
+First release: April 23rd, 2004
+Thanks to the NES community. http://nesdev.parodius.com.
+
+Note: to display this document properly, your text viewer needs two things: 
+1. support for the classic VGA-based text mode 256 character set with 
+line-drawing characters. 2. word-wrap. windows notepad can easially do both 
+if you change the font over to terminal style.
+
+
+Overview
+--------
+This document is targetted at people who do real NES/FC development, and 
+describes in some detail how to build a few NES-related hardware projects 
+mentioned here. An assumption is made that the user of this guide has a good 
+understanding of digital electronics, and has had experience building & 
+testing real digital circuits with glue logic (CMOS, TTL, etc.) and other 
+common ICs found in NES-related technology.
+
+
+A changed business world, where there's all of a sudden room for the small 
+guy
+------------------------------------------------------------------------------
+For those of you out there who are serious about NES/FC development (to the 
+point of mass-producing home-made carts), the best advice I can give to you 
+is to tell you to start a e-ferral commerce company on the internet, and 
+actually make a living off producing NES-related technology. If you don't 
+know what the terms e-ferral commerce, private franchising, or pro-suming 
+means, then for god sakes, go on the internet (or pick up a book about it) 
+and find out! It's a little hard to explain, but it's real, it's here, it 
+works, and it's an oppertunity of a lifetime for those of you serious about 
+starting an internet-based NES technology development business (which 
+obviously can lead to other things).
+
+
+Topics discussed
+----------------
+Pin nomenclature & signal descriptions of NES ports
+Additional hardware info
+Making good use of BRK opcodes
+Ten on-screen playfield palettes
+Increased color area mapper
+NES cart multitasker
+NES development kit
+NES file server
+
+
+*****************************************************
+*Pin nomenclature & signal descriptions of NES ports*
+*****************************************************
+Most the signals appearing on the cart connector and expansion port have 
+been documented in more detail in the 2A03 and 2C02 technical reference 
+guides, so refer there for information not covered here.
+
+
++--------------+
+|cart connector|
++--------------+
+          ________
+         |*       |
+VEE  >01]        [37>  21.48MHZ
+A11  <02]        [38>  PHI2
+A10  <03]        [39>  A12
+  A9  <04]        [40>  A13
+  A8  <05]        [41>  A14
+  A7  <06] +----+ [42]  D7
+  A6  <07] |6502| [43]  D6
+  A5  <08] |BUS | [44]  D5
+  A4  <09] +----+ [45]  D4
+  A3  <10]        [46]  D3
+  A2  <11]        [47]  D2
+  A1  <12]        [48]  D1
+  A0  <13]        [49]  D0
+R/W  <14]        [50>  /PRG
+/IRQ  [15]
+                  [51]  (06)
+(42)  [16] +----+ [52]  (07)
+(41)  [17] |EXP.| [53]  (08)
+(40)  [18] |PORT| [54]  (09)
+(39)  [19] +----+ [55]  (10)
+(38)  [20]
+                  [56>  /W
+  /R  <21]        [57<  /VCS
+VA10  >22]        [58>  /A13
+  A6  <23]        [59>  A7
+  A5  <24]        [60>  A8
+  A4  <25] +----+ [61>  A9
+  A3  <26] |2C02| [62>  A11
+  A2  <27] |BUS | [63>  A10
+  A1  <28] +----+ [64>  A12
+  A0  <29]        [65>  A13
+  D0  [30]        [66]  D7
+  D1  [31]        [67]  D6
+  D2  [32]        [68]  D5
+  D3  [33]        [69]  D4
+
+  S0  [34] +----+ [70]  S2
+  S1  [35] |CIC | [71>  4MHZ
+VCC  >36] +----+ [72<  VEE
+         |________|
+
+
+6502 BUS
+--------
+/PRG: the logical NAND between PHI2 and CPU A15.
+
+21.48MHZ: the NES's master internal clock.
+
+
+EXP. PORT
+---------
+the number in parenthesis here indicates the dedicated expansion port pin 
+number this cart pin connects to.
+
+
+2C02 BUS
+--------
+VA10: address line input 10 for an internal 2K RAM (VRAM) connected to the 
+2C02 bus. Usually this line controls how the PPU percieves name table pages 
+(mirroring).
+
+/A13: inverted A13. Intended to feed /VCS, when NES-provided name table 
+memory is to be used.
+
+/VCS: chip select for internal 2K VRAM. Usually enabled (0) when A13 is 1 
+(i.e., during name table fetch cycles).
+
+
+CIC
+---
+4MHZ: cicurity chip clock line.
+
+S0..S2: pins carrying cicurity chip protocol signals. Without the use of 
+another 6113 or 3193 device connected here, the NES control deck cannot 
+function properly (the cicurity chip inside the control deck will send a 
+nice 1Hz square wave to the 2A03 /reset and 2C02 /SYNC input lines). Much is 
+unknown about how the NES cicurity chips work, but there is some 
+documentation on it at the usual place, which includes pinout & hookup info, 
+and info on some techniques 3rd party NES game developers used to defeat it 
+(with simple discrete electronic components). For additional information on 
+the CIC not found anywhere else, refer to the following patent documents: 
+U.S.#4,799,635 and U.S.#5,070,479.
+
+
++--------------+
+|expansion port|
++--------------+
+          _______
+         |*      \
+VCC  >01]        [48<  VCC
+VEE  >02]        [47<  VEE
+AIN  >03]        [46]  --
+/NMI  [04]        [45>  C.2
+CA15  <05]        [44>  C.1
+(51)  [06]        [43>  C.0
+(52)  [07]        [42]  (16)
+(53)  [08]        [41]  (17)
+(54)  [09]        [40]  (18)
+(55)  [10]        [39]  (19)
+/C2R  <11]        [38]  (20)
+C1.1  >12]  EXP.  [37>  /C1R
+C1.3  >13]  PORT  [36>  C1.4
+/IRQ  [14]        [35>  C1.0
+C2.2  >15]        [34>  /C1R
+C2.3  >16]        [33>  C1.2
+/C2R  <17]        [32]  D0
+C2.4  >18]        [31]  D1
+C2.0  >19]        [30]  D2
+C2.1  >20]        [29]  D3
+VOUT  <21]        [28]  D4
+AOUT  <22]        [27]  D5
+VDD  <23]        [26]  D6
+4MHZ  <24]        [25]  D7
+         |_______/
+
+
+VEE,VCC: ground, and +5VDC power signals, respectfully.
+
+AIN: audio input. Internally mixes with 2A03-produced audio.
+
+/NMI: the 2C02's vblank status, and the 6502's /NMI status. can be used as 
+an input or output (treat as an open-collector bus line, with a 10K ohm 
+pull-up resistor to +5VDC).
+
+CA15: CPU A15. This line is only available on the expansion port; NES carts 
+must use the /PRG line to determine A15's status.
+
+(##): indicates a dedicated connection between this pin, and the cart 
+connector pin number shown in the parenthesis.
+
+/C1R,/C2R: output enable status of internal inverters connected to the 6502 
+data bus driven active when addresses $4016 (C1) or $4017 (C2) are accessed 
+by the CPU. The inputs of these 3-state inverters are connected to some 
+controller port pins located at the front of the deck (documented 
+elsewhere), and to other pins mapped on the expansion connector. These lines 
+are generally used to clock NES controller internal shift registers after 
+reading a single bit.
+
+Cn.x: external device status inputs. The equivelant 6502 internal read 
+address port and bit offset of corresponding pin is $4015+n.x (due to 
+3-state inverters inside the NES gating this signal data onto the 2A03 data 
+bus, sampled data on these input lines is always returned to CPU-accessable 
+ports with logical inversion applied to all valid bits.
+
+/IRQ: maskable interrupt status line (active when zero). can be used as an 
+input or output (see /NMI for explanation).
+
+VOUT: semi-buffered video output. usually connects to an NPN emitter 
+follower (collector tied to +5V) to boost drive. An NPN transistor may be 
+used to drive this line to zero before hitting the emitter follower, in 
+order to provide video signal gating functions (useful for multiplexing 
+NES-generated video signals over one composite video wire).
+
+AOUT: pre-buffered audio output. Audio here has been amplified, but current 
+drive capability is low (3..6 mA).
+
+VDD: the NES's switched, filtered & unregulated power supply. this is 
+usually around +10VDC, but is determined by the adaptor plugged into the 
+NES.
+
+4MHZ: cicurity chip clock line.
+
+D0..D7: the 6502's data bus.
+
+C.x: external device status outputs. The equivelant 6502 internal write 
+address port and bit offset of corresponding pin is $4016.x.
+
+--: unused.
+
+
++----------------+
+|controller ports|
++----------------+
+See expansion port for pin nomenclature here.
+__
+|  \
+| 1 \
+|    \
+| 2 5 |
+|     |
+| 3 6 |
+|     |
+| 4 7 |
++-----+
+
+1: ground
+2: /C1R (/C2R for second player)
+3: C.0
+4: C1.0 (C2.0)
+5: +5VDC.
+6: C1.3 (C2.3)
+7: C1.4 (C2.4)
+
+
+**************************
+*Additional hardware info*
+**************************
+This chapter is a hardware device documentation collection. These are 
+devices you will need to know how to use, in order to build projects listed 
+in this guide.
+
+
++---------------+
+|ATAPI interface|
++---------------+
+Pin sequence starts at red wire on ribbon cable.
+
+GND:   	2,19,22,24,26,30,40 (ground)
+A0..A2:	35,33,36 (selected port address output)
+/W:    	23 (write cycle decoded output; active while 0)
+/R:    	25 (read cycle decoded output; active while 0)
+D7..D0 	3,5,7,9,11,13,15,17 (data bus)
+D8..D15	4,6,8,10,12,14,16,18 (data bus)
+IRQ:   	31 (high-level triggered PC IRQ 14/15 source (primary/secondary IDE 
+channel))
+
+There are many other signals, but the ones listed are the only ones needed 
+for basic I/O through a PC, using simple IN and OUT instructions in the 
+program source at x86 port addresses 1F0..1F7 for the primary controller, 
+and at 170..177 for the secondary controller.
+
+In general, D8..D15 has little use, except for increasing throughput through 
+the first port, since all 7 other ports are treated as 8-bit ones.
+
+The IRQ line here can be useful for all sorts of programming tricks, but 
+keep in mind that it is positive-edge triggered. This means that you may 
+have to use an inverter to interface this input with a digital source with 
+active low outputs.
+
+
++--------------------+
+|parallel port pinout|
++--------------------+
+There are 3 addresses where the parallel port is mapped into the x86 i/o 
+map. All pins that appear on the parallel port connector map directly to an 
+x86 port address and bit offset (as indicated by pin name below). 
+Programmers may obtain the digital status of signals entering parallel port 
+pins functioning as inputs by reading the corresponding x86 port. Pins 
+functioning as outputs may be updated through a port write operation.
+
+        _____
+       |*    \
+/A.0  [ 1]   \
+       |   [14]  /A.1
+  8.0  [ 2]   |
+       |   [15<  9.3
+  8.1  [ 3]   |
+       |   [16]  A.2
+  8.2  [ 4]   |
+       |   [17]  /A.3
+  8.3  [ 5]   |
+       |   [18>  GND
+  8.4  [ 6]   |
+       |   [19>  GND
+  8.5  [ 7]   |
+       |   [20>  GND
+  8.6  [ 8]   |
+       |   [21>  GND
+  8.7  [ 9]   |
+       |   [22>  GND
+*9.6  >10]   |
+       |   [23>  GND
+/9.7  >11]   |
+       |   [24>  GND
+  9.5  >12]   |
+       |   [25>  GND
+  9.4  >13]   /
+       |_____/
+
+/: indicates inversion (logical NOT) of signal input or output. If pin 
+functions as both an input and output, inversion applies to both aspects.
+
+.x: indicates the bit offset inside the selected parallel port register.
+
+8.x: port 378h. 37Aw.5 controls the i/o status of these pins (0= output; 1= 
+input).
+
+9.x: port 379h. read-only.
+
+A.x: port 37Ah. open-collector outputs.
+
+*: IRQ input (positive-edge triggered).
+
+GND: ground.
+
+
+programming notes
+-----------------
+- use 8-bit x86 IN and OUT instructions to access the parallel port 
+registers and bus buffers
+- use 378w for throwing 8 bits of data out (when 37Aw.5 = 0)
+- use 378r for reading 8 bits of data in (when 37Aw.5 = 1)
+- use 379r for reading status signals from external hardware
+- 37Ah-based parallel port pins may function as inputs, if the corresponding 
+outputs are programmed to indicate logical 1.
+- IRQs may be masked via 37Aw.5 (0= masked)
+
+
++------------------------------------------+
+|ADC0820: 8-bit analog to digital convertor|
++------------------------------------------+
+          __  __
+         |* \/  |
+VIN  > 1]      [20<  VCC
+  Q0  [ 2]      [19]  --
+  Q1  [ 3]      [18>  /OFL
+  Q2  [ 4]      [17]  D7
+  Q3  [ 5]      [16]  D6
+/WR  [ 6]      [15]  D5
+MODE  > 7]      [14]  D4
+/RD  > 8]      [13<  /CS
+/INT  < 9]      [12<  VRF+
+VEE  >10]      [11<  VRF-
+         |______|
+
+VIN: analog voltage to be sampled.
+
+Q0..Q7: 8-bit data bus.
+
+MODE: When 0, ADC operates by holding down /RD, until a sample is available 
+(indicated by /INT). When 1, ADC operates by pulsing /WR to start a 
+conversion, then using the /RD line to read the value back later.
+
+/WR: (MODE=1): used as an input, and initializes a conversion (when pulsed 
+zero). (MODE=0): /WR becomes RDY, an open-drain output that indicates that 
+the ADC is busy making a conversion (while zero).
+
+/RD: throws the results of the ADC's sample conversion onto the data bus 
+(when 0). Note that this signal is internally gated with /INT, so this means 
+that data will never be thrown onto the bus in the middle of a conversion.
+
+/INT: indicates (when zero) that a sample is ready. Resets to 1 when the 
+sample has been serviced.
+
+VRF+,VRF-: indicates the voltage range in which the sampled data is to fall 
+under.
+
+/CS: chip select. Set to zero to use the chip's /RD & /WR lines.
+
+/OFL: indicates (when zero) that the sampled voltage exceeded VRF+.
+
+--: unused.
+
+
++-----------+
+|4001 pinout|
++-----------+
+         __  __
+        |* \/  |
+  A1  >1]      [14<  VCC
+  B1  >2]      [13<  A4
+  Q1  <3]      [12<  B4
+  Q2  <4]      [11>  Q4
+  A2  >5]      [10>  Q3
+  B2  >6]      [ 9<  A3
+VEE  >7]      [ 8<  B3
+        |______|
+
+This device contains 4 individual 2-input NOR (not-or) gates. A,B: inputs; 
+Q: output.
+
+
++-----------+
+|4013 pinout|
++-----------+
+         __  __
+        |* \/  |
+  1Q  <1]      [14<  VCC
+1/Q  <2]      [13>  2Q
+1CK  >3]      [12>  2/Q
+  1R  >4]      [11<  2CK
+  1D  >5]      [10<  2R
+  1S  >6]      [ 9<  2D
+VEE  >7]      [ 8<  2S
+        |______|
+
+This device contains 2 individual positive-edge triggered D flip-flops. Q, 
+/Q: complimentary outputs; CK: clock input; R: reset; S: set; D: data.
+
+
++-------------+
+|HC4066 pinout|
++-------------+
+         __  __
+        |* \/  |
+  1P  [1]      [14<  VCC
+  1P  [2]      [13<  1S
+  2P  [3]      [12<  4S
+  2P  [4]      [11]  4P
+  2S  >5]      [10]  4P
+  3S  >6]      [ 9]  3P
+VEE  >7]      [ 8]  3P
+        |______|
+
+This device contains 4 individual high-speed CMOS bilateral switches. S: 
+turn on switch (when 1); P: switch ports.
+
+
++-----------+
+|LS00 pinout|
++-----------+
+         __  __
+        |* \/  |
+  A0  >1]      [14<  VCC
+  B0  >2]      [13<  A3
+  Q0  <3]      [12<  B3
+  A1  >4]      [11>  Q3
+  B1  >5]      [10<  A2
+  Q1  <6]      [ 9<  B2
+VEE  >7]      [ 8>  Q2
+        |______|
+
+This device contains 4 individual 2-input NAND (not-and) gates. A,B: inputs; 
+Q: output.
+
+
++------------+
+|LS138 pinout|
++------------+
+         __  __
+        |* \/  |
+  A0  >1]      [16<  VCC
+  A1  >2]      [15>  /0
+  A2  >3]      [14>  /1
+  /G  >4]      [13>  /2
+  /G  >5]      [12>  /3
+  G   >6]      [11>  /4
+  /7  <7]      [10>  /5
+VEE  >8]      [ 9>  /6
+        |______|
+
+A0..A2: indicates a 3-bit binary condition to decode.
+
+/G, G: these are condition decode enable inputs (active when G=1 or /G=0). 
+All G inputs must be enabled, in order for any outputs to decode binary 
+combinations.
+
+/7../0: these are the 8 decoded outputs from a 3-bit binary number. The only 
+output to be enabled (set to 0) will be directly related to the A0..A2 
+value. All G inputs must be enabled for any outputs to be selected, 
+otherwise all decoded outputs will be disabled.
+
+
++------------+
+|LS157 pinout|
++------------+
+         __  __
+        |* \/  |
+SEL  >1]      [16<  VCC
+  A0  >2]      [15<  /OE
+  B0  >3]      [14<  A3
+  Y0  <4]      [13<  B3
+  A1  >5]      [12>  Y3
+  B1  >6]      [11<  A2
+  Y1  <7]      [10<  B2
+VEE  >8]      [ 9>  Y2
+        |______|
+
+SEL: select input to appear on Y terminals (0: B; 1: A).
+
+/OE: forces Y outputs to zero when inactive (1).
+
+
++------------+
+|LS161 pinout|
++------------+
+         __  __
+        |* \/  |
+/CLR  >1]      [16<  VCC
+CLK  >2]      [15>  RCO
+  D0  >3]      [14>  Q0
+  D1  >4]      [13>  Q1
+  D2  >5]      [12>  Q2
+  D3  >6]      [11>  Q3
+ENP  >7]      [10<  ENT
+VEE  >8]      [ 9<  /LD
+        |______|
+
+/CLR: resets counter to zero when zero, regardless of CLK condition.
+
+CLK: positive-edge triggered clock input.
+
+D0..D3: counter load port. data here is tansferred into the counter if /LD 
+is active during the rising edge of the CLK signal.
+
+ENP,ENT: tie these to ground to disable counting, or to +5V to enable 
+counting.
+
+/LD: transfers the data on the D0..D3 lines into the counter on the next 
+rising CLK edge.
+
+Q0..Q3: counter outputs. updated every rising CLK edge.
+
+RCO: goes 1 when Q0..Q3 = -1, and CLK = 0.
+
+
++------------+
+|LS670 pinout|
++------------+
+         __  __
+        |* \/  |
+  D1  >1]      [16<  VCC
+  D2  >2]      [15<  D0
+  D3  >3]      [14<  WA0
+RA1  >4]      [13<  WA1
+RA0  >5]      [12<  /WE
+  Q3  <6]      [11<  /RE
+  Q2  <7]      [10>  Q0
+VEE  >8]      [ 9>  Q1
+        |______|
+
+D0..D3: register file inputs.
+RA0,RA1: read register address
+Q0..Q3: register file outputs.
+/RE: read enable (when 0)
+/WE: write enable (when 0)
+WA0,WA1: write address
+
+
++----------------------------+
+|LS 244/273/373/374 interface|
++----------------------------+
+244:	8-bit 3-state buffer
+273:	8-bit D latch
+373:	8-bit transparent latch w/ 3-state outputs
+374:	8-bit D latch with w/ 3-state outputs
+
+
+top view of all devices
+-----------------------
+    __  __
+   |* \/  |
+[1]      [20]
+[2]      [19]
+[3]      [18]
+[4]      [17]
+[5]      [16]
+[6]      [15]
+[7]      [14]
+[8]      [13]
+[9]      [12]
+[10]      [11]
+   |______|
+
+
+Pinouts for 273/373/374 devices (in sequential order starting from pin 1): 
+-RESET (273)/ -output enable (373/374), 1Q (output), 1D (input), 2D, 2Q, 3Q, 
+3D, 4D, 4Q, GND, CLK (273/374)/ -LATCH (373), 5Q, 5D, 6D, 6Q, 7Q, 7D, 8D, 
+8Q, +5VDC.
+
+Pinouts for 244 device: -output enable Q0..Q3, D0, Q1, D2, Q3, D4, Q5, D6, 
+Q7, GND, D7, Q6, D5, Q4, D3, Q2, D1, Q0,  -output enable Q4..Q7, +5VDC.
+
+
+Notes
+-----
+It's important here to understand that these devices don't have to be hooked 
+up in the order that the "D" and "Q" pin names imply; the number index is 
+only used to tell the inputs/outputs apart, since they all have the same 
+function.
+
+Hard-wiring a 373 device to operate in transparent mode at all times 
+effectively makes the device functionally equivelant to a 244 model. The 373 
+has less output drive current than the 244 model, but it does have the same 
+wiring pinouts as the 374 (which you can't avoid using in this project). 
+That's why unless you know what you're doing, I recommend against using the 
+244, and just use the 373 for easier wiring/board layout.
+
+374s and 273s are almost identical except that the 374 model has a 3-state 
+output. This feature will actually be neccessary for some of the output 
+devices, and thus why I'd recommend simply investing completely in 374 
+devices, without having to worry about buying/using 273's in places where 
+the 3-state output function is not useful.
+
+
+********************************
+*Making good use of BRK opcodes*
+********************************
+In the 7 clock cycles it takes BRK to execute, a padding byte is fetched, 
+but the CPU does nothing with it. The diagram below will show the bus 
+operations that take place during the execution of BRK:
+
+cc	addr	data
+--	----	----
+0	PC	00	;BRK opcode
+1	PC+1	??	;the padding byte, ignored by the CPU
+2	S	PCH	;high byte of PC
+3	S-1	PCL	;low byte of PC
+4	S-2	P	;status flags with B flag set
+5	FFFE	??	;low byte of target address
+6	FFFF	??	;high byte of target address
+
+
+With some external hardware, it is possible to take advantage of the padding 
+byte. For example, a good use for this byte would be to index an interrupt 
+vector table to swap into addresses $FFFE & $FFFF, so that a 256 software 
+interrupt scheme could be implemented.
+
+On regular 6502's, BRK could be detected with an 8-input "OR" gate (tied to 
+the data bus), gated with "SYNC". The padding byte would then appear on the 
+data bus one clock cycle after detecting BRK. Unfortunately, there is no 
+SYNC signal available on the NES's 2A03, so obtaining the padding byte is a 
+little trickier, but still possible.
+
+The first step is to have an 8-bit latch that is loaded with the contents of 
+the data bus on every clock cycle _except_ during write cycles. This 
+condition can be decoded by running PHI2 and R/W through an AND gate.
+
+Next, hardware must be implemented to detect 3 consecutive write cycles to 
+the stack (only interrupts can do 3 writes in a row). You can use a 
+synchronously programmable counter (like the LS161 IC that many NES games 
+use for primitive bankswitching) to load -3 into itself during all CPU read 
+cycles, and count up from there on writes.
+
+Use logic (if neccessary) to decode the -1 count condition, and load the 
+counter (on the next clock) unconditionally, if bit 4 on the 6502's data bus 
+is zero (the B flag) during this time. This prevents the counter from 
+continuing if the interrupt was caused by hardware.
+
+The counter will arrive at zero when BRK has finished writing to the stack, 
+and normally this would cause the counter to load again on the next clock. 
+Use logic (if neccessary) to decode the 0 count condition, and use it to 
+cause the counter to unconditionally count for one more clock cycle, and to 
+prevent the latch from loading the data bus contents on the next clock.
+
+When the counter is at 1, the last program counter vector is loaded into the 
+CPU, and the counter will load with -3 on the next clock cycle. Use the 
+counter's sign bit to decode both BRK vector fetch cycles.
+
+For the two vector fetch clock cycles, the padding byte may be used to drive 
+address lines A1..A8 of the program ROM (essentially bypassing the eight 1's 
+the 6502 sends to the ROM for these address lines). This will effectively 
+cause the processor to index a 512-byte vector look-up table located at the 
+end of the ROM's address space. Note that by not changing any of the other 
+address lines, BRK padding byte combinations $FD, $FE, and $FF will coincide 
+with the 6502 system vectors. This may or may not be desired, but it only 
+requires 3 combinations, and it does provide an easy & convenient way of 
+calling the system NMI or IRQ routines.
+
+The best use I've found for this information is for implementing a 
+high-speed call mechanism for NES game code which has to rely on installed 
+ROM BIOS subroutines to run (like FDS games do). Using BRK's padding byte to 
+index 1 of 256 ROM BIOS subroutines not only allows the ROM BIOS code to 
+change in the future revisions without effecting backwards compatability, 
+but also puts a feature that has always been present in the 6502 to good 
+use. The cartridge hardware guarantees that any BRK-based ROM BIOS 
+subroutine can be called within 7 clock cycles; this is almost a dozen times 
+less the amount of clock cycles that a software-based BRK handler would 
+require to execute.
+
+
+**********************************
+*Ten on-screen playfield palettes*
+**********************************
+The reason I want to document this technique is because I was once thinking 
+about doing a custom port of one of my favorite games: Tetris Attack (aka 
+Panel de Pon/Pokemon Puzzle League (SFC/N64)). In this game, there are 
+panels that rise up in a stack. Each panel uses 3 colors, and occupies a 2*2 
+tile cluster: perfect for how the NES handles playfield graphics. 
+Unfortunetly, since this game requires that there be as much as 7 different 
+in play panel types, the end result is that the bitmaps from the original 
+SNES/SFC games would have to be "dumbed down" to one bit per pixel, in order 
+to work within the NES PPU's 4 palettes.
+
+What I didn't realize at first is that all the panel colors used in Tetris 
+Attack were based on primary and secondary colors of light. That's when I 
+realized that Tetris Attack could be done on the NES and still have 
+SNES-like graphics, if the NES palettes were programmed with 4 mutually 
+exclusive shades of colors red, green, blue, and grey, and color interlacing 
+tricks used for displaying panels made up of secondary colors of light.
+
+
+color blending
+--------------
+By rotating palette select values between frames (stored in the attribute 
+tables), qiute a few more colors can be made available for on-screen tiles. 
+For example, mixing red with green is going to give you yellow, and mixing a 
+shade of grey with a primary color will also give you another new color.
+
+In practice, it's not a good idea to rotate between more than 2 palettes, 
+since at 60 FPS even two-color rotation is not done fast enough for the 
+human eye to not notice flicker (though violet is much less noticable than 
+cyan or magenta). To overcome this, color interlacing can be used.
+
+
+color interlacing
+-----------------
+Color interlacing can also be considered a form of dithering. What it is 
+(for the NES's case) is two things:
+
+- alternating between two sets of palette select values for each sequential 
+scanline of the playfield (in reality, it will be switching between two 
+nametables every scanline which contain identical tile index values, but 
+different attribute data). this is how more colors can effectively be 
+produced without any flicker.
+
+- toggling the name table selection pointer every frame. this action 
+effectively causes opposite tables to be used for all playfield scanlines in 
+comparison to the last frame generated.
+
+Because scanlines are so close to each other, the human eye has a hard time 
+distinguishing the difference between one or two when it has to look from a 
+distance, and espically if only 2 colors are interlaced together over 
+multiple scanlines. After flipping odd & even scanline colors on a per-frame 
+basis, the human eye can only distinguish a single solid color, based on the 
+light-element combination of the two. The result of these two techniques 
+combined, provide a very good-quality, low-flicker method for increasing the 
+NES's on-screen palette count.
+
+
+pros of technique
+-----------------
+- ten individually available playfield palettes
+- no messing with palette registers required
+- easy to implement color interlacing: simply swap name tables every 
+scanline
+- palettes can be programmed with colors other than primary ones to produce 
+some really wierd colors!
+
+
+cons
+----
+- color interlacing requires timed code (*), and wastes alot of time in the 
+NES's CPU
+- name table updates are twice as large per frame (due to having to use two 
+name tables)
+- some secondary colors can't be produced without using certain primary ones
+
+
+*: this is assuming that the programmer has implemented some sort of name 
+table select toggle routine that is scanline-timed so that it fires 240 
+times a frame. The alternative to this is using cartridge hardware to do 
+this work for you (described next).
+
+
+*****************************
+*Increased color area mapper*
+*****************************
+This chapter describes a way to use 8 off the shelf logic gates in an NES 
+custom-designed mapper, to allow for on-screen color areas displayed on the 
+NES to be as low as 8 sequential horizontal pixels. In addition, this mapper 
+has the neccessary hardware to automatically implement the aforementioned 
+color interlacing technique.
+
+
+general
+-------
+By taking advantage of address lines A6..A9 during attribute table fetches 
+(along with two new 4K PPU memory banks), many more attribute tables can be 
+swapped into the PPU's apparent memory map. An 8-bit, 8-element register 
+file contains bank information for all 4 of the PPU's original 4K windows 
+(OBJ pattern table, PF pattern table, name table, and the $3000-$3FFF 
+range), plus 2 new extra 4K memory windows for corresponding to even/odd 
+scanline attribute table fetches, specially decoded & activated by the cart 
+hardware.
+
+Because bankswitching hardware maps name and attribute table fetches into 
+seperate programmable pages, the original 64-byte attribute table present at 
+the end of every 1K-byte boundary in name table pages is unused by the PPU 
+hardware, and is therefore available to the system as general purpose 
+memory.
+
+Instead of increasing the page granularity of the bankswitching hardware 
+(and with that, increasing the circuit part count by at least two), I 
+decided that there's no reason why NES game software can't enjoy using full 
+4K name table pages nowadays (due to cheap RAM). The only drawback to this 
+is that now each multi-directional split screen the programmer may want to 
+implement during playfield rendering will require a dedicated 4K byte page, 
+opposed to the original 1K bytes a PF screen used before. Because of this, 
+to implement a simple, one-playfield game with seperate pattern table pages 
+for objects and playfield, the mimimum required memory to be installed on 
+board the cart is: 4KB (OBJ) + 4KB (PF) + 4KB (NT) + 4KB (ATeven) + 4KB 
+(ATodd) = 20KB. So, in general, a 32KB memory device is the minimum 
+practical size required for use with this mapper.
+
+
+overview of circuit
+-------------------
+-the PPU's memory map is broken up into 6- 4K byte banks.
+-an 8-bit, 8-element register file provides CHR ROM addressing for lines 
+A12..A19, and is broken up into two 4-element bank tables.
+-the attribute table address decode condition (10xx1111xxxxxx) is used to 
+select the active bank table.
+-the PPU's A12 and A13 lines control A0 and A1 of bank table 1.
+-two latches are used to capture fine scroll information provided by the PPU 
+on name table and pattern table fetches, in order to throw these signals 
+onto the A6..A9 lines during attribute table fetches (when normally all 
+1's), and to drive A0 of bank look-up table 2.
+
+
+parts list
+----------
+1- NPN transistor
+2- 1K resistor
+1- LS138
+1- LS157
+2- LS161
+4- LS670
+
+
+directions
+----------
+- Connect PPU/2C02 bus lines A0..A5, A10..A11, D0..D7, /R and /W to 
+respective pins on the desired CHR RAM/ROM device(s).
+
+- Disable the NES's internal 2K name table RAM by tying PPU cart lines /VCS 
+and /VA10 to +5V.
+
+- Use the LS138 to completely decode an attribute table condition, by tying 
+CHR cart pins /A13 and A12 to both /G inputs, and CHR pins A9..A6 to the 
+LS138 A,B,C, and G inputs. The last decoded output (7, or 111b) indicates 
+the attribute decode condition (true when 0).
+
+- Group 2 pairs of LS670s together to make two 4*8-bit files. Connect the 
+/OS line on one LS670 pair to the attribute decode condition, and the /OS 
+line on the other pair to the same source, except after passing through a 
+transistor inverter circuit (emitter = ground; base = input through series 
+1K resistor; collector = output with 1K resistor pull-up (to +5V)). Connect 
+the 8-bit LS670 data outputs from both pairs together in parallel, and then 
+to A12..A19 of the CHR RAM/ROM.
+
+- Both LS161s are used here only as synchronous loadable registers (i.e., 
+counting disabled).
+
+- Connect one LS161 so that it loads the contents of PPU address lines A0 
+and A5 (these bits make up the attribute table address selection for 
+odd/even tiles for both rows and columns) into itself on every rising edge 
+of the /R line (connect /R (PPU) to CLK (LS161)). This effectively causes 
+name table address information to appear on the output of the device during 
+attribute table fetches (since these fetches always follow a name table 
+one).
+
+- Connect the other LS161 so that it loads the contents of PPU address lines 
+A0..A2 during pattern table fetches (put A13 on /LD, and /R on CLK 
+(PPU->LS161)). These bits make up the rest of the attribute table address 
+selection information (fine vertical scroll offset). Bit 0 of the LS161 is 
+used to control LS670 address line A0 (connect A1 to a constant logic level 
+source; it's unused). This is how the mapper uses hardware to make color 
+interlacing easy: each 4K bank points to an entire 4-screen attribute table 
+for only either even or odd scanlines. At the end of the frame, exchanging 
+the two attribute table bank pointers is all it takes to rotate attribute 
+table data between even & odd scanlines.
+
+- Connect PPU address lines A6..A9 to one of the selection inputs of a 
+LS157, and have the outputs of the device feeding A6..A9 of the CHR RAM/ROM.
+
+- Connect the remaining 4 latched bits in the LS161s to the other 4 inputs 
+on the LS157. Note that the order you connect these wires in here, will 
+determine how your attribute tables will be layed out in memory. Be sure you 
+have a good understing of how each address line effects the layout of each 
+attribute table page, before making a final decision on wire sequence.
+
+- Use the attribute decode condition to select between inputs on the LS157 
+(i.e., select the latched bits in the LS161s as output data when true).
+
+- Extra logic has to be used to map the LS670's write ports into the 6502's 
+memory area. I've left this detail up to the system developer to implement, 
+since PRG ROM/RAM bankswitching (a neccessity for any basic NES cart mapper) 
+is not discussed here.
+
+
+notes
+-----
+- In order to avoid graphical glitches appearing in the left 8-pixel column 
+of the playfield (as a result of the PPU putting updated fine horizontal 
+scroll information on the bus _after_ the first attribute fetch for a tile 
+on a new scanline), the PPU should be programmed to clip that screen area.
+
+- Connecting the LS161's latched condition of the least significant fine 
+vertical counter bit to the LS670's A0 line is only recommended for NES 
+developers who are interested in using color interlacing tricks for NES 
+graphics generation. However, due to the more complicated layout of the name 
+tables when the mapper is wired in this fashion, it may be desirable to use 
+another of the 5 latched scroll address information bits to make the 
+attribute table layout appear more like the original, if color interlacing 
+is undesired.
+
+
+**********************
+*NES cart multitasker*
+**********************
+There is a known technique for suspending the state of NES games running on 
+a real NES. On the NES's expansion port lies the PPU/CPU's vblank signal on 
+pin 4. Since this pin triggers a 6502 NMI on a negative edge transition, by 
+holding the state of this pin low (ground) after sensing a negative edge, 
+any NES software which base their main game animation around the NMI 
+handler, will appear to be effectively suspended (even in games like Punch 
+Out!! where there's no normal way to freeze the game action). The reason why 
+this works is because the PPU will try to send out another VINT pulse on the 
+next frame, but the open collector output design forces an AND function 
+between the vblank signal and the signal entering exp. port pin 4. The 
+result of this is that the CPU receives no further NMIs. It's important to 
+wait for the VINT/NMI line to get set to logic level 0 by the PPU before 
+using external logic to hold the line down from that point on, because just 
+doing it at any time may trigger false NMIs. However, removing the logic 
+level 0 hold on the VINT/NMI line can be done at any time, and game 
+animation will then be resumed starting with the next negative edged VINT 
+pulse to be generated by the PPU.
+
+The best use I've found for this information is for building a 
+hardware-based NES multitasker project. The idea is to have 4 to 8 (or so) 
+NES control decks all running games simultaniously. Only one control deck 
+out of all the machines would stay active, while the rest remain suspended. 
+Then, as the gamer's interest in the active game reduces, they can randomly 
+select another game to hop into instantly (in the same state it was left 
+in), via the press of a single button located around the NES control deck of 
+choice (the button would essentially be attached to a control deck 
+switchboard circuit that connects to the selected NES's expansion port via a 
+short ribbon cable). Other control decks which may be active prior to this 
+moment will be immediately and transparently suspended and disabled via an 
+OR-wired generic control deck disable bus line. A single control deck's 
+controller, audio, video, and power signals are all gated via the 
+switchboard, so that all these signals can share a single ribbon cable-based 
+bus connecting all the switchboards together, and send those I/O signals to 
+the base module that simply hosts the controller sockets, audio/video jacks, 
+and power supply.
+
+This project can be completely done with stock NESs (i.e., absolutely *no* 
+modifications to the NES internals are neccessary). The only caveat is that 
+the NES's expansion port is not easy to interface to; male connectors for 
+this interface are hard to find.
+
+I designed & built an older version of this project (based on a monolithic 
+design, which required that I mod each NES control deck) in 1995, a time 
+when my knowledge of digital electronics was still developing. In 2002, 
+after 4 years of studying and researching the operation of the NES, I was 
+finally able to compile a functioning NES emulator. In the end though, the 
+multitasker project remained the coolest (and most used) NES-related project 
+I've ever designed for two reasons:
+
+- it provides a function that has currently only been possible through the 
+use of an emulator (i.e., saving/loading states), yet there is no "aspects 
+of emulation" there to ruin the gaming experience (i.e.; windows; or having 
+to use a small VGA monitor when you could be using a big-screen TV).
+
+- it provides a function that no public-domain NES emulator out there makes 
+easy to do: rapid NES game multitasking. Very entertaining.
+
+
+parts list- base module
+-----------------------
+2- NES/SNES controller sockets
+2- female RCA jacks
+1- 28-pin ribbon cable connector
+1- 28-pin ribbon cable, with male connectors for each switchboard
+1- 7..12 volt high current power supply
+1- 100 ohm resistor
+1- 2K resistor
+
+
+parts list- switchboard
+-----------------------
+4- general purpose NPN transistors
+3- 2K ohm resistors
+3- HC4066 (quad bilateral switch)
+2- normally open pushbutton switches
+1- 1K ohm resistor
+1- general purpose PNP transistor
+1- 4013 (dual D flip-flop)
+1- 4001 (quad NOR gate)
+1- power cord connector (for back of NES)
+1- 28-pin ribbon cable connector
+1- male NES expansion port connector
+
+
+ribbon cable signals/ base module hookup
+----------------------------------------
++VDC: positive 7 to 12 volts DC power supply (in respect to ground). use a 
+minimum of 7 ribbon cable connectors for +VDC.
+
+GND: power supply ground. use a minimum of 7 ribbon cable connectors for 
+GND.
+
+VOUT: video signal output (in respect to ground). use a 100 ohm resistor to 
+pull this signal down to ground. This provides adequate loading on the video 
+signal bus line to reduce capacitance caused by long distance.
+
+AOUT: audio signal output (in respect to ground).
+
+CTRLPOW: switched +5VDC controller power. This power is supplied by the 
+active control deck (via a bilateral switch) in order to power the 
+controllers in the base module with the regular +5VDC. Whenever 
+controller-related signals float (like when a control deck is powered down 
+from the selected state), the CTRLPOW line also floats, and this prevents 
+undesired operation of the controllers when inputs are left floating.
+
+DISABLE: control deck disable line. use a 2K ohm resistor to pull this 
+signal down to ground. Normally, this signal stays at ground potential, 
+except whenever a control deck's action buttons are pressed; this causes the 
+line to go to +VDC, and indicates to any other switchboards to deselect.
+
+/C1R, C1.0, C1.3, C1.4, /C2R, C2.0, C2.3, C2.4, C.0: the usual controller 
+signals.
+
+
+switchboard setup
+-----------------
+- positive power for all components on the switchboard will be provided by 
+the +VDC supply on the ribbon cable connector. Use only this power source 
+for references to +VDC throughout this setup.
+
+- wire the power cord connector to the +VDC/GND power source from the ribbon 
+cable connector. This cord provides power to the NES control deck via 
+conventional means, so that an NES control deck may be powered down and it's 
+cartridge changed transparently, without effecting the operation of anything 
+else going on in the NES multitasker.
+
+- Eleven bilateral switches are used to switch audio (AOUT) and controller 
+signals (/C1R, C1.0, C1.3, C1.4, /C2R, C2.0, C2.3, C2.4, C.0, and +5VDC) 
+onto mutually exclusive pins on the ribbon cable connector. The enable 
+control for all 10 controller signal-related switchers are all common.
+
+- use an NPN transistor for video signal buffering (emitter = video out pin 
+on ribbon cable; base = VOUT on expansion port; collector = +5VDC from exp. 
+port).
+
+- connect two pushbutton switches up so that each provide a normally false 
+output logic condition (connect one connector from each switch to +VDC; use 
+the other connectors as outputs, with 2K ohm resistors pulling down each 
+output to ground).
+
+- connect the pushbutton output logic signals to mutually exclusive R and S 
+inputs on one D flip-flop device (hereon the animation disable flip-flop), 
+and also have them feed a 2-input NOR gate. Then, have that NOR gate output 
+feed the input of another NOR gate (hereon the disable signal gate).
+
+- connect the D and clock inputs on the animation disable flip-flop to 
+appropriate logic levels (VEE or +VDC); these inputs are not used on this 
+device.
+
+- feed the expansion port VDD signal through a NOR gate to invert the signal 
+(tie the unused input to ground), and then on to an input on the disable 
+signal gate, and a reset input on the other available flip-flop (hereon the 
+machine select flip-flop).
+
+- connect the output of the disable signal gate, to the set input on the 
+machine select flip-flop, and also to the base of an NPN transistor (which 
+has it's collector tied to +VDC, and emitter tied to: - the clock input on 
+the machine select flip-flop; - the ribbon cable DISABLE signal bus line).
+
+- use the Q output on the machine select flip-flop to the 10 switch control 
+inputs for the controller signal-related bilateral switches.
+
+- connect the /Q output on the machine select flip-flop, to the input of a 
+NOR gate (hereon the animation enable gate), and to one end of a 2K ohm 
+resistor. Have the other end of the resistor connect to the base of a NPN 
+transistor with emitter tied to ground, and collector tied to the base of 
+the video signal buffer transistor (this is how a control deck's video 
+signal is disabled).
+
+- use a pair of NPN & PNP transistors to form a SCR (silicon-controlled 
+rectifier; PNP base connects to NPN collector, and NPN base connects to PNP 
+collector). Have a 1K-ohm resistor provide the PNP emitter power off the 
+expansion port's +5VDC power supply. Connect the NPN emitter to ground. 
+Connect the PNP base/NPN collector junction to the expansion port's /NMI 
+pin, and have the other base-collector junction connected to a port on the 
+last bilateral switch (the other port on the bilateral switch will be tied 
+to ground; this is how the switch is used to disable the SCR from latching 
+up the /NMI output).
+
+- connect the /Q output on the animation disable flip-flop, to the remaining 
+input on the animation enable gate. The output of this gate then controls 
+the remaining two bilateral switches (audio, and for the SCR).
+
+
+notes
+-----
+- C1.3 and C1.4 signals are usually not used much, as these inputs are most 
+commonly used by the light gun accessory, which Nintendo decided to try and 
+keep exclusively on the second controller port (even accessories like NES 
+Four Score or NES Satellite don't implement these controller input bits on 
+any port other than the usual second one). Even though there are NES games 
+in existence which support 2-player simultanious light gun use (such as 
+American Game Cart's "Chiller" title), these types are pretty rare. For 
+those of you out there who are looking to possibly reduce the switchboard 
+device part count based on this fact, freeing up two bilateral switches here 
+will provide an oppertunity to eliminate the requirement for some discrete 
+transistor and resistor logic.
+
+- each control deck usually uses between 200 to 500 milliamperes of current 
+through the main power connector (this will mostly be based on the cartridge 
+type used, as carts with large old ROM chips (like early UNROM and 
+MMC1-based ones) burn the most power). Make sure your master power supply 
+can adequately handle the power loading situation for all NES control decks 
+in the multitasker project. Also, for more than 8 control decks, it is 
+recommended that a larger ribbon cable be used, in order to increase the 
+power supply wire count.
+
+- a switchboard foil pattern should be designed, so that multiple 
+switchboards may be mass-produced easilly.
+
+
+*********************
+*NES development kit*
+*********************
+this chapter details how to build the following pieces of hardware, 
+compatable with nearly any personal computer, using some off-the-shelf ICs:
+
+- an NES cart reader/writer
+- 2A03 reverse engineering kit
+- 2C02 reverse engineering kit
+
+
++-----------+
+|no software|
++-----------+
+unfortunately, for people who want to build this project, you will also have 
+to write the software that will make it work (my own software is still in 
+production!). the cart reader sofware is not hard to write; all it takes to 
+talk to an NES cart port, is to write two bytes (the 16-bit PPU or CPU 
+address info) to the x86 port the cart reader is mapped in at, followed by 
+the desired I/O byte transfer from either the PRG or CHR data ports.
+
+
+rekits
+------
+for people who want to use the rekits, there's a bit of a problem: the 
+software required to control these devices is extremely complex. That's 
+because the software must mimic the functions of an oscilliscope: that is, 
+sampling data on every clock edge, and displaying all that data on one 
+screen in a way that is organized and easy to understand (multiple windows 
+consisting of lists that indicate the status of the PPU's inputs and outputs 
+on a per-clock cycle basis). Note that since a device like the 2C02 has so 
+many clock edges per frame, zoom functions would also be neccessary to 
+implement to see an overview of the 2C02's operations per frame. bar & 
+linegraph display functions would be neccessary to display 
+digitally-converted analog samples in the fashion a traditional oscilliscope 
+would. and of course, the user must be able to interact with writable PPU 
+ports in real-time, by being able to specify the data that will essentially 
+control the PPU's on-going operation on a clock-edge granular basis.
+
+currently, I have software in development for controlling the PPU rekit, but 
+I can't make any guarantees on when that's going to be done. in the short 
+term, for those of you who want to see your own PPU rekit in action, you'll 
+have to be up to the task of writing this software yourself.
+
+
++------------+
+|PC interface|
++------------+
+the ATAPI bus (for connecting 40-pin IDE hard drives, CDROMs, etc.) is the 
+interface of choice for this project. this is due to a few reasons.
+
+- only 3 address lines need to be decoded to use the bus. this means that 
+using the ATAPI bus for our own bus interface devices is simply a matter of 
+using 2 LS138 address decoder chips- one for decoding read addresses, and 
+one for writes.
+
+- 40-pin ribbon cable connectors are easy to interface to. this is in 
+contrast to other ways of interfacing with the PC, like having to etch a 
+board in order to connect to the ISA or PCI system busses.
+
+- IDE ports have been a long-time established industry standard. except for 
+RAID controllers (or other wierd types), you can always expect to find the 
+ATAPI ports (in the x86 port map) at 1F0..1F7 for the primary controller, 
+and at 170..177 for the secondary controller.
+
+- an 8-bit bus makes connections to TTL chips with 8 interface bits ideal. 
+(the bus is actually 16-bit, but 1F0/170 is the only 16-bit port, so we'll 
+just say that the bus is 8-bit.)
+
+
++----------+
+|parts list|
++----------+
+Most these parts consist of LS373s and LS374s. The chosen analog to digital 
+convertor (ADC) listed below is not mandatory; however a replacement ADC 
+must not take longer than 1.5 microseconds per conversion.
+
+
+mainboard
+---------
+2- LS374
+2- LS138
+1- LS00
+
+
+ppu rekit
+---------
+5- LS373
+4- LS374
+1- 2C02
+1- ADC0820CCN
+
+
+cpu rekit
+---------
+4- LS373
+2- LS374
+2- ADC0820CCN
+1- 2A03*
+
+*: with sound output pin current sources. see the 2A03 tech ref, under 
+"4-bit DAC" section for details.
+
+
++-----------+
+|cart reader|
++-----------+
+The cart reader simply allows the user a simple way to download the contents 
+of any NES cartridge onto your PC, without ever having to disassemble the 
+cart. It also allows any battery-backed RAM on the cart to be read and/or 
+changed (hint: replace an NROM-based cart with battery-backed SRAMs. now 
+you've just created a programmable cart!). The cart reader will also become 
+the base of your NES devkit.
+
+note: there may be a chance to lose save game information on battery-backed 
+games if the cart reader is not powered down before the cart is removed, so 
+keep this in mind before trying to read these types of games. Also, some 
+cart hardware offers a way to protect the save RAM contents (by writing out 
+to an MMC port, etc.); this ability should be excercised if possible, before 
+a user is expected to pull the cart out of the reader.
+
+
+directions
+----------
+- connect both LS138s up to the ATAPI bus so that they decode all 16 address 
+combinations made up of /R, /W, and A0..A2 signals.
+
+- connect a NAND gate up to decode line 6 on both address decoders. this 
+signal provides the PRG's PHI2 line.
+
+- connect decode lines 7 on both address decoders to respective /R and /W 
+CHR signal pins on the cart.
+
+- connect the 8-bit inputs of two LS374 devices to the ATAPI's data bus. 
+ground the /OS pin to enable the outputs all the time. Have each device's 
+clock lines controlled by write cycle decoder lines 4 and 5 (one for each). 
+Connect the combined 16-bit outputs of the LS374 devices to both PRG and CHR 
+matching address pins on the cart connector. A13 should also be ran through 
+an inverter (with a spare NAND gate; one input tied to +5V), to provide the 
+/A13 CHR output line. A15 should be NAND-gated with the PHI2 signal to 
+produce the /PRG signal.
+
+- connect both PRG and CHR data busses directly to the ATAPI's.
+
+- provide an expansion connector for future projects (like rekits). connect 
+all unused address decoder outputs, the cart/ATAPI bus, and unused pins on 
+the cart connector here.
+
+- wire up all power & ground signals. use an optional switch & fuse to 
+control power to the project board, if desired.
+
+
+port mapping (offset from from port 1F0/170)
+--------------------------------------------
+4w:	PRG/CHR address to access LO
+5w:	PRG/CHR address to access HI
+6rw:	PRG memory map data port
+7rw:	CHR memory map data port
+
+other ports are reserved for use by rekit registers and bus buffers.
+
+
+how to use
+----------
+write out the desired 16-bit PRG or CHR address to access to port 4 and 5 
+(low byte/high byte). After this, ports 6 & 7 can be used to access the data 
+at the programmed address. These operations can then be performed 
+repeatingly to access all desired memory addresses the cart may have 
+(including for any mapper hardware's registers and ports).
+
+
+notes
+-----
+Some complex cartridge hardware (like the Famicom Disk System RAM adaptor) 
+use the PHI2 cart edge pin connector to control internal DRAM refresh cycles 
+for large internal register files. Since PHI2 only goes active when a PRG 
+port is accessed in this project, it will be neccessary for the cart reader 
+control program to continiously access the PRG i/o port at some minimum 
+frequency, in order to get cart types with complex hardware like this to 
+function properly.
+
+
++------------------------+
+|reverse engineering kits|
++------------------------+
+these kits are based around using multiple copies of 2 common TTL bus 
+interface chips (an 8-bit register, and an 8-bit 3-state buffer- all of 
+which will in part be connected up to the ATAPI bus). understanding how 
+these devices connect up to the 2C02 and 2A03 chips, will allow you to wire 
+up the whole circuit without my help.
+
+
+registers
+---------
+registers are essentially a form of memory storage. when a register is 
+programmed (by writing to it's designated x86 port address), the value gets 
+loaded into the register, and stays there until the port is programmed again 
+with a different value. Note that the value the register holds is available 
+at all times to other hardware (via output pins), that may want to know what 
+the register is programmed with (this is how we control the status of pins 
+on the device being reverse-engineered). a good example of an 8-bit register 
+chip is the LS374.
+
+
+3-state buffers
+---------------
+buffers provide a method of taking an external digital signal, and putting 
+it on the data bus when the buffer's designated PC port address is read. 
+this allows the real-time status of any digital signal to be read through 
+one of these devices. LS244s are the basic 8-bit TTL buffer package, but 
+LS373s can be used as an 8-bit buffer as well, and have the same pinout as 
+the LS374s, thus making wiring with them alot easier.
+
+
+analog-to-digital converters
+----------------------------
+ADCs will have to be used to analyze the composite video output on the 2C02, 
+and the audio outputs signals from the 2A03.
+
+Due to the fact that the ADC0820CCN was the only ADC I could get for my PPU 
+RE kit at the time, there may be other ADC's you could get to build this 
+project around, which are simply easier to use and faster than this one is.
+
+Conversion times are reasonably fast at as small as 1.5 microseconds for 
+guaranteed accurate-as-possible samples, which will actually work out OK 
+since the PC purposely limits I/O-based access to ATAPI devices to about 2.5 
+million transfers per second (this will require a minimum port delay of 4 or 
+so I/O operations before reading the ADC again). However, this delay can 
+transparently be generated by performing read operations on other ports to 
+be analyzed at the same time.
+
+Unfortunately, this ADC's most useful operating mode for our application 
+(MODE=1) is kinda crappy, due to the fact that each conversion takes 2 
+cycles: a "start conversion pulse" on /WR, and a "read" pulse on /RD (there 
+is no way to overlap the start of a new conversion with reading the buffer 
+contents of the last conversion). In order to speed things up in my rekit, I 
+overlapped the start conversion signal with any read access from another 
+common port to be read during video signal analysis (like one returning PPU 
+status flags). This hides the latency of starting the conversion, but now 
+requires that the associated port always be read in, in order for the ADC to 
+work. Keep this info in mind if you end up building this RE kit around the 
+0820.
+
+
+putting it all together
+-----------------------
+a series of these aforementioned devices, connected to the expansion port 
+connector on the cart reader (consisting of unused address decode and ATAPI 
+data bus pins), provides an easy way to interface and use little rekit 
+modules, like the ones you may build for the 2A03/2C02 chips. Once the 
+hardware is complete, the PC can be in 100% total control of the rekit at 
+all times.
+
+
+notes
+-----
+- every input pin that the digital device may have, should be connected up 
+to a mutually exclusive output line on a register chip.
+
+- output pins on the digital device should be connected up to inputs on the 
+3-state buffer device in the same mannar.
+
+- 3-state outputs on the digital device will require a combination of a 
+register, and a 3-state buffer device. Depending on the rules the device may 
+enforce for bus direction, a pin from the device _or_ a flag from another 
+programmable latch chip will have to be used to control the output enable 
+lines of any register chip outputs connected to these type of bus lines on 
+the device.
+
+- each register device has it's CLK lines controlled by a mutually exclusive 
+write address decode line, and it's 8-bit inputs tied to the ATAPI bus.
+
+- each bus buffer device has it's /OS lines controlled by a mutually 
+exclusive read address decode line, and it's 8-bit outputs tied to the ATAPI 
+bus.
+
+- carefully plan out how physical pins on digital device will relate to your 
+devkit's i/o port map. make sure to maintain any relivant signal bit orders 
+when connecting multiple like-typed signal wires to register outputs or bus 
+buffer inputs.
+
+
+*****************
+*NES file server*
+*****************
+This chapter documents a project which will enable the following abilities 
+associated with development of new NES games.
+
+- Have an x86-based program ran on a pentium-class system to communicate 
+with the NES, requiring absolutely *no* discrete electronic components to 
+do, other than wires, a D-connector for parallel port interface, and an NES 
+expansion port connector.
+
+- Have a custom development cart, being a simple mod of a very common type.
+
+- Upload and download files between the PC and the NES devcart (as either 
+requested by the PC program *or* the NES game code) on-the-fly. NES 
+load/store memory transfer speeds: 25K/38K bytes per second.
+
+- Development cartridge portability. This means that if your devcart has an 
+adequate amount of battery-backed CPU RAM in it, you can program your game 
+cart at home with your development tools, and then take the devcart over to 
+joe blow's house (who only has just a stock NES system), and show him this 
+cool neat video game you programmed- just like that.
+
+
+project requirements
+--------------------
+- a stock NES gamecart with provisions for PPU RAM, extra CPU RAM, and an 
+optional battery, if desired. The recommended NES cart board to use for this 
+project is the SNROM board: these carts contain 8K CHR RAM, 8K save RAM, and 
+even a battery in carts other than Metroid and Kid Icarus.
+
+- the ability to burn a simple ROM chip with a ROM BIOS program required to 
+make the project work. The ROM BIOS source code is listed at the end of this 
+chapter. This ROM BIOS replaces the devcart's original PRG-ROM.
+
+- the ability to write an x86-based PC program, for communication with the 
+NES. Unfortunetly, there is no PC software provided for this project; 
+instead, the chapter explains how the communication protocol works so that 
+you can do it yourself, as parallel port communication is pretty 
+straightforward in x86 programming.
+
+- the wiring part. this is easy, once you have all parts ready to go.
+
+- the ability to assemble 6502 code into a binary ROM image file (*.PRG), 
+and optionally design NES graphics & convert them into CHR pattern table 
+files (*.CHR), on your own.
+
+
+wiring directions
+-----------------
+exp.  	parallel
+port  	port  	signal
+conn  	signal	description
+----  	------	-----------
+C.0   	379r.3	xmit data bit/ command enable
+C.1   	379r.4	xmit data bit
+C.2   	379r.5	xmit data bit
+/C1R  	379r.6(IRQ)	data transfer event
+C1.1  	378w.0	rcv data bit
+C1.2  	378w.1	rcv data bit
+/IRQ  	/37Aw.1	external command
+C2.1  	/37Aw.0	external command
+C2.2  	/37Aw.3	load file on reset
+VEE   	GND    	ground
+
+
+notes
+-----
+- on NES reset, the BIOS examines the status of C2.2, to determine the file 
+load action on reset. A file will be assumed to be ready for immediate 
+transfer to the NES, if the status of this bit is 1 when read in by the BIOS 
+reset handler.
+
+- a vector at $7ffc is always executed after NES reset, regardless if 
+whether a file was loaded by the BIOS or not.
+
+- data is transfered between the NES and PC via the data transfer event 
+signal. every time the NES reads or writes data from the PC, $4016 is read 
+so that the signal may force an IRQ on the PC, and allow software to prepare 
+for the next transfer (in other words, the data transfer rate is completely 
+controlled by the NES BIOS code). If the PC IRQs cannot respond quickly 
+enough to the NES's transfer rate, surround access to $4017r in the data 
+transfer BIOS routines with NOP instructions to slow things down a bit.
+
+- data byte uploads to the NES (sent over the "rcv data bit" signal lines) 
+occur over 4- two-bit transfers, in bit transfer order of: 6-7, 5-4, 3-2, 
+and 1-0. data byte downloads send 3 bits at a time over the "xmit data bit" 
+lines, to send a byte in 3 transfers: first bits 0-2, 3-5, and then 5-7.
+
+- loaded NES game code may initialize a file transfer with the PC, by 
+executing a 6502 BRK opcode (which behaves like a BIOS subroutine call) and 
+using the padding byte as a file select parameter. The BIOS lets the PC know 
+that the NES game is starting a BRK-based file transfer command by 
+generating a PC IRQ while having the C.0 line set to 1; this is done to 
+prevent false file transfer init commands when the game code is reading 
+$4016 for controller input (as a game would never attempt to read $4016 for 
+controller input while C.0 = 1, as this only returns the real-time status of 
+the A button). After this init signal, the BIOS will send the BRK padding 
+byte to the PC, where a BRK code table file will be used to determine how 
+the code relates to name of file to be accessed, direction of transfer, and 
+NES memory map to effect (PRG or CHR).
+
+- the PC may initialize a file transfer with the NES, by writing 1 to 37Aw, 
+bits 0 and 1 (consider these two bits the same signal). the PC may clear 
+these bits after receiving the first data transfer interrupt from the NES, 
+while C.0 is 1 (again, to avoid problems if the PC generates an NES IRQ in 
+the middle of controller 1 service instruction).
+
+- after a file initialization operation (via BRK, external, or reset (when 
+C2.2 indicates so)), the BIOS will read in 5 bytes from the PC: loadaddrlo, 
+loadaddrhi, negbytecntlo, negbytecnthi, attr (corresponding to zero page 
+addresses $00..$04). Loadaddr indicates a 16-bit address where file data 
+will be loaded in either the PRG or CHR memory maps. Negbytecnt indicates 
+the negative 16-bit count of bytes to transfer for the file (0 indicates 
+65536). Attr bit 7 when set indicates to transfer file data to/from CHR mem 
+(rather than PRG); bit 6 when set indicates to store a file (rather than to 
+load one).
+
+- all file transfers disable PPU NMIs, and modify $4016w. file transfers 
+invlolving the PPU always use 1 as the VRAM addresss increment value, and 
+disable objects & playfield beforehand. The BIOS has no way of restoring 
+these system port values, so game code must be responsible to reprogram 
+these system registers after a file transfer (external file transfers when 
+complete, execute a special RAM vector like an interrupt at $7ffa).
+
+- game code has it's own IRQ vector at $7ffe, and a hardcoded NMI routine at 
+$6000. The IRQ vector is only invoked if an IRQ was caused by NES hardware 
+unrelated to file transfers (IRQ response in this case is delayed 41 clock 
+cycles, due to the ROM BIOS IRQ handler overhead).
+
+- game code must keep IRQs enabled at all times, if external file transfer 
+commands are desired.
+
+- while idling, the PC program should disable file manager services if the 
+data transfer line (/C1R) is found to be consistently zero; this indicates 
+that the NES has been powered down.
+
+- the PC program should have a data transfer IRQ acknowlegement timeout 
+delay of about a second.
+
+
+;лллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллл
+;лллллллллллллллconstantsлллллллллллллллллллллллллллллллллллллллллллллллллллл
+;лллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллл
+;8-bit immediates
+IRQsrcmask	equ	#$02;	select bit 1
+rstsrcmask	equ	#$04;	select bit 2
+bflag	equ	#$10;	select bit 4
+frameIRQmask	equ	#$40;	select bit 6
+
+;8 and 16-bit addresses
+PRGaddr	equ	$00;	starting CPU xfer address
+PRGaddrhi	equ	$01;	CPU xfer addr high byte
+bytecnt	equ	$02;	negative byte xfer count
+bytecnthi	equ	$03;	upper 8-bits of bytecnt
+attr	equ	$04;	6:read/write. 7:CPU/PPU.
+temp	equ	$05;	used for system	init
+PPUctrl1	equ	$2000;	NMI control
+PPUctrl2	equ	$2001;	display control
+PPUstatus	equ	$2002;	read to reset $2006 byte ptr
+PPUaddr	equ	$2006;	6 + 8 bit vram addr port
+PPUdata	equ	$2007;	vram i/o port
+dataport	equ	$4016;	bi-direction transfer port
+statport	equ	$4017;	mask w/rstsrcmask & IRQsrcmask
+frameIRQctrl	equ	$4017;	disabling IRQ's here is good
+RAMNMIhndlr	equ	$6000;	static NMI address for speed
+RAMcmdack	equ	$7ffa;	executes after external cmd.
+RAMreset	equ	$7ffc;	called after BIOS reset routine
+RAMIRQ	equ	$7ffe;	if IRQ source is from RAM code
+
+
+;лллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллл
+;лллллллллллллллzero page mem 
+save/loadлллллллллллллллллллллллллллллллллллллл
+;лллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллл
+;push Y and $00..$05 to stack
+savemem:	lda	#$01
+	sta	dataport;	PC IRQ ack enable
+	sta	PPUctrl1;	disable NMIs
+	tya
+	pha
+	lda	PRGaddr
+	pha
+	lda	PRGaddrhi
+	pha
+	lda	bytecnt
+	pha
+	lda	bytecnthi
+	pha
+	lda	attr
+	pha
+	lda	temp
+	pha
+	ret
+
+;----------------------------------------------------------------------------
+;pull $05..$00 and Y X A from stack
+rstmem:	pla
+	sta	temp
+	pla
+	sta	attr
+	pla
+	sta	bytecnthi
+	pla
+	sta	bytecnt
+	pla
+	sta	PRGaddrhi
+	pla
+	sta	PRGaddr
+	pla
+	tay
+	pla
+	tax
+	pla
+	ret
+
+
+;лллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллл
+;лллллллллллллллreset 
+handlerлллллллллллллллллллллллллллллллллллллллллллллллл
+;лллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллл
+;initialize some NES registers and CPU flags
+reset:	sei
+	cld
+	ldx	#$00
+	stx	PPUctrl1;	disable NMIs
+	dex
+	txs;		set up stack pointer
+	lda	frameIRQmask
+	sta	frameIRQctrl;	disable frame IRQs
+	lda	statport
+	and	rstcondmask;	has game already been loaded?
+	beq	$03,pc;	skip next instruction if so
+	jsr	NESIO;	load in data from PC
+	jmp	(RAMreset)
+
+
+;лллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллл
+;лллллллллллллллIRQ/BRK 
+handlerлллллллллллллллллллллллллллллллллллллллллллллл
+;лллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллл
+IRQ:	pha;		save a
+	txa
+	tsx;		load stack pointer
+	pha;		save x
+	lda	$0103,x;	load flags
+	and	bflag;	test b flag
+	bne	BRKhndlr
+
+;test IRQ source mask
+	lda	statport
+	and	IRQsrcmask;	test IRQ flag
+	bne	externalcmd
+
+;execute RAM code IRQ handler
+	pla
+	tax
+	pla
+	jmp	(RAMIRQ);	execute RAM IRQ routine
+
+;----------------------------------------------------------------------------
+;initialize BRK command on PC
+BRKhndlr:	jsr	savemem;	save $00..$05 and Y
+	lda	dataport;	PC ack BRK cmd
+	lda	$010b,x;	PC return address lo
+	ldx	$010c,x;	PC return address hi
+	dex;		subtract 256
+	sta	PRGaddr
+	stx	PRGaddrhi
+	ldy	#$ff;	bytecnt
+	ldx	#$ff;	bytecnthi
+	jsr	PRGst
+
+;execute transfer command
+	jsr	NESIO
+	jsr	rstmem
+	rti
+
+;----------------------------------------------------------------------------
+;execute transfer command
+externalcmd:	jsr	savemem
+	jsr	NESIO
+	jsr	rstmem
+	jmp	(RAMcmdack)
+
+
+;лллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллл
+;лллллллллллллллdata transfer 
+routineлллллллллллллллллллллллллллллллллллллллл
+;лллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллл
+;disable PPU rendering and NMIs
+NESIO:	ldx	#$fb;	5 loop iterations
+
+;load in 5 bytes from parallel port
+loadinfo:	lda	dataport
+	asl	a
+	and	#$0c
+	sta	temp
+	lda	dataport
+	lsr	a
+	and	#$03
+	ora	temp
+	asl	a
+	asl	a
+	sta	temp
+	lda	dataport
+	lsr	a
+	and	#$03
+	ora	temp
+	asl	a
+	asl	a
+	sta	temp
+	lda	dataport
+	lsr	a
+	and	#$03
+	ora	temp
+	sta	temp,x
+	inx
+	bne	loadinfo
+
+;test attribute byte
+	ldy	bytecnt
+	ldx	bytecnthi;	load page count into x
+	bit	attr
+	bmi	CHRIO;	test ppu bit
+
+;adjust PRGaddr by bytecnt
+	sec
+	lda	PRGaddr
+	sbc	bytecnt
+	sta	PRGaddr
+	bcs	$02,pc;	borrow from hi byte?
+	dec	PRGaddrhi;	adjust high page if so
+	bit	attr
+	bvc	PRGld;	load data in if v=0
+
+;----------------------------------------------------------------------------
+;CPU data transmission loop
+PRGst:	lda	(PRGaddr),y
+	sta	dataport
+	bit	dataport
+	lsr	a
+	lsr	a
+	lsr	a
+	sta	dataport
+	bit	dataport
+	lsr	a
+	lsr	a
+	sta	dataport
+	bit	dataport
+	iny
+	bne	PRGst
+
+;page loop count test
+	inc	PRGaddrhi
+	inx
+	bne	PRGst
+	rts
+
+;----------------------------------------------------------------------------
+;load in PRG-based mem
+PRGld:	lda	dataport
+	asl	a
+	and	#$0c
+	sta	attr
+	lda	dataport
+	lsr	a
+	and	#$03
+	ora	attr
+	asl	a
+	asl	a
+	sta	attr
+	lda	dataport
+	lsr	a
+	and	#$03
+	ora	attr
+	asl	a
+	asl	a
+	sta	attr
+	lda	dataport
+	lsr	a
+	and	#$03
+	ora	attr
+	sta	(PRGaddr),y
+	iny
+	bne	PRGld
+
+;page loop count test
+	inc	PRGaddrhi
+	inx
+	bne	PRGld
+	rts
+
+;----------------------------------------------------------------------------
+;set up PPU address
+CHRIO:	lda	#$00
+	sta	PPUctrl2;	disable OBJ & PF
+	lda	PPUstatus;	reset PPUaddr flip-flop
+	lda	PRGaddrhi
+	sta	PPUaddr
+	lda	PRGaddr
+	sta	PPUaddr
+	bvc	CHRld;	load data in if	v=0
+	lda	PPUaddr;	read in dummy byte
+
+;PPU data transmission loop
+CHRst:	lda	PPUdata
+	sta	dataport
+	bit	dataport
+	lsr	a
+	lsr	a
+	lsr	a
+	sta	dataport
+	bit	dataport
+	lsr	a
+	lsr	a
+	sta	dataport
+	bit	dataport
+	iny
+	bne	CHRst
+
+;page loop count test
+	inx
+	bne	CHRst
+	rts
+
+;----------------------------------------------------------------------------
+;set up rcv loop counters
+CHRld:	lda	dataport
+	asl	a
+	and	#$0c
+	sta	attr
+	lda	dataport
+	lsr	a
+	and	#$03
+	ora	attr
+	asl	a
+	asl	a
+	sta	attr
+	lda	dataport
+	lsr	a
+	and	#$03
+	ora	attr
+	asl	a
+	asl	a
+	sta	attr
+	lda	dataport
+	lsr	a
+	and	#$03
+	ora	attr
+	sta	PPUdata
+	iny
+	bne	CHRld
+
+;page loop count test
+	inx
+	bne	CHRld
+	rts
+
+
+;лллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллл
+;лллллллллллллллsystem vector 
+tableлллллллллллллллллллллллллллллллллллллллллл
+;лллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллл
+;ROM BIOS vector table
+	org	$fffa
+	dw	RAMNMIhndlr,reset,IRQ
+
+
+EOF
+

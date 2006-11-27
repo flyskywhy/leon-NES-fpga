@@ -1,0 +1,7 @@
+; Cheat file for NESten 0.6
+CheatName=Memory Loc : $03EB
+Address=03EB
+SetValue=03
+CheatName=Memory Loc : $03EE
+Address=03EE
+SetValue=09

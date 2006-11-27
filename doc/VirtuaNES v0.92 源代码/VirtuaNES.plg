@@ -1,0 +1,509 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: VirtuaNES - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating command line "rc.exe /l 0x411 /fo"Release/VirtuaNES.res" /i "res" /d "NDEBUG" "C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\VirtuaNES.rc"" 
+Creating temporary file "C:\DOCUME~1\lizheng.IC\LOCALS~1\Temp\RSP157.tmp" with contents
+[
+/nologo /MT /W3 /GX /O2 /I "Zlib" /I "." /I "NES" /I "NES\Mapper" /I "NES\ApuEx" /I "NES\ApuEx\emu2413" /I "NES\PadEx" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /Fp"Release/VirtuaNES.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\AboutDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\App.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\Archive.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\AviConvDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\AviWriter.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\ChatDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\CheatDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\Com.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\Config.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\ControllerDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\Crclib.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\DatachBarcodeDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\DebugOut.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\DipSwitchDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\DirectDraw.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\DirectInput.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\DirectSound.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\EmulatorDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\EmuThread.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\FolderDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\GameOptionDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\GraphicsDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\JoyAxisDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\LanguageDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\LauncherDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\MainFrame.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\MemoryView.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\MMTimer.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\MovieDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\MovieInfoDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NameTableView.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NetPlay.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NetPlayDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\PaletteEdit.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\PaletteView.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\Pathlib.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\PatternView.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\Plugin.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\Recent.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\Registry.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\RomInfoDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\ShortcutDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\SimpleVirusChecker.c"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\SoundDlg.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\WaveRec.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\WinMain.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\Wnd.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\WndHook.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\Mapper\Mapper.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\Mapper\MapperFactory.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\ApuEX\emu2413\emu2413.c"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\ApuEX\APU_FDS.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\ApuEX\APU_FME7.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\ApuEX\APU_INTERNAL.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\ApuEX\APU_MMC5.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\ApuEX\APU_N106.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\ApuEX\APU_VRC6.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\ApuEX\APU_VRC7.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\APU.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\Cpu.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\IPS.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\MMU.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\Nes.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\PAD.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\PPU.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\ROM.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\ROMDB.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\VsUnisystem.cpp"
+"C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\zlib\unzip.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\lizheng.IC\LOCALS~1\Temp\RSP157.tmp" 
+Creating temporary file "C:\DOCUME~1\lizheng.IC\LOCALS~1\Temp\RSP158.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib comctl32.lib imm32.lib dinput.lib shlwapi.lib /nologo /subsystem:windows /incremental:no /pdb:"VirtuaNES.pdb" /map:"Release/VirtuaNES.map" /machine:I386 /out:"VirtuaNES.exe" 
+".\Release\AboutDlg.obj"
+".\Release\App.obj"
+".\Release\Archive.obj"
+".\Release\AviConvDlg.obj"
+".\Release\AviWriter.obj"
+".\Release\ChatDlg.obj"
+".\Release\CheatDlg.obj"
+".\Release\Com.obj"
+".\Release\Config.obj"
+".\Release\ControllerDlg.obj"
+".\Release\Crclib.obj"
+".\Release\DatachBarcodeDlg.obj"
+".\Release\DebugOut.obj"
+".\Release\DipSwitchDlg.obj"
+".\Release\DirectDraw.obj"
+".\Release\DirectInput.obj"
+".\Release\DirectSound.obj"
+".\Release\EmulatorDlg.obj"
+".\Release\EmuThread.obj"
+".\Release\FolderDlg.obj"
+".\Release\GameOptionDlg.obj"
+".\Release\GraphicsDlg.obj"
+".\Release\JoyAxisDlg.obj"
+".\Release\LanguageDlg.obj"
+".\Release\LauncherDlg.obj"
+".\Release\MainFrame.obj"
+".\Release\MemoryView.obj"
+".\Release\MMTimer.obj"
+".\Release\MovieDlg.obj"
+".\Release\MovieInfoDlg.obj"
+".\Release\NameTableView.obj"
+".\Release\NetPlay.obj"
+".\Release\NetPlayDlg.obj"
+".\Release\PaletteEdit.obj"
+".\Release\PaletteView.obj"
+".\Release\Pathlib.obj"
+".\Release\PatternView.obj"
+".\Release\Plugin.obj"
+".\Release\Recent.obj"
+".\Release\Registry.obj"
+".\Release\RomInfoDlg.obj"
+".\Release\ShortcutDlg.obj"
+".\Release\SimpleVirusChecker.obj"
+".\Release\SoundDlg.obj"
+".\Release\WaveRec.obj"
+".\Release\WinMain.obj"
+".\Release\Wnd.obj"
+".\Release\WndHook.obj"
+".\Release\Mapper.obj"
+".\Release\MapperFactory.obj"
+".\Release\emu2413.obj"
+".\Release\APU_FDS.obj"
+".\Release\APU_FME7.obj"
+".\Release\APU_INTERNAL.obj"
+".\Release\APU_MMC5.obj"
+".\Release\APU_N106.obj"
+".\Release\APU_VRC6.obj"
+".\Release\APU_VRC7.obj"
+".\Release\APU.obj"
+".\Release\Cpu.obj"
+".\Release\IPS.obj"
+".\Release\MMU.obj"
+".\Release\Nes.obj"
+".\Release\PAD.obj"
+".\Release\PPU.obj"
+".\Release\ROM.obj"
+".\Release\ROMDB.obj"
+".\Release\VsUnisystem.obj"
+".\Release\unzip.obj"
+".\Release\VirtuaNES.res"
+".\zlib\zlib.lib"
+]
+Creating command line "link.exe @C:\DOCUME~1\lizheng.IC\LOCALS~1\Temp\RSP158.tmp"
+<h3>Output Window</h3>
+Compiling resources...
+Compiling...
+AboutDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+App.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+Archive.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+AviConvDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+AviWriter.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+ChatDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+CheatDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+Com.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+Config.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+ControllerDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+Crclib.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+DatachBarcodeDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+DebugOut.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+DipSwitchDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+DirectDraw.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+DirectInput.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+DirectSound.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+EmulatorDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+EmuThread.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+FolderDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+GameOptionDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+GraphicsDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+JoyAxisDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+LanguageDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+LauncherDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+MainFrame.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+MemoryView.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+MMTimer.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+MovieDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+MovieInfoDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+NameTableView.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+NetPlay.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+NetPlayDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+PaletteEdit.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+PaletteView.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+Pathlib.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+PatternView.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+Plugin.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+Recent.cpp
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/_types.h(30) : error C2146: syntax error : missing ';' before identifier '__wch'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/_types.h(30) : error C2501: 'wint_t' : missing storage-class or type specifiers
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/_types.h(30) : error C2501: '__wch' : missing storage-class or type specifiers
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/errno.h(14) : warning C4005: 'errno' : macro redefinition
+        C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\stddef.h(78) : see previous definition of 'errno'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdio.h(50) : error C2371: 'FILE' : redefinition; different basic types
+        C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\mbstring.h(102) : see declaration of 'FILE'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(39) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(40) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(59) : error C2733: second C linkage of overloaded function 'atexit' not allowed
+        C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(59) : see declaration of 'atexit'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(168) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(169) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(170) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(172) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(173) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(174) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(175) : error C2632: 'long' followed by 'long' is illegal
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\yvals.h(77) : warning C4005: '_L' : macro redefinition
+        C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\ctype.h(31) : see previous definition of '_L'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\exception(68) : error C2629: unexpected 'class std::bad_exception ('
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\exception(68) : error C2334: unexpected token(s) preceding ':'; skipping apparent function body
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\new(18) : error C2629: unexpected 'class std::bad_alloc ('
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\new(18) : error C2334: unexpected token(s) preceding ':'; skipping apparent function body
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\new(41) : error C2143: syntax error : missing ')' before 'constant'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\new(41) : error C2143: syntax error : missing ';' before 'constant'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\new(41) : fatal error C1004: unexpected end of file found
+Registry.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+RomInfoDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+ShortcutDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+SimpleVirusChecker.c
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2061: syntax error : identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2059: syntax error : ';'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(150) : error C2143: syntax error : missing '{' before '*'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(151) : error C2143: syntax error : missing '{' before '*'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(152) : error C2143: syntax error : missing '{' before '*'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(153) : error C2143: syntax error : missing '{' before '*'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(154) : error C2143: syntax error : missing '{' before '*'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(156) : error C2143: syntax error : missing '{' before '*'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(4734) : error C2061: syntax error : identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(4735) : error C2059: syntax error : '}'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(4767) : error C2061: syntax error : identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(4768) : error C2059: syntax error : '}'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(4774) : error C2061: syntax error : identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(4775) : error C2059: syntax error : '}'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(4779) : error C2059: syntax error : '}'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(4780) : error C2059: syntax error : '}'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(6160) : error C2061: syntax error : identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(6161) : error C2059: syntax error : '}'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/_types.h(30) : error C2061: syntax error : identifier 'wint_t'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/_types.h(32) : error C2059: syntax error : '}'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/_types.h(33) : error C2059: syntax error : '}'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(573) : error C2061: syntax error : identifier '_mbstate_t'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(574) : error C2061: syntax error : identifier '_mbtowc_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(574) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(575) : error C2061: syntax error : identifier '_wctomb_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(575) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(579) : error C2061: syntax error : identifier '_mbrlen_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(579) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(580) : error C2061: syntax error : identifier '_mbrtowc_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(580) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(581) : error C2061: syntax error : identifier '_mbsrtowcs_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(581) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(582) : error C2061: syntax error : identifier '_wcrtomb_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(582) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(583) : error C2061: syntax error : identifier '_wcsrtombs_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(583) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(584) : error C2059: syntax error : '}'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(594) : error C2059: syntax error : '}'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(608) : error C2059: syntax error : '}'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(6776) : error C2061: syntax error : identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(6779) : error C2059: syntax error : '}'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winbase.h(408) : error C2061: syntax error : identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winbase.h(409) : error C2059: syntax error : '}'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winbase.h(494) : error C2061: syntax error : identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winbase.h(495) : error C2059: syntax error : '}'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winbase.h(500) : fatal error C1046: compiler limit : struct nested too deeply
+SoundDlg.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+WaveRec.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+WinMain.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+Wnd.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+WndHook.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+Mapper.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+MapperFactory.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+emu2413.c
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/_types.h(30) : error C2061: syntax error : identifier 'wint_t'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/_types.h(32) : error C2059: syntax error : '}'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/_types.h(33) : error C2059: syntax error : '}'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(573) : error C2061: syntax error : identifier '_mbstate_t'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(574) : error C2061: syntax error : identifier '_mbtowc_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(574) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(575) : error C2061: syntax error : identifier '_wctomb_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(575) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(579) : error C2061: syntax error : identifier '_mbrlen_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(579) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(580) : error C2061: syntax error : identifier '_mbrtowc_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(580) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(581) : error C2061: syntax error : identifier '_mbsrtowcs_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(581) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(582) : error C2061: syntax error : identifier '_wcrtomb_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(582) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(583) : error C2061: syntax error : identifier '_wcsrtombs_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(583) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(584) : error C2059: syntax error : '}'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(594) : error C2059: syntax error : '}'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(608) : error C2059: syntax error : '}'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(39) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(40) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(168) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(169) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(170) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(172) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(173) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(174) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(175) : error C2632: 'long' followed by 'long' is illegal
+C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\ApuEX\emu2413\emu2413.c(709) : warning C4133: '=' : incompatible types - from 'char *' to 'struct OPLL_SLOT *'
+C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\ApuEX\emu2413\emu2413.c(742) : warning C4133: '=' : incompatible types - from 'char *' to 'struct OPLL_CH *'
+C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\ApuEX\emu2413\emu2413.c(775) : warning C4133: '=' : incompatible types - from 'char *' to 'struct OPLL_PATCH *'
+C:\Documents and Settings\lizheng.IC\My Documents\Emulation\Emulator\VirtuaNES v0.92 源代码\NES\ApuEX\emu2413\emu2413.c(794) : warning C4133: '=' : incompatible types - from 'char *' to 'struct OPLL *'
+APU_FDS.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+APU_FME7.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+APU_INTERNAL.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+APU_MMC5.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+APU_N106.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+APU_VRC6.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+APU_VRC7.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+APU.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+Cpu.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+IPS.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+MMU.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+Nes.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+PAD.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+PPU.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+ROM.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+ROMDB.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+VsUnisystem.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : error C2146: syntax error : missing ';' before identifier 'WCHAR'
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\winnt.h(144) : fatal error C1004: unexpected end of file found
+unzip.c
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/_types.h(30) : error C2061: syntax error : identifier 'wint_t'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/_types.h(32) : error C2059: syntax error : '}'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/_types.h(33) : error C2059: syntax error : '}'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(573) : error C2061: syntax error : identifier '_mbstate_t'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(574) : error C2061: syntax error : identifier '_mbtowc_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(574) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(575) : error C2061: syntax error : identifier '_wctomb_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(575) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(579) : error C2061: syntax error : identifier '_mbrlen_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(579) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(580) : error C2061: syntax error : identifier '_mbrtowc_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(580) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(581) : error C2061: syntax error : identifier '_mbsrtowcs_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(581) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(582) : error C2061: syntax error : identifier '_wcrtomb_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(582) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(583) : error C2061: syntax error : identifier '_wcsrtombs_state'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(583) : error C2059: syntax error : ';'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(584) : error C2059: syntax error : '}'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(594) : error C2059: syntax error : '}'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/reent.h(608) : error C2059: syntax error : '}'
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(39) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(40) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(168) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(169) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(170) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(172) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(173) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(174) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\stdlib.h(175) : error C2632: 'long' followed by 'long' is illegal
+C:\DOCUMENTS AND SETTINGS\LIZHENG.IC\MY DOCUMENTS\EMULATION\EMULATOR\FCEU-0.98.10.SRC\INCLUDE\sys/errno.h(14) : warning C4005: 'errno' : macro redefinition
+        C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\stddef.h(78) : see previous definition of 'errno'
+Error executing cl.exe.
+
+
+
+<h3>Results</h3>
+VirtuaNES.exe - 257 error(s), 7 warning(s)
+</pre>
+</body>
+</html>

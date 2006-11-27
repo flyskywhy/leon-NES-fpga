@@ -1,0 +1,13 @@
+nesterJ - NES Emulator for Win32
+
+------------------------------------------------------------------------------
+"nesterJ" is based on "nester public beta 3" by Darren Ranalli.
+It is added some functions.
+It is also added many mappers from "Unofficial nester" written by Mr. Takeda.
+Mr. Ranalli only knows these things; He do not know our details.
+So you cannot ask him about "nesterJ".
+------------------------------------------------------------------------------
+This files are only source codes.
+You can get compiled files from;
+http://www.dcn.ne.jp/%7Eotim2/nesterj.html
+------------------------------------------------------------------------------

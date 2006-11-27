@@ -1,0 +1,321 @@
+Nintendo family computer ‰ñ˜H‚Ì‰ðÍ
+date ‹Ž”N‚Ì12ŒŽ‚­‚ç‚¢
+by goroh
+mail: goroh_kun@geocities.co.jp
+
+CPU PR2A03G 1FQ EV M
+      +--------------+
+ SND1 |1    (__)   40| VCC
+ SND2 |2           39| out0
+ ~RST |3           38| out1
+   A0 |4           37| out2
+   A1 |5           36| port0
+   A2 |6           35| port1
+   A3 |7           34| R/W
+   A4 |8           33| NMI
+   A5 |9           32| IRQ
+   A6 |10          31| CLK
+   A7 |11 PR2A03G  30| GND
+   A8 |12          29| ?
+   A9 |13          28| D0
+   AA |14          27| D1
+   AB |15          26| D2
+   AC |16          25| D3
+   AD |17          24| D4
+   AE |18          23| D5
+   AF |19          22| D6
+  GND |20          21| D7
+      +--------------+
+
+”õl.
+A0-AF ADDRESS output
+D0-D7 DATA Input/Output
+out0
+out1
+out2
+port0
+port1
+SND1 SOUND OUT1
+SND2 SOUND OUT2
+CLK  CPU CLOCKM†
+IRQ  CPU Š„ž‚ÝM†
+NMI  CPU NON_MASKABLE Š„ž‚ÝM†
+
+PPU PR2C02G-0 1FL UC
+         +--------------+
+~REG-WR  |1    (__)   40| VCC
+    PD0  |2           39| ~ADDROUT
+    PD1  |3           38| CA7,CD0
+    PD2  |4           37| CA6,CD1
+    PD3  |5           36| CA5,CD2
+    PD4  |6           35| CA4,CD3
+    PD5  |7           34| CA3,CD4
+    PD6  |8 PR2C02-G  33| CA2,CD5
+    PD7  |9           32| CA1,CD6
+    PA2  |10          31| CA0,CD7
+    PA1  |11          30| CA8
+    PA0  |12          29| CA9
+ ~REG_OE |13          28| CA10
+    GND  |14          27| CA11
+    GND  |15          26| CA12
+    GND  |16          25| CA13
+    GND  |17          24| ~DATA_READ
+  VIDEO  |18          23| R/W
+ ~VBLANK |19          22| VCC
+    GND  |20          21| CLK
+         +--------------+
+
+”õl.
+PD0-PD7 CPU-DATA Input/Output
+PA0-PA2 CPU-ADDRESS Input
+~REG_OE=L‚Ì‚Æ‚«‚ÉPA0-PA2‚ÌƒAƒhƒŒƒX‚É‘Î‰ž‚µ‚½PPU“à•”‚Ìî•ñ‚ðPD0-PD7‚Éo—Í‚·‚é
+~REG_WR=L‚Ì‚Æ‚«‚ÉPA0-PA2‚ÌƒAƒhƒŒƒX‚É‘Î‰ž‚µ‚½PPU“à•”‚Ìî•ñ‚ª•ÏX‚³‚ê‚é
+CD0-CD7/CA0-CA7 PPU‚ÌƒAƒhƒŒƒXo—Í‚Ü‚½‚Íƒf[ƒ^“üo—Í‚ÉŽg—p‚³‚ê‚éB
+CA0-CA13 CHR-ADDRESS Output
+~ADDROUT=L‚Ì‚Æ‚«‚ÍA31-38ƒsƒ“‚ÍƒAƒhƒŒƒX‚ðo—Í‚·‚é
+~DATA_READ=L‚Ì‚Æ‚«‚Í31-38ƒsƒ“‚©‚çƒf[ƒ^‚ð“ü—Í‚·‚éB 
+R/W=L‚Ì‚Æ‚«‚Í31-38ƒsƒ“‚©‚çƒf[ƒ^‚ðo—Í‚·‚é
+
+ƒJ[ƒgƒŠƒbƒWƒRƒlƒNƒ^
+01.GND			31.+5V
+02.PA11			32 CLK
+03.PA10			33.PA12
+04.PA09			34.PA13
+05.PA08			35.PA14
+06.PA07			36.PD7
+07.PA06			37.PD6
+08.PA05			38.PD5
+09.PA04			39.PD4
+10.PA03			40.PD3
+11.PA02			41.PD2
+12.PA01			42.PD1
+13.PA00			43.PD0
+14.~PRG-WE		44.~PRG-OE
+15.IRQ			45.SND_IN
+16.GND			46.SND-OUT
+17.~CHR-OE		47.~CHR-WE
+18.NT_A10		48.~NT-CS
+19.CA06			49.~CA13
+20.CA05			50.CA07
+21.CA04			51.CA08
+22.CA03			52.CA09
+23.CA02			53.CA10
+24.CA01			54.CA11
+25.CA00			55.CA12
+26.CD0			56 CA13
+27.CD1			57.CD07
+28.CD2			58.CD06
+29.CD3			59.CD05
+30.+5V			60.CD04
+
+lŽ@
+SOUND-IN,SOUND-OUT ƒTƒEƒ“ƒh‹@”\‚ðŠg’£‚·‚é‚Æ‚«‚ÉŽg—p‚·‚é
+NT-CS‚Íƒl[ƒ€ƒe[ƒuƒ‹—p‚ÌSRAM‚ð‘‚«Š·‚¦‚½‚¢ê‡‚ÉL‚ðo—Í‚·‚é
+ˆê”Ê‚É‚Í~CA13(49pin)‚ÆÚ‘±‚³‚êAPPU‚É‚æ‚è$2000ˆÈã‚ÌƒAƒhƒŒƒX‚ð
+ƒAƒNƒZƒX‚µ‚½‚Æ‚«‚ÉL‚É‚È‚éB
+NAMETABLE‚ðƒy[ƒWØ‚è‘Ö‚¦‚µ‚½‚¢‚Æ‚«‚Í~CA13‚ÆŠÖŒW‚È‚­NT-CS‚Í“Æ—§‚µ‚ÄŽg—p‚³‚ê‚éB
+
+U1,U4 S-RAM(2Kx8)
+lŽ@ ƒvƒƒOƒ‰ƒ€‚Ì$0000-$1FFF($0800-$0FFF,$1000-$17FF,$1800-$1FFF)‚¨‚æ‚ÑA
+ƒLƒƒƒ‰ƒNƒ^‚Ì$2000-$2FFF‚ÅŽg—p‚³‚ê‚éB
+01 A7		24 VCC
+02 A6		23 A8
+03 A5		22 A9
+04 A4		21 ~WR
+05 A3		20 OE
+06 A2		19 A10
+07 A1		18 CS
+08 A0		17 D7
+09 D0		16 D6
+10 D1		15 D5
+11 D2		14 D4
+12 GND		13 D3
+
+U2 Octal 3-State D-Latches
+8bit‚Ìƒ‰ƒbƒ`
+lŽ@ CHR‚ÌƒAƒhƒŒƒX‚ðƒ‰ƒbƒ`‚·‚é‚½‚ß‚ÉŽg—p‚³‚ê‚é
+OUTPUT‚ÍGND‚ÉÚ‘±‚³‚ê‚Ä‚¢‚é‚Ì‚ÅAí‚Éƒf[ƒ^‚Í‚Â‚Â‚Ê‚¯‚Å‚ ‚é
+1Q CA7		1D PPU DC7
+2Q CA6		2D PPU DC6
+3Q CA5		3D PPU DC5
+4Q CA4		4D PPU DC4
+5Q CA3		5D PPU DC3
+6Q CA2		6D PPU DC2
+7Q CA1		7D PPU DC1
+8Q CA0		8D PPU DC0
+
+ENABLE G=H ƒf[ƒ^XV
+       G=L ƒf[ƒ^•ÛŽ
+OUTPUT =H o—Í‚ªƒnƒCƒCƒ“ƒs[ƒ_ƒ“ƒXó‘Ô
+       =L o—Í
+01 OUTPUT	20 Vcc
+02 1Q		19 8Q
+03 1D		18 8D
+04 2D		17 7D
+05 2Q		16 7Q
+06 3Q		15 6Q
+07 3D		14 6D
+08 4D		13 5D
+09 4Q		12 5Q
+10 GND		11 ENABLE G
+
+U3 LS139 Dual 2 to 4 Demultiplexers
+lŽ@ 2“ü—Í‚Å4–{‚Ì‚¤‚¿‚Ì‚Ç‚ê‚©‚ðo—Í
+ƒvƒƒOƒ‰ƒ€ƒƒ‚ƒŠ[ƒ}ƒbƒv‚É—˜—p‚³‚ê‚Ä‚¢‚é
+0000-1FFF PRG-RAM ‚Ì OE M†
+2000-3FFF PPU-REG ‚Ì OE M†
+4000-7FFF –¢Ú‘±
+8000-FFFF & CLK PRG-ROM ‚Ì OE M†
+
+
+01 1G		16 Vcc
+02 1A		15 2G
+03 1B		14 2A
+04 1Y0		13 2B
+05 1Y1		12 2Y0
+06 1Y2		11 2Y1
+07 1Y4		10 2Y2
+08 GND		09 2Y3
+
+
+U7,U8 ???
+01 P0(P1)	16 Vcc
+02 CLK		15 GND(P1)
+03 P0CLK(P1CLK)	14 (P1D0)
+04 joy1(P1D1)	13 (D0)
+05 D0(D1)	12 (P1D2)
+06 P0D1(P1D3)	11 (D2)
+07 D1(D3)	10 (P1D4)
+08 GND		09 D2(D4)
+
+(ii)Šg’£’[Žq‚ÌŽd—l
+01 GND
+02 SOUND
+03 IRQ
+04 port1-D4
+05 port1-D3
+06 port1-D2
+07 port1-D1
+08 port1-D0
+09 port1-CLK
+10 OUT2
+11 OUT1
+12 OUT0
+13 port0-D1
+14 port0-CLK
+15 +5V
+
+
+KEYBOARD
+4017B
+01 Q5		16 VDD
+02 Q1		15 CLEAR
+03 Q0		14 CLOCK
+04 Q2		13 ~CLOCK ENABLE
+05 Q6		12 CARRY OUT
+06 Q7		11 Q9
+07 Q3		10 Q4
+08 Vss		09 Q8
+
+lŽ@ ƒXƒLƒƒƒ“•ûŽ®‚ÌƒL[ƒ{[ƒh‚È‚Ì‚ÅƒXƒLƒƒƒ“—p‚ÉŽg—p‚·‚éB
+CLOCK‚ÆVDD‚Í’¼Œ‹‚³‚ê‚Ä‚¢‚é‚Ì‚ÅA~CLOCK ENABLE‚É‚æ‚Á‚ÄƒXƒLƒƒƒ“‚ð
+Ø‚è‘Ö‚¦‚Ä‚¢‚é‚ÆŽv‚í‚ê‚éB
+
+4019B
+Quad AND/OR Select Gate
+01 B4		16 VDD
+02 A3		15 A4
+03 B3		14 KB
+04 A2		13 X4
+05 B2		12 X3
+06 A1		11 X2
+07 B1		10 X1
+08 VSS		09 KA
+lŽ@ƒL[ƒR[ƒh‚ÌŽóM•”
+A1-1,A2-2,A3-3,A4-4,B1-5,B2-6,B3-7,B4-8‚ªŽóM•”‚É‚È‚Á‚Ä‚¢‚éB
+KAEKB‚ðØ‚è‘Ö‚¦‚é‚±‚Æ‚Å‚Ç‚¿‚ç‚Ì“ü—Í‚©‚ð”»’f‚·‚éB
+X1,X2,X3,X4,KB(~KA)‚Í‚»‚ê‚¼‚ê5,4,3,2,7‚Æ‚Â‚È‚ª‚Á‚Ä‚¢‚éB
+
+4069UB
+01 IN1		14 VDD
+02 OUT1		13 IN6
+03 IN2		12 OUT6
+04 OUT2		11 IN5
+05 IN3		10 OUT5
+06 OUT3		09 IN4
+07 VSS		08 OUT4
+lŽ@
+01,02pin GND‚©‚ç+5V‚ð“üŽè‚·‚é‚Ì‚ÉŽg—p
+03,04pin ƒL[ƒ{[ƒh‚Ì“ü—Í‚Æƒe[ƒvƒŒƒR[ƒ_“ü—Í‚ÌØ‚è‘Ö‚¦‚æ‚¤
+05,06pin KA,KB‚ÌØ‚è‘Ö‚¦‚æ‚¤
+
+ƒWƒ‡ƒCƒXƒeƒBƒbƒN’[Žq
+01(01:GND) GND
+02(04:PORT1 D4) OUT4
+03(05:PORT1 D3) OUT3
+04(06:PORT1 D2) OUT2
+05(07:PORT1 D1) OUT1
+06(10:OUT2) NOT‚Ì3pin(IN2) ƒL[ƒ{[ƒh‚Ì“ü—Í‚Æƒe[ƒvƒŒƒR[ƒ_“ü—Í‚ÌØ‚è‘Ö‚¦
+	 0:ƒe[ƒv 1:ƒL[ƒ{[ƒh
+07(11:OUT1) KB,~KA ƒL[ƒ{[ƒh“ü—Í‚ÌØ‚è‘Ö‚¦, NOT‚Ìpin5(IN3)
+08(12:OUT0) CLEAR ƒXƒLƒƒƒ“‚ÌƒNƒŠƒA ƒe[ƒvƒfƒR[ƒ_[‚Ö‚Ìƒf[ƒ^
+09(13:PORT0 D1) NOT‚Ìpin8(OUT4) ƒe[ƒvƒŒƒR[ƒ_[‚©‚ç‚Ìƒf[ƒ^
+10(15) +5V
+
+ƒL[ƒ{[ƒh‚©‚ç‚ÌƒR[ƒh“ü—Í•û–@
+(1)ƒL[ƒ{[ƒh‰Šú‰»
+$4016 <- #$05
+
+(2) ‘æ‚PƒXƒLƒƒƒ“
+$4016 <- #$04
+$4016 -> D1a
+$4016 <- #$06
+$4016 -> D1b
+
+(3) ‘æ‚Q`‚P‚OƒXƒLƒƒƒ“
+.(2)‚Æ“¯—l
+$4016 <- #$04 ‚±‚ÌŽž“_‚ÅŽ©“®“I‚ÉŽŸ‚ÌƒXƒLƒƒƒ“‚ÉˆÚs‚·‚é
+$4016 -> D2a
+$4016 <- #$06
+$4016 -> D2b
+
+4016 WR
+R: 0100000A
+	A:inp0(13,pad1)
+W: -----ABC
+	A:out2(10pin) B:out1(11pin) C:out0(12pin)
+	or #FF
+4017
+R: 010ABCDE 
+	A:inp4(4) B:inp3(5) C:inp2(6) D:inp1(7) E:inp0(8,pad2)
+W: ????????
+	sound (ƒ¢ƒ`ƒƒƒ“ƒlƒ‹) setting
+
+ƒL[ƒ{[ƒh‚ÌƒR[ƒh•\
+
+1’i–Ú F1:A91 F2:A81 F3:A71 F4:A61 F5:A51 F6:A41 F7:A31 F8:A11,A21
+2’i–Ú 1:B83,B93 2:B84,B94 3:B74 4:B64 5:B63 6:B54 7:B53 8:B44 9:B43 0:B34 -:B23 ^:B24 \:B13 stop:B14
+3’i–Ú ESC:A92 Q:A93 W:A82 E:B73 R:A73 T:A72 Y:62 U:A53 I:A52 O:A42 P:B33 @:A32 [:A13,A23 RETURN:A12,A22
+4’i–Ú CTR:A94 A:A84 S:A82 D:A74 F:B61 G:A63 H:A64 J:A54 K:A44 L:A43 ;:A34 ::A32 ]:A14,A24  kana:B11,B21
+5’i–Ú SHIFT:B81,B91 Z:B72,B82 X:B71,B81 C:B62 V:B52 B:B51 N:B42 M:B41 <:B32 >:B31 /:B22 _:B21,B31 SHIFT:B12
+6’i–ÚGRPH:B82,B92 SPACE:B92
+ƒJ[ƒ\ƒ‹ƒL[ CLR:A91,A01 INS:B94 DEL:B93 UP:A92,A02 LEFT:A04 RIGHT:A03 DOWN:B91,B01
+
+
+ƒfƒBƒXƒN‚ÌŠg’£’[Žq
+0 1 2 3 4
+5 6 7 8 9
+0:GND
+1:H
+2:H
+3:H
+4:H
+5:H
+6:L
+7:H
+8:H
+9:H
+
+
+
+

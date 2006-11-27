@@ -1,0 +1,116 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<TITLE>NES controller information</TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice/5.0 (Unix)">
+	<META NAME="AUTHOR" CONTENT="Tennessee Carmel-Veilleux">
+	<META NAME="CREATED" CONTENT="19990124;20283700">
+	<META NAME="CHANGEDBY" CONTENT="Tennessee Carmel-Veilleux">
+	<META NAME="CHANGED" CONTENT="19990124;20283700">
+	<STYLE>
+	<!--
+	-->
+	</STYLE>
+</HEAD>
+<BODY BGCOLOR="#ffffff">
+<H1>Technical information on the NES controller</H1>
+<H1><FONT SIZE=4><U><SPAN STYLE="font-weight: medium">1- Technical</SPAN><B>
+</B><SPAN STYLE="font-weight: medium">overview</SPAN></U></FONT></H1>
+<P STYLE="font-weight: medium; text-decoration: none"><FONT SIZE=3>The
+NES controller interface is the prefered mean of interfacing with the
+user on the NES. It allows 2 (two) separate ports to read serial data
+from an external device operating at TTL voltage level. It provides
+access to 3 serial channels for each port, which are usually strobed
+than read using a PISO converter triggered by a clock signal. The
+strobe signals and clock signal generation are made by the software
+program currently running in the unit. Special circuitry in both the
+CPU and external I/O system are in charge of strobing the hardware
+and putting the data to/from the data BUS to/from the ports.</FONT></P>
+<P STYLE="font-weight: medium"><FONT SIZE=4><U>2- The connector</U></FONT></P>
+<P ALIGN=CENTER><IMG SRC="nes_con.gif" NAME="Graphic1" ALIGN=BOTTOM WIDTH=286 HEIGHT=196 BORDER=0></P>
+<P ALIGN=CENTER>Figure 1: The controller port connector</P>
+<UL TYPE=DISC>
+	<LI><P ALIGN=LEFT><FONT SIZE=4>GND -&gt; The ground (0V) connection</FONT></P>
+	<LI><P ALIGN=LEFT><FONT SIZE=4>CLK -&gt; The clock signal for serial
+	data control</FONT></P>
+	<LI><P ALIGN=LEFT><FONT SIZE=4>STRB -&gt; The strobe connection for
+	circuit strobing</FONT></P>
+	<LI><P ALIGN=LEFT><FONT SIZE=4>D0 -&gt; 1<SUP>st</SUP> serial
+	channel (usually used for joypad controller data)</FONT></P>
+	<LI><P ALIGN=LEFT><FONT SIZE=4>+5V -&gt; The positive 5V supply
+	connection</FONT></P>
+	<LI><P ALIGN=LEFT><FONT SIZE=4>D3/D4 -&gt; The other two serial
+	channels primarily used by the Zapper and other more sophisticated
+	controllers</FONT></P>
+</UL>
+<P ALIGN=LEFT STYLE="margin-left: 1.27cm; text-indent: -0.50cm"><FONT SIZE=3>The
+5V and GND provide power to the internal circuitry. Maximum power
+load acceptable is unknown, but considered to be extremely low.</FONT></P>
+<P ALIGN=LEFT STYLE="margin-left: 0.50cm; text-indent: -0.50cm"><FONT SIZE=4><U>3-
+The Joypads</U></FONT></P>
+<P ALIGN=LEFT STYLE="margin-left: 1.24cm; text-decoration: none"><FONT SIZE=3>The
+following account of the joypad theory of operation is based solely
+on my reverse engineering of the hardware itself by carefully tracing
+the circuit manually with the help of a multi-tester. Since I am NOT
+an electrical engineer or anything like that, this information could
+be totally erroneous. I sure hope it isn't, but in the event of the
+former, I would like to be notified of my mistakes :)</FONT></P>
+<P ALIGN=CENTER STYLE="text-decoration: none"><FONT SIZE=3><IMG SRC="nes_jp.gif" NAME="Graphic2" ALIGN=BOTTOM WIDTH=726 HEIGHT=768 BORDER=0></FONT></P>
+<P ALIGN=CENTER>Figure 2: Schematic of the Joypad circuit.</P>
+<P ALIGN=LEFT STYLE="margin-left: 1.27cm">The preceding schematic was
+made from the reverse-engineering of a NES controller from a
+front-loading US/Canadian model. The pushbuttons are, from left to
+right: Right, Left, Down, Up, Start, Select, B and A.</P>
+<P ALIGN=LEFT STYLE="margin-left: 1.27cm">What the circuit contains:</P>
+<UL TYPE=DISC>
+	<LI><P ALIGN=LEFT>4021 8-bit static shift register</P>
+	<LI><P ALIGN=LEFT>8 PCB film resistors of about 70Kohm (couldn't get
+	accurate reading though)</P>
+	<LI><P ALIGN=LEFT>8 Pushbuttons made from PCB contacts with a
+	conductive plastics part for each</P>
+	<LI><P ALIGN=LEFT>A connector</P>
+</UL>
+<P ALIGN=LEFT STYLE="margin-left: 1.27cm; text-indent: -0.03cm">How
+it works:</P>
+<P ALIGN=LEFT STYLE="margin-left: 2.54cm; text-indent: -0.03cm">The
+4021 has inverting inputs. Every time the Strobe (STRB) connection
+gets a HIGH then LOW signal, the data on the 8 parrallel inputs gets
+latched in the register. Since the inputs of the 4021 are inverting,
+the 8 resistors act as pull-up resistors to the +5V making the input
+HIGH by default. When a button is pressed, 0V is allowed to the
+input, thus enabling the state in the register. The serial data input
+is tied to 0V so as not to act upon the internal flip-flops of the
+4021. Then, everytime the Clock (CLK) connection gets a HIGH signal,
+rightmost bit (P8) is sent to D0 through Q8. After 8 shift, the
+entire register is zero and thus all other read return a 0 state. The
+operation of this device is extremely simple, and making a home-made
+controller should cost less than 1US$ of parts (4021 is 0.25US$ and
+resistors are extra cheap at <A HREF="http://www.jameco.com/">www.jameco.com</A>).</P>
+<P ALIGN=LEFT STYLE="margin-left: 0.03cm; text-indent: -0.03cm"><FONT SIZE=4><U>4-
+Contact information</U></FONT></P>
+<P ALIGN=LEFT STYLE="margin-left: 0.03cm; text-indent: -0.03cm; text-decoration: none">
+<FONT SIZE=3>This page was made by Tennessee Carmel-Veilleux
+(<A HREF="mailto:veilleux@ameth.org">veilleux@ameth.org</A>). Report
+any errors or bugs to the preceding address.</FONT></P>
+<P ALIGN=LEFT STYLE="margin-left: 0.03cm; text-indent: -0.03cm"><FONT SIZE=4><U>5-
+References</U></FONT></P>
+<UL>
+	<LI><P ALIGN=LEFT STYLE="text-decoration: none"><FONT SIZE=3>NESTUFF.TXT
+	by Kevin Horton (<A HREF="mailto:khorton@iquest.net">khorton@iquest.net</A>)
+	for part of the connector pinout</FONT></P>
+	<LI><P ALIGN=LEFT STYLE="text-decoration: none"><FONT SIZE=3>Data
+	sheet for the Phillips Semiconductor HEF4021B 8-bit static shift
+	register</FONT></P>
+</UL>
+<P ALIGN=LEFT STYLE="text-decoration: none"><FONT SIZE=3> </FONT>
+</P>
+<P ALIGN=CENTER><BR><BR>
+</P>
+<P ALIGN=CENTER><BR><BR>
+</P>
+<P ALIGN=CENTER><BR><BR>
+</P>
+<P ALIGN=CENTER><BR><BR>
+</P>
+</BODY>
+</HTML>

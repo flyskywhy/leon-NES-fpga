@@ -1,0 +1,67 @@
+Famicom / Pegasus cartridge connector pinout
+By siudym@pf.pl
+
+
+
+ 
+VIEW FROM CONSOLE (TOP VIEW):
+
+                           -------
+          (#16) GND     - |01   31| - +5V (#30)
+                PRG A11 - |02   32| - M2
+                PRG A10 - |03   33| - PRG A12
+                PRG A9  - |04   34| - PRG A13
+                PRG A8  - |05   35| - PRG A14
+                PRG A7  - |06   36| - PRG D7
+                PRG A6  - |07   37| - PRG D6
+                PRG A5  - |08   38| - PRG D5
+                PRG A4  - |09   39| - PRG D4
+                PRG A3  - |10   40| - PRG D3
+                PRG A2  - |11   41| - PRG D2
+                PRG A1  - |12   42| - PRG D1
+                PRG A0  - |13   43| - PRG D0
+                PRG R/W - |14   44| - PRG /CE ( /15 & /M2 )
+                /IRQ    - |15   45| - EXP (#46)
+          (#01) GND     - |16   46| - EXP (#45)
+                CHR /RD - |17   47| - CHR /WR
+                CHR A10 - |18   48| - CIRAM /CE
+                CHR A6  - |19   49| - CHR A13
+                CHR A5  - |20   50| - CHR A7
+                CHR A4  - |21   51| - CHR A8
+                CHR A3  - |22   52| - CHR A9
+                CHR A2  - |23   53| - CHR A10
+                CHR A1  - |24   54| - CHR A11
+                CHR A0  - |25   55| - CHR A12
+                CHR D0  - |26   56| - CHR /A13
+                CHR D1  - |27   57| - CHR D7
+                CHR D2  - |28   58| - CHR D6
+                CHR D3  - |29   59| - CHR D5
+          (#31) +5V     - |30   60| - CHR D4
+                           -------
+
+
+Pins #30 and #31 (+5V) connected together (polaczone razem)
+Pins #01 and #16 (GND) connected together
+Pins #45 and #46 (EXP) connected together
+
+
+
+
+W opisie pinow moga wystepowac bledy i nie daje pewnosci,
+ze wszystko jest dobrze rozpisane. Osobiscie uwazam, ze opis
+jest zgodny i byl weryfikowany. Ale sami wiecie jak to czasami
+bywa, nikt nie jest doskonaly...
+
+Ps. Bardzo wazna sprawa! Jesli jestes posiadaczem gier do
+Pegasusa (Famicom'a) i w twojej kolekcji jest gra "DonDokoDon 2"
+to napisz do mnie koniecznie. Poszukuje tej bardzo waznej
+dla mnie gry, moze ona wystepowac pod innymi nazwami
+np. "Pon Poko Pon 2" lub "Super Bros 8 - Don Doko Don 2".
+Moze ja masz lub znasz kogos kto ja ma?. Prosze o kontakt
+w tej sprawie - to dla mnie bardzo wazne!
+ 
+
+
+19-X-2001
+Siudym'2001 (siudym@pf.pl)
+
