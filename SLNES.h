@@ -1,5 +1,5 @@
 /*******************************************************************
- *        Copyright (c) 2005,杭州市兰微电子股份有限公司            *
+ *        Copyright (c) 2005,杭州士兰微电子股份有限公司            *
  *                   All rights reserved.                          *
  *******************************************************************
       文件名称： SLNES.h
@@ -22,7 +22,7 @@ extern int StartDisplay;
 #endif /* SimLEON */
 
 #ifdef WIN32
-#include "/Project/Reuse/Leon/SOFTWARE/include/leon.h"
+//#include "/Project/Reuse/Leon/SOFTWARE/include/leon.h"
 #else /* WIN32 */
 #include <leon.h>
 #endif /* WIN32 */

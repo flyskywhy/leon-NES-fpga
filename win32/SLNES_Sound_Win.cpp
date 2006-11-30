@@ -12,7 +12,7 @@
 
 #include <windows.h>
 #include <mmsystem.h>
-#include "dsound.h"
+#include <dsound.h>
 #include "SLNES_Sound_Win.h"
 #include "../SLNES_System.h"
 
